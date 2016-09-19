@@ -1,0 +1,81 @@
+body {
+    display: flex;
+    flex-direction: row;
+}
+
+#left {
+    display: flex;
+    border-left: 1px solid gray;
+    flex-direction: column;
+    width: 1000px;
+    /*    height: 300px*/
+    /*    padding-left: 20px;*/
+}
+
+#views {
+    display: flex;
+    justify-content: space-around;
+    border-bottom: 1px solid gray;
+}
+#chart{
+    display: flex;
+    flex-direction: row;
+}
+
+#machine{
+    flex-basis: 200px;
+}
+
+#process{
+    flex-basis: 700px;
+}
+
+.btn-group {
+    display: flex;
+}
+
+#right {
+    display: flex;
+    border-left: 1px solid gray;
+    flex-direction: column;
+    height: 800px;
+    flex-basis: 500px;
+}
+
+.rightContent {
+    border-bottom: 2px solid white;
+    background-color: ghostwhite;
+}
+
+.rightContent:nth-child(1) {
+    flex-grow: 1;
+}
+
+.rightContent:nth-child(2) {
+    flex-grow: 4;
+}
+
+.rightContent:nth-child(3) {
+    flex-grow: 4;
+}
+
+.rightContent:nth-child(4) {
+    flex-grow: 2;
+}
+
+.title {
+    background-color: orange;
+    color: darkblue;
+    font-size: 30px;
+    font-family: sans-serif;
+    font-weight: bolder;
+    text-align: center;
+
+}
+
+.axis path,
+.axis line {
+    fill: none;
+    stroke: black;
+    shape-rendering: crispEdges;
+}

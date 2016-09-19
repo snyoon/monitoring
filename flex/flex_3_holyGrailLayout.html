@@ -1,0 +1,75 @@
+<!doctype>
+
+<html>
+<head>
+    <meta charset='utf-8'>
+    <style>
+        body{
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .container{
+            display: flex;
+            flex-direction:column;  
+            width: 800px;
+            border:1px solid gray;
+        }
+        header{
+            border-bottom:1px solid gray;
+            padding-left: 20px;
+        }
+        footer{
+            border-top:1px solid gray;
+            padding: 20px;
+            text-align: center;
+        }
+        .content{
+            display:flex;
+        }
+        .content nav{
+            border-right:1px solid gray;
+        }
+        .content aside{
+            border-left: 1px solid gray;
+        }
+        nav, aside{
+            flex-basis: 150px;
+            flex-shrink: 0;
+        }
+        main{
+            padding: 10px;
+        }
+        nav{
+            order: -1;
+        }
+    </style>
+</head>
+<body>
+    <div class='container'>
+        <header>
+            <h1>생활코딩</h1>
+        </header>
+        <section class = 'content'>
+             <main>
+                Lorem ipsum dolor sit amet, consectetur adipisicing elit. Ea eos similique quas a quidem nulla asperiores autem? Praesentium fugiat eum eveniet repudiandae! Sunt, odit similique debitis dolorem, perspiciatis excepturi soluta iusto reiciendis! Necessitatibus doloribus dolorum aspernatur sapiente sint ullam, esse voluptatibus voluptatum illum enim eligendi, numquam, quibusdam placeat quos laboriosam atque nam. Fuga repellat nisi quo quibusdam distinctio adipisci iusto eveniet quisquam nobis illo vel tempore, totam porro id quas unde voluptatem ratione eligendi exercitationem ducimus, sed? Ipsam, officiis, qui molestiae iste vero doloribus voluptatem asperiores eum, tenetur placeat quaerat. Earum et sunt, sapiente quis iste doloribus perspiciatis eveniet minima aut labore similique officia distinctio esse praesentium vero magni harum provident? Amet doloremque, aut vitae recusandae dolor consequuntur, ipsa veniam sint aspernatur optio, ducimus dignissimos! Non totam itaque quam cum molestiae quibusdam dignissimos neque quidem pro
+            </main>
+            <nav>
+                <ul>
+                    <li>html</li>
+                    <li>css</li>
+                    <li>javascript</li>
+                </ul>
+            </nav>
+           
+            <aside>
+                AD
+            </aside>
+        </section>
+        <footer>
+            <a href='http://opentutorials.org/course/1'>홈페이지</a>
+        </footer>
+    </div>
+    
+</body>
+</html>

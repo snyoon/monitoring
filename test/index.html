@@ -1,0 +1,39 @@
+<!doctype>
+
+<head>
+    <meta charset='utf-8'>
+    <link rel="stylesheet" type="text/css" href="css/style.css" />
+    <link rel="stylesheet" type="text/css" href="css/bootstrap.css" /> </head>
+
+<body>
+    <div id='left'>
+        <div id='views'>
+            <!--            <div class="btn-group" role="group" aria-label="...">-->
+            <button type="button" class="btn btn-default" id='resourceView'>Resource View</button>
+            <button type="button" class="btn btn-default" id='productView'>Product View</button>
+            <button type="button" class="btn btn-default" id='lotView'>Lot Status View</button>
+            <!--            </div>-->
+        </div>
+        <div id='chart'>
+            <div id='machine'></div>
+            <div id='process'></div>
+        </div>
+        <div id="scrolled_date"></div>
+        <div id='attribute'> attribute </div>
+    </div>
+    <div id='right'>
+        <div id='timeTravel' class='rightContent'>
+            <div class='title'> Time Traveler </div> time </div>
+        <div id='status' class='rightContent'>
+            <div class='title'> Production Status Viewer </div>status </div>
+        <div id='kpi' class='rightContent'>
+            <div class='title'> KPI Status Viewer </div> kpi </div>
+        <div id='decision' class='rightContent'>
+            <div class='title'> Decision Viewer </div>decision </div>
+    </div>
+    <script src='js/d3.v3.min.js'></script>
+    <script src='js/flexibility.js'></script>
+    <script src='js/d3-timeline.js'></script>
+    <script src='js/monitor.js'></script>
+    <script src="http://code.jquery.com/jquery-latest.min.js"></script>
+</body>
