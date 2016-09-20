@@ -44,7 +44,7 @@ body {
 
 .rightContent {
     border-bottom: 2px solid white;
-    background-color: ghostwhite;
+/*    background-color: ghostwhite;*/
 }
 
 .rightContent:nth-child(1) {

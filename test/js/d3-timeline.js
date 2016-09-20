@@ -16,13 +16,22 @@
         height = null,
         rowSeparatorsColor = null,
         backgroundColor = null,
-        tickFormat = { format: d3.time.format("%I %p"),
-          tickTime: d3.time.hours,
-          tickInterval: 1,
+        // http://d3-wiki.readthedocs.io/zh_CN/master/Time-Formatting/
+        tickFormat = { format: d3.time.format("%H %M"),
+          tickTime: d3.time.hour,
+          tickInterval: 2,
           tickSize: 6,
           tickValues: null
         },
-        colorCycle = d3.scale.category20(),
+        // FIX
+        // colorCycle = d3.scale.category20(),
+        colorCycle = {
+            'SDP_01': '#2A75A6',
+            'SDP_02': '#AEC6EB',
+            'SDP_03': '#FD7E12',
+            'DDP_01': '#FCB972',
+            'DDP_02': '#2AA12D'
+        },
         colorPropertyName = null,
         display = "rect",
         beginning = 0,
@@ -192,9 +201,7 @@
       // do this here so that we can draw the axis before the graph
       if (stacked || ending === 0 || beginning === 0) {
         g.each(function (d, i) {
-          d.forEach(function (datum, index) {
-              console.log(datum);
-              console.log(index);
+          d.forEach(function (datum, index) {          
 
             // create y mapping for stacked graph
             if (stacked && Object.keys(yAxisMapping).indexOf(index) == -1) {
@@ -205,11 +212,11 @@
             // figure out beginning and ending times if they are unspecified
             datum.times.forEach(function (time, i) {
               if(beginning === 0)
-                if (time.starting_time < minTime || (minTime === 0 && timeIsRelative === false))
-                  minTime = time.starting_time;
+                if (time.starting_time * 1000 < minTime || (minTime === 0 && timeIsRelative === false))
+                  minTime = time.starting_time * 1000;
               if(ending === 0)
-                if (time.ending_time > maxTime)
-                  maxTime = time.ending_time;
+                if (time.ending_time * 1000 > maxTime)
+                  maxTime = time.ending_time * 1000;
             });
           });
         });
@@ -229,7 +236,7 @@
         .domain([beginning, ending])
         .range([0, width - margin.right]);
         // .range([margin.left, width - margin.right]); // FIX
-
+        
       var xAxis = d3.svg.axis()
         .scale(xScale)
         .orient(orient)
@@ -263,7 +270,7 @@
             .attr("x", getXPos)
             .attr("y", getStackPosition)
             .attr("width", function (d, i) {
-              return (d.ending_time - d.starting_time) * scaleFactor;
+              return (d.ending_time*1000 - d.starting_time*1000) * scaleFactor;
             })
             .attr("cy", function(d, i) {
                 return getStackPosition(d, i) + itemHeight/2;
@@ -282,7 +289,7 @@
                   return colorCycle( datum[colorPropertyName] );
                 }
               }
-              return colorCycle(index);
+              return colorCycle[d.productId];
             })
             .on("mousemove", function (d, i) {
               hover(d, index, datum);
@@ -318,11 +325,8 @@
             .style('font-weight', 'bold')
             .style('fill', 'white')
             .text(function(d) {
-              return d.operationId;
-            })
-            
-            
-          ;
+              return d.lotId;
+            });
 
           if (rowSeparatorsColor) {
             var lineYAxis = ( itemHeight + itemMargin / 2 + margin.top + (itemHeight + itemMargin) * yAxisMapping[index]);
@@ -399,17 +403,17 @@
       var gSize = g[0][0].getBoundingClientRect();
       setHeight();
 
-      if (showBorderLine) {
-        g.each(function (d, i) {
-          d.forEach(function (datum) {
-            var times = datum.times;
-            times.forEach(function (time) {
-              appendLine(xScale(time.starting_time), showBorderFormat);
-              appendLine(xScale(time.ending_time), showBorderFormat);
-            });
-          });
-        });
-      }
+//      if (showBorderLine) {
+//        g.each(function (d, i) {
+//          d.forEach(function (datum) {
+//            var times = datum.times;
+//            times.forEach(function (time) {
+//              appendLine(xScale(time.starting_time), showBorderFormat);
+//              appendLine(xScale(time.ending_time), showBorderFormat);
+//            });
+//          });
+//        });
+//      }
 
       if (showTodayLine) {
         var todayLine = xScale(new Date());
@@ -418,15 +422,15 @@
 
       function getXPos(d, i) {
         // FIX: 왼쪽으로 이동
-        return margin.left + (d.starting_time - beginning) * scaleFactor;
+        return margin.left + (d.starting_time * 1000 - beginning) * scaleFactor;
 //        return 0 + (d.starting_time - beginning) * scaleFactor;
       }
 
       function getXTextPos(d, i) {
         // FIX: 왼쪽으로 이동
 //        return margin.left + (d.starting_time - beginning) * scaleFactor + 5;
-        return margin.left + (d.starting_time - beginning) * scaleFactor 
-                 + (d.ending_time - d.starting_time)*scaleFactor/2;
+        return margin.left + (d.starting_time * 1000 - beginning) * scaleFactor 
+                 + (d.ending_time * 1000 - d.starting_time * 1000)*scaleFactor/2;
       }
         
 

@@ -20,49 +20,115 @@ var labelTestData = [
     {
         label: "DA001"
         , times: [{
-                "starting_time": 1355752800000
-                , "ending_time": 1355759900000
-                , "operationId": "L00001"
+                "starting_time": 0
+                , "ending_time": 7200
+                , "lotId": "L00001"
+                , 'productId': 'SDP_01'
             }
             , {
-                "starting_time": 1355767900000
-                , "ending_time": 1355774400000
-                , "operationId": "L00002"
+                "starting_time": 10000
+                , "ending_time": 30000
+                , "lotId": "L00002"
+                , 'productId': 'SDP_03'
             }]
     }
     , {
         label: "DA002"
         , times: [{
-            "starting_time": 1355759910000
-            , "ending_time": 1355761900000
-            , "operationId": "L00003"
+            "starting_time": 4000
+            , "ending_time": 10000
+            , "lotId": "L00003"
+            , 'productId': 'DDP_01'
         }, ]
     }
     , {
         label: "DA003"
         , times: [{
-            "starting_time": 1355762910000
-            , "ending_time": 1355769010000
-            , "operationId": "L00004"
+            "starting_time": 200
+            , "ending_time": 8570
+            , "lotId": "L00004"
+            , 'productId': 'DDP_02'
         }]
     }
     , {
         label: "DA004"
         , times: [{
-            "starting_time": 1355761910000
-            , "ending_time": 1355763910000
-            , "operationId": "L00005"
+            "starting_time": 2000
+            , "ending_time": 7900
+            , "lotId": "L00005"
+            , 'productId': 'SDP_01'
         }]
     }
     , {
         label: "DA005"
         , times: [{
-            "starting_time": 1355756000000
-            , "ending_time": 1355762010000
-            , "operationId": "L00007"
+            "starting_time": 8000
+            , "ending_time": 41000
+            , "lotId": "L00007"
+            , 'productId': 'SDP_03'
+        },
+                 {
+            "starting_time": 60000
+            , "ending_time": 90000
+            , "lotId": "L00008"
+            , 'productId': 'SDP_03'
         }]
     }
       ];
+
+//var labelTestData = [
+//    {
+//        label: "DA001"
+//        , times: [{
+//                "starting_time": 1355752800000
+//                , "ending_time": 1355759900000
+//                , "lotId": "L00001"
+//                , 'productId': 'SDP_01'
+//            }
+//            , {
+//                "starting_time": 1355767900000
+//                , "ending_time": 1355774400000
+//                , "lotId": "L00002"
+//                , 'productId': 'SDP_03'
+//            }]
+//    }
+//    , {
+//        label: "DA002"
+//        , times: [{
+//            "starting_time": 1355759910000
+//            , "ending_time": 1355761900000
+//            , "lotId": "L00003"
+//            , 'productId': 'DDP_01'
+//        }, ]
+//    }
+//    , {
+//        label: "DA003"
+//        , times: [{
+//            "starting_time": 1355762910000
+//            , "ending_time": 1355769010000
+//            , "lotId": "L00004"
+//            , 'productId': 'DDP_02'
+//        }]
+//    }
+//    , {
+//        label: "DA004"
+//        , times: [{
+//            "starting_time": 1355761910000
+//            , "ending_time": 1355763910000
+//            , "lotId": "L00005"
+//            , 'productId': 'SDP_01'
+//        }]
+//    }
+//    , {
+//        label: "DA005"
+//        , times: [{
+//            "starting_time": 1355756000000
+//            , "ending_time": 1355762010000
+//            , "lotId": "L00007"
+//            , 'productId': 'SDP_03'
+//        }]
+//    }
+//      ];
 var machineStatusTestData = [
 {
     label: "DA001"
@@ -90,22 +156,26 @@ var machineStatusTestData = [
 ];
 
 function timelineHover() {
-    var chart = d3.timeline().width(processWidth).stack().margin({
+    var chart = d3.timeline().width(processWidth*2).stack().margin({
             left: 0
             , right: 30
             , top: 0
             , bottom: 0
-        }).showTimeAxisTick().hover(function (d, i, datum) {
+        })
+        .showTimeAxisTick()
+        .hover(function (d, i, datum) {
             // d is the current rendering object
             // i is the index during d3 rendering
             // datum is the id object
             var div = $('#hoverRes');
             var colors = chart.colors();
-            div.find('.coloredDiv').css('background-color', colors(i))
+            console.log(colors[d.productId])
+            div.find('.coloredDiv').css('background-color', colors[d.productId])
             div.find('#name').text(datum.label);
-        }).click(function (d, i, datum) {
-            alert(datum.label);
         })
+//        .click(function (d, i, datum) {
+//            alert(datum.label);
+//        })
         //          .scroll(function (x, scale) {
         //            $("#scrolled_date").text(scale.invert(x) + " to " + scale.invert(x+width));
         //          });
