@@ -162,6 +162,7 @@ function timelineHover() {
             , top: 0
             , bottom: 0
         })
+        .traveledTime(6000)
         .showTimeAxisTick()
         .hover(function (d, i, datum) {
             // d is the current rendering object

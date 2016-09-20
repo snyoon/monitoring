@@ -57,7 +57,8 @@
         showAxisNav = false,
         showAxisCalendarYear = false,
         axisBgColor = "white",
-        chartData = {}
+        chartData = {},
+        traveledTime = 0;
       ;
 
     var appendTimeAxis = function(g, xAxis, yPosition) {
@@ -248,7 +249,7 @@
       } else {
         xAxis.ticks(tickFormat.numTicks || tickFormat.tickTime, tickFormat.tickInterval);
       }
-
+        
       // draw the chart
       g.each(function(d, i) {
         chartData = d;
@@ -264,7 +265,7 @@
           if (backgroundColor) { appendBackgroundBar(yAxisMapping, index, g, data, datum); }
           // FIX
           var operations = g.selectAll("svg").data(data).enter();
-            operations.append(function(d, i) {
+            operations.append(function(d, i) {                
                 return document.createElementNS(d3.ns.prefix.svg, "display" in d? d.display:display);
             })
             .attr("x", getXPos)
@@ -279,6 +280,7 @@
             .attr("r", itemHeight / 2)
             .attr("height", itemHeight)
             .style("fill", function(d, i){
+              if(d.starting_time > traveledTime) return 'white';
               var dColorPropName;
               if (d.color) return d.color;
               if( colorPropertyName ){
@@ -700,6 +702,10 @@
       navigateLeft = navigateBackwards;
       navigateRight = navigateForwards;
       showAxisNav = !showAxisNav;
+      return timeline;
+    };
+    timeline.traveledTime = function(t){
+      traveledTime = t;
       return timeline;
     };
 
