@@ -155,6 +155,7 @@ var machineStatusTestData = [
 }
 ];
 
+var traveledTime = 10000;
 function timelineHover() {
     var chart = d3.timeline().width(processWidth*2).stack().margin({
             left: 0
@@ -162,17 +163,17 @@ function timelineHover() {
             , top: 0
             , bottom: 0
         })
-        .traveledTime(6000)
+        .traveledTime(traveledTime)
         .showTimeAxisTick()
         .hover(function (d, i, datum) {
             // d is the current rendering object
             // i is the index during d3 rendering
             // datum is the id object
+            if(d.starting_time > traveledTime) return;
             var div = $('#hoverRes');
             var colors = chart.colors();
-            console.log(colors[d.productId])
             div.find('.coloredDiv').css('background-color', colors[d.productId])
-            div.find('#name').text(datum.label);
+            div.find('#name').text(d.lotId);
         })
 //        .click(function (d, i, datum) {
 //            alert(datum.label);
