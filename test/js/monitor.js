@@ -62,20 +62,48 @@ var labelTestData = [
     , {
         label: "DA005"
         , times: [{
-            "starting_time": 8000
-            , "ending_time": 41000
-            , "lotId": "L00007"
-            , 'productId': 'SDP_03'
-        },
-                 {
-            "starting_time": 60000
-            , "ending_time": 90000
-            , "lotId": "L00008"
-            , 'productId': 'SDP_03'
+                "starting_time": 8000
+                , "ending_time": 41000
+                , "lotId": "L00007"
+                , 'productId': 'SDP_03'
+        }
+            , {
+                "starting_time": 60000
+                , "ending_time": 90000
+                , "lotId": "L00008"
+                , 'productId': 'SDP_03'
+        }]
+    }
+    , {
+        label: "DA006"
+        , times: [{
+                "starting_time": 7000
+                , "ending_time": 30000
+                , "lotId": "L00009"
+                , 'productId': 'SDP_01'
+        }
+            , {
+                "starting_time": 40000
+                , "ending_time": 50000
+                , "lotId": "L00010"
+                , 'productId': 'DDP_02'
+        }]
+    }, {
+        label: "DA007"
+        , times: [{
+                "starting_time": 10000
+                , "ending_time": 25000
+                , "lotId": "L00011"
+                , 'productId': 'SDP_01'
+        }
+            , {
+                "starting_time": 28000
+                , "ending_time": 42000
+                , "lotId": "L00012"
+                , 'productId': 'DDP_02'
         }]
     }
       ];
-
 //var labelTestData = [
 //    {
 //        label: "DA001"
@@ -130,54 +158,59 @@ var labelTestData = [
 //    }
 //      ];
 var machineStatusTestData = [
-{
-    label: "DA001"
-    , status: 'proc'
+    {
+        label: "DA001"
+        , status: 'proc'
 }
-    
+
 , {
-    label: "DA002"
-    , status: 'idle'
+        label: "DA002"
+        , status: 'idle'
 }
-    
+
 , {
-    label: "DA002"
-    , status: 'idle'
+        label: "DA003"
+        , status: 'idle'
 }
-    
+
 , {
-    label: "DA002"
-    , status: 'down'
+        label: "DA004"
+        , status: 'down'
 }
     , {
-    label: "DA002"
-    , status: 'proc'
+        label: "DA005"
+        , status: 'proc'
+}
+      , {
+        label: "DA006"
+        , status: 'proc'
+}
+          , {
+        label: "DA007"
+        , status: 'proc'
 }
 ];
+var traveledTime = 90000;
 
-var traveledTime = 10000;
-function timelineHover() {
-    var chart = d3.timeline().width(processWidth*2).stack().margin({
+function timelineHover(traveledTime) {
+    var chart = d3.timeline().width(processWidth * 2).stack().margin({
             left: 0
             , right: 30
             , top: 0
             , bottom: 0
-        })
-        .traveledTime(traveledTime)
-        .showTimeAxisTick()
-        .hover(function (d, i, datum) {
+        }).traveledTime(traveledTime).showTimeAxisTick().hover(function (d, i, datum) {
             // d is the current rendering object
             // i is the index during d3 rendering
             // datum is the id object
-            if(d.starting_time > traveledTime) return;
+            if (d.starting_time > traveledTime) return;
             var div = $('#hoverRes');
             var colors = chart.colors();
             div.find('.coloredDiv').css('background-color', colors[d.productId])
             div.find('#name').text(d.lotId);
         })
-//        .click(function (d, i, datum) {
-//            alert(datum.label);
-//        })
+        //        .click(function (d, i, datum) {
+        //            alert(datum.label);
+        //        })
         //          .scroll(function (x, scale) {
         //            $("#scrolled_date").text(scale.invert(x) + " to " + scale.invert(x+width));
         //          });
@@ -185,28 +218,41 @@ function timelineHover() {
 }
 
 function getStackPosition(d, i) {
-    return margin.top + (itemHeight + itemMargin) * (i);
+    return margin.top + (itemHeight + itemMargin) * (i) - 5;
 }
 
 function getStackTextPosition(d, i) {
-    return margin.top + (itemHeight + itemMargin) * (i) + itemHeight * 0.75;
+    return margin.top + (itemHeight + itemMargin) * (i) + itemHeight * 0.75 - 5;
 }
 
 function displayMachine() {
-    var svg = d3.select('#machine').append('svg').attr('width', machineWidth);
+    var chartSvg = d3.select('.scrollable');
+    var height = chartSvg.style('height')
+    var svg = d3.select('#machine').append('svg').attr('width', machineWidth).attr('height', height);
     var machines = svg.selectAll('.machineName').data(labelTestData).enter();
     // Machine Names
     machines.append('rect').attr('x', 0).attr('y', getStackPosition).attr("width", itemWidth).attr("height", itemHeight).style('fill', 'none').style('stroke', 'black')
     machines.append('text').attr('x', itemWidth / 2).attr('y', getStackTextPosition).style('text-anchor', 'middle').style('font-weight', 'bold').style('fill', 'black').text(function (d) {
             return d.label;
         })
-    // Machine Status
+        // Machine Status
     var status = svg.selectAll('.machineStatus').data(machineStatusTestData).enter();
     status.append('rect').attr('x', itemWidth + 10).attr('y', getStackPosition).
-    attr('rx', 6).attr('ry', 6).attr("width", itemWidth).attr("height", itemHeight).style('fill', function(d){return statusColorMap[d.status]})
+    attr('rx', 6).attr('ry', 6).attr("width", itemWidth).attr("height", itemHeight).style('fill', function (d) {
+        return statusColorMap[d.status]
+    })
     status.append('text').attr('x', itemWidth + 10 + itemWidth / 2).attr('y', getStackTextPosition).style('text-anchor', 'middle').style('font-weight', 'bold').style('fill', 'black').text(function (d) {
         return d.status;
     })
 }
-timelineHover();
+
+// Time Travel
+d3.select('#timeButton').on('click', function(){
+    time = document.getElementById("traveledTime").value;
+    d3.select('#process').selectAll('*').remove()
+    timelineHover(time);
+    
+});
+
+timelineHover(traveledTime);
 displayMachine();

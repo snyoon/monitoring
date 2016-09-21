@@ -264,8 +264,10 @@
 
           if (backgroundColor) { appendBackgroundBar(yAxisMapping, index, g, data, datum); }
           // FIX
-          var operations = g.selectAll("svg").data(data).enter();
-            operations.append(function(d, i) {                
+          var operations = g.selectAll("svg").data(data);
+          var operationsEnter = operations.enter().append('g');
+            operationsEnter
+                      .append(function(d, i) {                
                 return document.createElementNS(d3.ns.prefix.svg, "display" in d? d.display:display);
             })
             .attr("x", getXPos)
@@ -319,7 +321,7 @@
           ;
 
          // FIX
-         operations
+         operationsEnter
             .append("text")
             .attr("x", getXTextPos)
             .attr("y", getStackTextPosition)
@@ -329,7 +331,10 @@
             .text(function(d) {
               return d.lotId;
             });
-
+       
+        operations
+            .exit()
+            .remove();
           if (rowSeparatorsColor) {
             var lineYAxis = ( itemHeight + itemMargin / 2 + margin.top + (itemHeight + itemMargin) * yAxisMapping[index]);
             gParent.append("svg:line")
