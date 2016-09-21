@@ -8,7 +8,8 @@ var margin = {
     }
     , itemHeight = 20
     , itemMargin = 5
-    , itemWidth = 80;
+    , itemWidth = 80
+    , timeHorizon = 90000;
 var statusColorMap = {
         'proc': '4FB81C'
         , 'idle': 'F0AB00'
@@ -47,6 +48,12 @@ var labelTestData = [
             "starting_time": 200
             , "ending_time": 8570
             , "lotId": "L00004"
+            , 'productId': 'DDP_02'
+        },
+          {
+            "starting_time": 9000
+            , "ending_time": 9900
+            , "lotId": "L00013"
             , 'productId': 'DDP_02'
         }]
     }
@@ -190,10 +197,10 @@ var machineStatusTestData = [
         , status: 'proc'
 }
 ];
-var traveledTime = 90000;
+var traveledTime = timeHorizon;
 
 function timelineHover(traveledTime) {
-    var chart = d3.timeline().width(processWidth * 2).stack().margin({
+    var chart = d3.timeline().width(processWidth*4).stack().margin({
             left: 0
             , right: 30
             , top: 0
@@ -226,7 +233,7 @@ function getStackTextPosition(d, i) {
 }
 
 function displayMachine() {
-    var chartSvg = d3.select('.scrollable');
+    var chartSvg = d3.select('#process');
     var height = chartSvg.style('height')
     var svg = d3.select('#machine').append('svg').attr('width', machineWidth).attr('height', height);
     var machines = svg.selectAll('.machineName').data(labelTestData).enter();

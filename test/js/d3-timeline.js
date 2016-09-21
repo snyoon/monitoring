@@ -308,15 +308,16 @@
               click(d, index, datum);
             })
             .attr("class", function (d, i) {
-              return datum.class ? "timelineSeries_"+datum.class : "timelineSeries_"+index;
+              return datum.class ? "timelineSeries_"+datum.class : d.productId;          
+              // return datum.class ? "timelineSeries_"+datum.class : "timelineSeries_"+index;
             })
             .attr("id", function(d, i) {
               // use deprecated id field
               if (datum.id && !d.id) {
                 return 'timelineItem_'+datum.id;
               }
-
-              return d.id ? d.id : "timelineItem_"+index+"_"+i;
+               return d.id ? d.id : d.lotId;         
+              // return d.id ? d.id : "timelineItem_"+index+"_"+i;
             })
           ;
 
