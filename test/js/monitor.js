@@ -1,5 +1,5 @@
 processWidth = d3.select('#process').style('width').replace("px", "");
-machineWidth = d3.select('#machine').style('width').replace('px', '');
+//machineWidth = d3.select('#machine').style('width').replace('px', '');
 var margin = {
         left: 30
         , right: 30
@@ -211,7 +211,7 @@ function zoomed() {
 
 function timelineHover(traveledTime) {
     var chart = d3.timeline().width(processWidth).stack().margin({
-            left: 0
+            left: 60
             , right: 30
             , top: 0
             , bottom: 0
@@ -234,7 +234,7 @@ function timelineHover(traveledTime) {
         //            $("#scrolled_date").text(scale.invert(x) + " to " + scale.invert(x+width));
         //          });
     var svg = d3.select("#process").append("svg").attr("width", processWidth);
-        svg.datum(labelTestData).call(chart);
+     svg.datum(labelTestData).call(chart);
 }
 
 function getStackPosition(d, i) {
@@ -275,4 +275,4 @@ d3.select('#timeButton').on('click', function(){
 });
 
 timelineHover(traveledTime);
-displayMachine();
+//displayMachine();

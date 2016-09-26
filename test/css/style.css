@@ -27,7 +27,7 @@ body {
 }
 
 #process{
-    flex-basis: 700px;
+    flex-basis: 1000px;
 }
 
 .btn-group {
@@ -78,4 +78,11 @@ body {
     fill: none;
     stroke: black;
     shape-rendering: crispEdges;
+}
+
+.Yaxis path,
+.Yaxis line {
+    fill: none;
+    stroke: black;
+/*    shape-rendering: crispEdges;*/
 }

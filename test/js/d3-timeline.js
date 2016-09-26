@@ -58,16 +58,30 @@
         showAxisCalendarYear = false,
         axisBgColor = "white",
         chartData = {},
-        traveledTime = 0;
+        traveledTime = 0,
+        labelArr = [],
+        timeAxis,
+        labelAxis;
       ;
+    
+      var appendLabelAxis = function(g, yAxis) {
 
+      if(showAxisHeaderBackground){ appendAxisHeaderBackground(g, 0, 0); }
+
+      if(showAxisNav){ appendTimeAxisNav(g) };
+      labelAxis = g.append("g")
+        .attr("class", "Yaxis")
+        .attr("transform", "translate(" + (margin.left -5)+ "," + 0 + ")")
+        .call(yAxis);
+    };
+      
     var appendTimeAxis = function(g, xAxis, yPosition) {
 
       if(showAxisHeaderBackground){ appendAxisHeaderBackground(g, 0, 0); }
 
       if(showAxisNav){ appendTimeAxisNav(g) };
 
-      var axis = g.append("g")
+      timeAxis = g.append("g")
         .attr("class", "axis")
         .attr("transform", "translate(" + 0 + "," + yPosition + ")")
         .call(xAxis);
@@ -165,11 +179,10 @@
         .text(hasLabel ? labelFunction(datum.label) : datum.id)
         .on("click", function (d, i) { click(d, index, datum); });
     };
-
+   
     function timeline (gParent) {
       var g = gParent.append("g");
       var gParentSize = gParent[0][0].getBoundingClientRect();
-
       var gParentItem = d3.select(gParent[0][0]);
 
       var yAxisMapping = {},
@@ -177,33 +190,12 @@
         minTime = 0,
         maxTime = 0;
 
-      setWidth();
-
-      // check if the user wants relative time
-      // if so, substract the first timestamp from each subsequent timestamps
-      if(timeIsRelative){
-        g.each(function (d, i) {
-          d.forEach(function (datum, index) {
-            datum.times.forEach(function (time, j) {
-              if(index === 0 && j === 0){
-                originTime = time.starting_time;               //Store the timestamp that will serve as origin
-                time.starting_time = 0;                        //Set the origin
-                time.ending_time = time.ending_time - originTime;     //Store the relative time (millis)
-              }else{
-                time.starting_time = time.starting_time - originTime;
-                time.ending_time = time.ending_time - originTime;
-              }
-            });
-          });
-        });
-      }
-
+       setWidth();
       // check how many stacks we're gonna need
       // do this here so that we can draw the axis before the graph
       if (stacked || ending === 0 || beginning === 0) {
         g.each(function (d, i) {
           d.forEach(function (datum, index) {          
-
             // create y mapping for stacked graph
             if (stacked && Object.keys(yAxisMapping).indexOf(index) == -1) {
               yAxisMapping[index] = maxStack;
@@ -230,19 +222,27 @@
         }
       }
 
-      var scaleFactor = (1/(ending - beginning)) * (width - margin.left - margin.right);
+      var scaleFactor = (1 / (ending - beginning)) * (width - margin.left - margin.right);
+
+        function getXPos(d, i) {
+       return margin.left + (d.starting_time * 1000 - beginning) * scaleFactor;
+        }
+
+        function getXTextPos(d, i) {
+       return margin.left + (d.starting_time * 1000 - beginning) * scaleFactor + (d.ending_time * 1000 - d.starting_time * 1000) * scaleFactor / 2;
+    }
 
       // draw the axis
       var xScale = d3.time.scale()
         .domain([beginning, ending])
-        .range([0, width - margin.right]);
-        // .range([margin.left, width - margin.right]); // FIX
+        .range([margin.left, width - margin.right]); // FIX
         
       var xAxis = d3.svg.axis()
         .scale(xScale)
         .orient(orient)
         .tickFormat(tickFormat.format)
         .tickSize(tickFormat.tickSize);
+    
 
       if (tickFormat.tickValues != null) {
         xAxis.tickValues(tickFormat.tickValues);
@@ -251,196 +251,106 @@
       }
         
       // draw the chart
-      g.each(function(d, i) {
-        chartData = d;
-        d.forEach( function(datum, index){
-          var data = datum.times;
-          var hasLabel = (typeof(datum.label) != "undefined");
-
-          // issue warning about using id per data set. Ids should be individual to data elements
-          if (typeof(datum.id) != "undefined") {
-            console.warn("d3Timeline Warning: Ids per dataset is deprecated in favor of a 'class' key. Ids are now per data element.");
-          }
-
-          if (backgroundColor) { appendBackgroundBar(yAxisMapping, index, g, data, datum); }
-          // FIX
-          var operations = g.selectAll("svg").data(data);
-          var operationsEnter = operations.enter().append('g');
-            operationsEnter
-                      .append(function(d, i) {                
-                return document.createElementNS(d3.ns.prefix.svg, "display" in d? d.display:display);
-            })
-            .attr("x", getXPos)
-            .attr("y", getStackPosition)
-            .attr("width", function (d, i) {
-              return (d.ending_time*1000 - d.starting_time*1000) * scaleFactor;
-            })
-            .attr("cy", function(d, i) {
-                return getStackPosition(d, i) + itemHeight/2;
-            })
-            .attr("cx", getXPos)
-            .attr("r", itemHeight / 2)
-            .attr("height", itemHeight)
-            .style("fill", function(d, i){
-              if(d.starting_time > traveledTime) return 'white';
-              var dColorPropName;
-              if (d.color) return d.color;
-              if( colorPropertyName ){
-                dColorPropName = d[colorPropertyName];
-                if ( dColorPropName ) {
-                  return colorCycle( dColorPropName );
-                } else {
-                  return colorCycle( datum[colorPropertyName] );
-                }
-              }
-              return colorCycle[d.productId];
-            })
-            .on("mousemove", function (d, i) {
-              hover(d, index, datum);
-            })
-            .on("mouseover", function (d, i) {
-              mouseover(d, i, datum);
-            })
-            .on("mouseout", function (d, i) {
-              mouseout(d, i, datum);
-            })
-            .on("click", function (d, i) {
-              click(d, index, datum);
-            })
-            .attr("class", function (d, i) {
-              return datum.class ? "timelineSeries_"+datum.class : d.productId;          
-              // return datum.class ? "timelineSeries_"+datum.class : "timelineSeries_"+index;
-            })
-            .attr("id", function(d, i) {
-              // use deprecated id field
-              if (datum.id && !d.id) {
-                return 'timelineItem_'+datum.id;
-              }
-               return d.id ? d.id : d.lotId;         
-              // return d.id ? d.id : "timelineItem_"+index+"_"+i;
-            })
-          ;
-
-         // FIX
-         operationsEnter
-            .append("text")
-            .attr("x", getXTextPos)
-            .attr("y", getStackTextPosition)
-            .style('text-anchor', 'middle')
-            .style('font-weight', 'bold')
-            .style('fill', 'white')
-            .text(function(d) {
-              return d.lotId;
-            });
-       
-        operations
-            .exit()
-            .remove();
-          if (rowSeparatorsColor) {
-            var lineYAxis = ( itemHeight + itemMargin / 2 + margin.top + (itemHeight + itemMargin) * yAxisMapping[index]);
-            gParent.append("svg:line")
-              .attr("class", "row-separator")
-              .attr("x1", 0 + margin.left)
-              .attr("x2", width - margin.right)
-              .attr("y1", lineYAxis)
-              .attr("y2", lineYAxis)
-              .attr("stroke-width", 1)
-              .attr("stroke", rowSeparatorsColor);
-          }
-
-          // add the label
-          // FIX
-          // if (hasLabel) { appendLabel(gParent, yAxisMapping, index, hasLabel, datum); }
-
-          if (typeof(datum.icon) !== "undefined") {
-            gParent.append("image")
-              .attr("class", "timeline-label")
-              .attr("transform", "translate("+ 0 +","+ (margin.top + (itemHeight + itemMargin) * yAxisMapping[index])+")")
-              .attr("xlink:href", datum.icon)
-              .attr("width", margin.left)
-              .attr("height", itemHeight);
-          }
-
-          function getStackPosition(d, i) {
-            if (stacked) {
-              return margin.top + (itemHeight + itemMargin) * yAxisMapping[index];
-            }
-            return margin.top;
-          }
-          function getStackTextPosition(d, i) {
-            if (stacked) {
-              return margin.top + (itemHeight + itemMargin) * yAxisMapping[index] + itemHeight * 0.75;
-            }
-            return margin.top + itemHeight * 0.75;
-          }
-        });
-          
-          
-      });
-
+      drawChart(g);
+        
       var belowLastItem = (margin.top + (itemHeight + itemMargin) * maxStack);
       var aboveFirstItem = margin.top;
       var timeAxisYPosition = showAxisTop ? aboveFirstItem : belowLastItem;
-      if (showTimeAxis) { appendTimeAxis(g, xAxis, timeAxisYPosition); }
-      if (timeAxisTick) { appendTimeAxisTick(g, xAxis, maxStack); }
-
-      if (width > gParentSize.width) {
-        var move = function() {
-          var x = Math.min(0, Math.max(gParentSize.width - width, d3.event.translate[0]));
-          zoom.translate([x, 0]);
-          g.attr("transform", "translate(" + x + ",0)");
-          scroll(x*scaleFactor, xScale);
-        };
-
-        var zoom = d3.behavior.zoom().x(xScale).on("zoom", move);
-
-        gParent
-          .attr("class", "scrollable")
-          .call(zoom);
-      }
-
-      if (rotateTicks) {
-        g.selectAll(".tick text")
-          .attr("transform", function(d) {
-            return "rotate(" + rotateTicks + ")translate("
-              + (this.getBBox().width / 2 + 10) + "," // TODO: change this 10
-              + this.getBBox().height / 2 + ")";
-          });
-      }
+      // FIX
+      // Axis representation
+      if (showTimeAxis) {appendTimeAxis(g, xAxis, timeAxisYPosition);}
+      //if (timeAxisTick) { appendTimeAxisTick(g, xAxis, maxStack); }
+        
+      // FIX: For Scroll          
+//      if (width > gParentSize.width) {
+//        var move = function() {
+//          var x = Math.min(0, Math.max(gParentSize.width - width, d3.event.translate[0]));
+//          zoom.translate([x, 0]);
+//          g.attr("transform", "translate(" + x + ",0)");
+//          scroll(x*scaleFactor, xScale);
+//        };
+//
+//        var zoom = d3.behavior.zoom().x(xScale).on("zoom", move);
+//
+//        gParent
+//          .attr("class", "scrollable")
+//          .call(zoom);
+//      }
+        
+        
 
       var gSize = g[0][0].getBoundingClientRect();
+      
       setHeight();
-
-//      if (showBorderLine) {
-//        g.each(function (d, i) {
-//          d.forEach(function (datum) {
-//            var times = datum.times;
-//            times.forEach(function (time) {
-//              appendLine(xScale(time.starting_time), showBorderFormat);
-//              appendLine(xScale(time.ending_time), showBorderFormat);
-//            });
-//          });
-//        });
-//      }
-
-      if (showTodayLine) {
-        var todayLine = xScale(new Date());
-        appendLine(todayLine, showTodayFormat);
-      }
-
-      function getXPos(d, i) {
-        // FIX: 왼쪽으로 이동
-        return margin.left + (d.starting_time * 1000 - beginning) * scaleFactor;
-//        return 0 + (d.starting_time - beginning) * scaleFactor;
-      }
-
-      function getXTextPos(d, i) {
-        // FIX: 왼쪽으로 이동
-//        return margin.left + (d.starting_time - beginning) * scaleFactor + 5;
-        return margin.left + (d.starting_time * 1000 - beginning) * scaleFactor 
-                 + (d.ending_time * 1000 - d.starting_time * 1000)*scaleFactor/2;
-      }
+      var yScale = d3.scale.linear()
+         .domain([0, labelArr.length])
+         .range([(itemHeight + itemMargin), height - itemHeight - itemMargin ]);
+//         .rangeBands([(itemHeight + itemMargin), height - itemHeight - itemMargin ]);
         
+      var yAxis = d3.svg.axis()
+        .scale(yScale)
+        .orient('left')
+        .tickFormat(function(d){
+            return labelArr[d]
+        })
+        .tickSize(2);
+     
+     // Display Label at yAxis
+     appendLabelAxis(g, yAxis);  
+     
+      // FIX: Zoom In & Out
+      function zoomed() {
+            gParent.select('.axis').call(xAxis);
+            gParent.select('.Yaxis').call(yAxis);
+      }  
+        
+      var xyzoom = d3.behavior.zoom()
+                .x(xScale)
+                .y(yScale)
+                .on("zoom", draw);
+      var xzoom = d3.behavior.zoom()
+                .x(xScale)
+                .on("zoom", draw);
+      var yzoom = d3.behavior.zoom()
+                .y(yScale)
+                .on("zoom", draw);
+     gParent.call(xyzoom);   
+      
+      
+      function zoom_update(){
+          xyzoom = d3.behavior.zoom()
+                .x(xScale)
+                .y(yScale)
+                .on("zoom", draw);
+          xzoom = d3.behavior.zoom()
+                .x(xScale)
+                .on("zoom", draw);
+          yzoom = d3.behavior.zoom()
+                .y(yScale)
+                .on("zoom", draw);
+      
+          gParent.call(xyzoom);    
+          
+      }    
+        
+      function draw(){
+        gParent.select('.axis').call(xAxis);
+        gParent.select('.Yaxis').call(yAxis);
+          
+        var rects = gParent.selectAll('rect')
+//        console.log(rects)
+        console.log(gParent.select('.axis'));
+          
+          
+        rects
+            .attr("x", getXPos)
+            .attr("y", getStackPosition)
+          
+          
+          
+        zoom_update();
+      }  
+    
 
       function setHeight() {
         if (!height && !gParentItem.attr("height")) {
@@ -490,7 +400,87 @@
           .style("stroke", lineFormat.color)//"rgb(6,120,155)")
           .style("stroke-width", lineFormat.width);
       }
+        
+     function drawChart(g) {
+        g.each(function (d, i) {
+            chartData = d;
+                d.forEach(function (datum, index) {
+                labelArr.push(datum.label)
+                    var data = datum.times;
+                    var hasLabel = (typeof (datum.label) != "undefined");
+                    // issue warning about using id per data set. Ids should be individual to data elements
+                    if (typeof (datum.id) != "undefined") {
+                        console.warn("d3Timeline Warning: Ids per dataset is deprecated in favor of a 'class' key. Ids are now per data element.");
+                    }
+                    if (backgroundColor) {
+                        appendBackgroundBar(yAxisMapping, index, g, data, datum);
+                    }
+                    // FIX
+                    var operations = g.selectAll("svg").data(data);
+                    var operationsEnter = operations.enter().append('g');
+                    operationsEnter.append(function (d, i) {
+                        return document.createElementNS(d3.ns.prefix.svg, "display" in d ? d.display : display);
+                    }).attr("x", xScale(d.starting_time*1000)).attr("y", getStackPosition).attr("width", function (d, i) {
+                        return xScale(d.ending_time*1000 - d.starting_time*1000 ) ;
+                    }).attr("cy", function (d, i) {
+                        return getStackPosition(d, i) + itemHeight / 2;
+                    }).attr("cx", getXPos).attr("r", itemHeight / 2).attr("height", itemHeight).style("fill", function (d, i) {
+                        if (d.starting_time > traveledTime) return 'white';
+                        var dColorPropName;
+                        if (d.color) return d.color;
+                        if (colorPropertyName) {
+                            dColorPropName = d[colorPropertyName];
+                            if (dColorPropName) {
+                                return colorCycle(dColorPropName);
+                            }
+                            else {
+                                return colorCycle(datum[colorPropertyName]);
+                            }
+                        }
+                        return colorCycle[d.productId];
+                    }).on("mousemove", function (d, i) {
+                        hover(d, index, datum);
+                    }).on("mouseover", function (d, i) {
+                        mouseover(d, i, datum);
+                    }).on("mouseout", function (d, i) {
+                        mouseout(d, i, datum);
+                    }).on("click", function (d, i) {
+                        click(d, index, datum);
+                    }).attr("class", function (d, i) {
+                        return datum.class ? "timelineSeries_" + datum.class : d.productId;
+                        // return datum.class ? "timelineSeries_"+datum.class : "timelineSeries_"+index;
+                    }).attr("id", function (d, i) {
+                        // use deprecated id field
+                        if (datum.id && !d.id) {
+                            return 'timelineItem_' + datum.id;
+                        }
+                        return d.id ? d.id : d.lotId;
+                        // return d.id ? d.id : "timelineItem_"+index+"_"+i;
+                    });
+                    // FIX
+                    operationsEnter.append("text").attr("x", getXTextPos).attr("y", getStackTextPosition).style('text-anchor', 'middle').style('font-weight', 'bold').style('fill', 'white').text(function (d) {
+                        return d.lotId;
+                    });
+                    operations.exit().remove();
+                    // add the label
+                    // FIX Label Represent
+                    // if (hasLabel) { appendLabel(gParent, yAxisMapping, index, hasLabel, datum); }
+                    function getStackPosition(d, i) {
+                        if (stacked) {
+                            return margin.top + (itemHeight + itemMargin) * yAxisMapping[index];
+                        }
+                        return margin.top;
+                    }
 
+                    function getStackTextPosition(d, i) {
+                        if (stacked) {
+                            return margin.top + (itemHeight + itemMargin) * yAxisMapping[index] + itemHeight * 0.75;
+                        }
+                        return margin.top + itemHeight * 0.75;
+                    }
+                });
+            });
+        }
     }
 
     // SETTINGS
