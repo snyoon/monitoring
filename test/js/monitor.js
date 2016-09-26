@@ -28,7 +28,7 @@ var labelTestData = [
             }
             , {
                 "starting_time": 10000
-                , "ending_time": 30000
+                , "ending_time": 12000
                 , "lotId": "L00002"
                 , 'productId': 'SDP_03'
             }]
@@ -37,8 +37,8 @@ var labelTestData = [
         label: "DA002"
         , times: [{
             "starting_time": 4000
-            , "ending_time": 10000
-            , "lotId": "L00003"
+            , "ending_time": 8000
+            , "lotId": "L00001"
             , 'productId': 'DDP_01'
         }, ]
     }
@@ -52,7 +52,7 @@ var labelTestData = [
         },
           {
             "starting_time": 9000
-            , "ending_time": 9900
+            , "ending_time": 12500
             , "lotId": "L00013"
             , 'productId': 'DDP_02'
         }]
@@ -69,14 +69,14 @@ var labelTestData = [
     , {
         label: "DA005"
         , times: [{
-                "starting_time": 8000
-                , "ending_time": 41000
+                "starting_time": 20000
+                , "ending_time": 27000
                 , "lotId": "L00007"
                 , 'productId': 'SDP_03'
         }
             , {
-                "starting_time": 60000
-                , "ending_time": 90000
+                "starting_time": 40000
+                , "ending_time": 43000
                 , "lotId": "L00008"
                 , 'productId': 'SDP_03'
         }]
@@ -85,13 +85,13 @@ var labelTestData = [
         label: "DA006"
         , times: [{
                 "starting_time": 7000
-                , "ending_time": 30000
+                , "ending_time": 16000
                 , "lotId": "L00009"
                 , 'productId': 'SDP_01'
         }
             , {
-                "starting_time": 40000
-                , "ending_time": 50000
+                "starting_time": 79000
+                , "ending_time": 85000
                 , "lotId": "L00010"
                 , 'productId': 'DDP_02'
         }]
@@ -199,8 +199,18 @@ var machineStatusTestData = [
 ];
 var traveledTime = timeHorizon;
 
+
+var zoom = d3.behavior.zoom()
+    .scaleExtent([1, 10])
+    .on("zoom", zoomed);
+
+function zoomed() {
+  container.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
+}
+
+
 function timelineHover(traveledTime) {
-    var chart = d3.timeline().width(processWidth*4).stack().margin({
+    var chart = d3.timeline().width(processWidth).stack().margin({
             left: 0
             , right: 30
             , top: 0
@@ -210,18 +220,21 @@ function timelineHover(traveledTime) {
             // i is the index during d3 rendering
             // datum is the id object
             if (d.starting_time > traveledTime) return;
-            var div = $('#hoverRes');
-            var colors = chart.colors();
-            div.find('.coloredDiv').css('background-color', colors[d.productId])
-            div.find('#name').text(d.lotId);
+//            var div = $('#hoverRes');
+//            var colors = chart.colors();
+//            div.find('.coloredDiv').css('background-color', colors[d.productId])
+//            div.find('#name').text(d.lotId);
+        }).click(function (d, i, datum) {
+            alert(d.lotId);
+            var selectedLotId = d.lotId;
+            d3.selectAll('#'+selectedLotId)
+               
         })
-        //        .click(function (d, i, datum) {
-        //            alert(datum.label);
-        //        })
         //          .scroll(function (x, scale) {
         //            $("#scrolled_date").text(scale.invert(x) + " to " + scale.invert(x+width));
         //          });
-    var svg = d3.select("#process").append("svg").attr("width", processWidth).datum(labelTestData).call(chart);
+    var svg = d3.select("#process").append("svg").attr("width", processWidth);
+        svg.datum(labelTestData).call(chart);
 }
 
 function getStackPosition(d, i) {
