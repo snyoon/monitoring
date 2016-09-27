@@ -13,7 +13,7 @@
         navigateRight = function () {},
         orient = "bottom",
         width = null,
-        height = null,
+        height = 300,
         rowSeparatorsColor = null,
         backgroundColor = null,
         // http://d3-wiki.readthedocs.io/zh_CN/master/Time-Formatting/
@@ -71,7 +71,7 @@
       if(showAxisNav){ appendTimeAxisNav(g) };
       labelAxis = g.append("g")
         .attr("class", "Yaxis")
-        .attr("transform", "translate(" + (margin.left -5)+ "," + 0 + ")")
+        .attr("transform", "translate(" + (margin.left -5)+ "," + margin.top + ")")
         .call(yAxis);
     };
       
@@ -83,103 +83,12 @@
 
       timeAxis = g.append("g")
         .attr("class", "axis")
-        .attr("transform", "translate(" + 0 + "," + yPosition + ")")
+        .attr("transform", "translate(" + 0 + "," + (height - margin.bottom) + ")")
         .call(xAxis);
     };
 
-    var appendTimeAxisCalendarYear = function (nav) {
-      var calendarLabel = beginning.getFullYear();
-
-      if (beginning.getFullYear() != ending.getFullYear()) {
-        calendarLabel = beginning.getFullYear() + "-" + ending.getFullYear()
-      }
-
-      nav.append("text")
-        .attr("transform", "translate(" + 20 + ", 0)")
-        .attr("x", 0)
-        .attr("y", 14)
-        .attr("class", "calendarYear")
-        .text(calendarLabel)
-      ;
-    };
-    var appendTimeAxisNav = function (g) {
-      var timelineBlocks = 6;
-      var leftNavMargin = (margin.left - navMargin);
-      var incrementValue = (width - margin.left)/timelineBlocks;
-      var rightNavMargin = (width - margin.right - incrementValue + navMargin);
-
-      var nav = g.append('g')
-          .attr("class", "axis")
-          .attr("transform", "translate(0, 20)")
-        ;
-
-      if(showAxisCalendarYear) { appendTimeAxisCalendarYear(nav) };
-
-      nav.append("text")
-        .attr("transform", "translate(" + leftNavMargin + ", 0)")
-        .attr("x", 0)
-        .attr("y", 14)
-        .attr("class", "chevron")
-        .text("<")
-        .on("click", function () {
-          return navigateLeft(beginning, chartData);
-        })
-      ;
-
-      nav.append("text")
-        .attr("transform", "translate(" + rightNavMargin + ", 0)")
-        .attr("x", 0)
-        .attr("y", 14)
-        .attr("class", "chevron")
-        .text(">")
-        .on("click", function () {
-          return navigateRight(ending, chartData);
-        })
-      ;
-    };
-
-    var appendAxisHeaderBackground = function (g, xAxis, yAxis) {
-      g.insert("rect")
-        .attr("class", "row-green-bar")
-        .attr("x", xAxis)
-        .attr("width", width)
-        .attr("y", yAxis)
-        .attr("height", itemHeight)
-        .attr("fill", axisBgColor);
-    };
-
-    var appendTimeAxisTick = function(g, xAxis, maxStack) {
-      g.append("g")
-        .attr("class", "axis")
-        .attr("transform", "translate(" + 0 + "," + (margin.top + (itemHeight + itemMargin) * maxStack) + ")")
-        .attr(timeAxisTickFormat.stroke, timeAxisTickFormat.spacing)
-        .call(xAxis.tickFormat("").tickSize(-(margin.top + (itemHeight + itemMargin) * (maxStack - 1) + 3), 0, 0));
-    };
-
-    var appendBackgroundBar = function (yAxisMapping, index, g, data, datum) {
-      var greenbarYAxis = ((itemHeight + itemMargin) * yAxisMapping[index]) + margin.top;
-      g.selectAll("svg").data(data).enter()
-        .insert("rect")
-        .attr("class", "row-green-bar")
-        .attr("x", fullLengthBackgrounds ? 0 : margin.left)
-        .attr("width", fullLengthBackgrounds ? width : (width - margin.right - margin.left))
-        .attr("y", greenbarYAxis)
-        .attr("height", itemHeight)
-        .attr("fill", backgroundColor instanceof Function ? backgroundColor(datum, index) : backgroundColor)
-      ;
-    };
-
-    var appendLabel = function (gParent, yAxisMapping, index, hasLabel, datum) {
-      var fullItemHeight    = itemHeight + itemMargin;
-      var rowsDown          = margin.top + (fullItemHeight/2) + fullItemHeight * (yAxisMapping[index] || 1);
-
-      gParent.append("text")
-        .attr("class", "timeline-label")
-        .attr("transform", "translate(" + labelMargin + "," + rowsDown + ")")
-        .text(hasLabel ? labelFunction(datum.label) : datum.id)
-        .on("click", function (d, i) { click(d, index, datum); });
-    };
    
+  
     function timeline (gParent) {
       var g = gParent.append("g");
       var gParentSize = gParent[0][0].getBoundingClientRect();
@@ -191,12 +100,14 @@
         maxTime = 0;
 
        setWidth();
+    
       // check how many stacks we're gonna need
       // do this here so that we can draw the axis before the graph
       if (stacked || ending === 0 || beginning === 0) {
         g.each(function (d, i) {
           d.forEach(function (datum, index) {          
             // create y mapping for stacked graph
+              labelArr.push(datum.label)
             if (stacked && Object.keys(yAxisMapping).indexOf(index) == -1) {
               yAxisMapping[index] = maxStack;
               maxStack++;
@@ -222,19 +133,9 @@
         }
       }
 
-      var scaleFactor = (1 / (ending - beginning)) * (width - margin.left - margin.right);
-
-        function getXPos(d, i) {
-       return margin.left + (d.starting_time * 1000 - beginning) * scaleFactor;
-        }
-
-        function getXTextPos(d, i) {
-       return margin.left + (d.starting_time * 1000 - beginning) * scaleFactor + (d.ending_time * 1000 - d.starting_time * 1000) * scaleFactor / 2;
-    }
-
       // draw the axis
       var xScale = d3.time.scale()
-        .domain([beginning, ending])
+        .domain([0, ending])
         .range([margin.left, width - margin.right]); // FIX
         
       var xAxis = d3.svg.axis()
@@ -242,6 +143,18 @@
         .orient(orient)
         .tickFormat(tickFormat.format)
         .tickSize(tickFormat.tickSize);
+        
+      var yScale = d3.scale.linear()
+         .domain([0, labelArr.length])
+         .range([(itemHeight + itemMargin), (height-margin.bottom) ]);
+        
+      var yAxis = d3.svg.axis()
+        .scale(yScale)
+        .orient('left')
+        .tickFormat(function(d){
+            return labelArr[d]
+        })
+        .tickSize(2);    
     
 
       if (tickFormat.tickValues != null) {
@@ -256,9 +169,11 @@
       var belowLastItem = (margin.top + (itemHeight + itemMargin) * maxStack);
       var aboveFirstItem = margin.top;
       var timeAxisYPosition = showAxisTop ? aboveFirstItem : belowLastItem;
-      // FIX
+      
+        // FIX
       // Axis representation
       if (showTimeAxis) {appendTimeAxis(g, xAxis, timeAxisYPosition);}
+       appendLabelAxis(g, yAxis);  
       //if (timeAxisTick) { appendTimeAxisTick(g, xAxis, maxStack); }
         
       // FIX: For Scroll          
@@ -277,26 +192,11 @@
 //          .call(zoom);
 //      }
         
-        
-
       var gSize = g[0][0].getBoundingClientRect();
-      
       setHeight();
-      var yScale = d3.scale.linear()
-         .domain([0, labelArr.length])
-         .range([(itemHeight + itemMargin), height - itemHeight - itemMargin ]);
-//         .rangeBands([(itemHeight + itemMargin), height - itemHeight - itemMargin ]);
         
-      var yAxis = d3.svg.axis()
-        .scale(yScale)
-        .orient('left')
-        .tickFormat(function(d){
-            return labelArr[d]
-        })
-        .tickSize(2);
-     
      // Display Label at yAxis
-     appendLabelAxis(g, yAxis);  
+     
      
       // FIX: Zoom In & Out
       function zoomed() {
@@ -343,8 +243,37 @@
           
           
         rects
-            .attr("x", getXPos)
+            .attr("x", function (d) {
+                return xScale(d.starting_time * 1000)})
             .attr("y", getStackPosition)
+            .attr("width", function (d, i) {
+                console.log("start: " + xScale(d.starting_time * 1000))
+                console.log("end: " + xScale(d.ending_time * 1000))
+                console.log("time: " + xScale(d.ending_time * 1000 - d.starting_time * 1000))
+                return xScale(d.ending_time * 1000) - xScale(d.starting_time * 1000);})
+//            .attr("height", function(d){
+//                        return (yScale(index+1) - yScale(index) -itemMargin*3)
+//                    })
+//            .style("fill", function (d, i) {
+//                if (d.starting_time > traveledTime) return 'white';
+//                var dColorPropName;
+//                if (d.color) return d.color;
+//                if (colorPropertyName) {
+//                    dColorPropName = d[colorPropertyName];
+//                    if (dColorPropName) {
+//                        return colorCycle(dColorPropName);
+//                    }
+//                    else {
+//                        return colorCycle(datum[colorPropertyName]);
+//                    }
+//                }
+//                return colorCycle[d.productId];
+//            })
+         
+//        rects
+//        .exit()
+//        .remove()
+//        
           
           
           
@@ -402,10 +331,10 @@
       }
         
      function drawChart(g) {
+         
         g.each(function (d, i) {
             chartData = d;
                 d.forEach(function (datum, index) {
-                labelArr.push(datum.label)
                     var data = datum.times;
                     var hasLabel = (typeof (datum.label) != "undefined");
                     // issue warning about using id per data set. Ids should be individual to data elements
@@ -420,11 +349,22 @@
                     var operationsEnter = operations.enter().append('g');
                     operationsEnter.append(function (d, i) {
                         return document.createElementNS(d3.ns.prefix.svg, "display" in d ? d.display : display);
-                    }).attr("x", xScale(d.starting_time*1000)).attr("y", getStackPosition).attr("width", function (d, i) {
-                        return xScale(d.ending_time*1000 - d.starting_time*1000 ) ;
-                    }).attr("cy", function (d, i) {
-                        return getStackPosition(d, i) + itemHeight / 2;
-                    }).attr("cx", getXPos).attr("r", itemHeight / 2).attr("height", itemHeight).style("fill", function (d, i) {
+                    }).attr("x", function(d){
+                        return xScale(d.starting_time*1000)
+                       })
+                      .attr("y", function(d){
+                        return yScale(index)  
+                      })
+                      .attr("width", function (d, i) {
+                        return xScale(d.ending_time *1000) - xScale(d.starting_time*1000) ;
+                    })
+//                    .attr("cy", function (d, i) {
+//                        return getStackPosition(d, i) + itemHeight / 2;
+//                    }).attr("cx", getXPos).attr("r", itemHeight / 2)
+                     .attr("height", function(d){
+                        return (yScale(index+1) - yScale(index) -itemMargin*3)
+                    })
+                     .style("fill", function (d, i) {
                         if (d.starting_time > traveledTime) return 'white';
                         var dColorPropName;
                         if (d.color) return d.color;
@@ -458,7 +398,19 @@
                         // return d.id ? d.id : "timelineItem_"+index+"_"+i;
                     });
                     // FIX
-                    operationsEnter.append("text").attr("x", getXTextPos).attr("y", getStackTextPosition).style('text-anchor', 'middle').style('font-weight', 'bold').style('fill', 'white').text(function (d) {
+                    operationsEnter
+                        .append("text")
+                        .attr("x", function(d){
+                          return xScale((d.starting_time*1000 + d.ending_time*1000)/2)
+                        })
+                        .attr("y", function(d){
+                        return yScale(index+0.4)   
+                       })
+                        .style('text-anchor', 'middle')
+                        .style('text-align', 'text-bottom')
+                        .style('font-weight', 'bold')
+                        .style('fill', 'black')
+                        .text(function (d) {
                         return d.lotId;
                     });
                     operations.exit().remove();

@@ -213,8 +213,8 @@ function timelineHover(traveledTime) {
     var chart = d3.timeline().width(processWidth).stack().margin({
             left: 60
             , right: 30
-            , top: 0
-            , bottom: 0
+            , top: 10
+            , bottom: 20
         }).traveledTime(traveledTime).showTimeAxisTick().hover(function (d, i, datum) {
             // d is the current rendering object
             // i is the index during d3 rendering
