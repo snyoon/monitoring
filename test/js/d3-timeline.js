@@ -61,7 +61,8 @@
         traveledTime = 0,
         labelArr = [],
         timeAxis,
-        labelAxis;
+        labelAxis
+        labelMap = {};
       ;
     
       var appendLabelAxis = function(g, yAxis) {
@@ -71,7 +72,7 @@
       if(showAxisNav){ appendTimeAxisNav(g) };
       labelAxis = g.append("g")
         .attr("class", "Yaxis")
-        .attr("transform", "translate(" + (margin.left -5)+ "," + margin.top + ")")
+        .attr("transform", "translate(" + (margin.left )+ "," + (margin.top) + ")")
         .call(yAxis);
     };
       
@@ -93,7 +94,14 @@
       var g = gParent.append("g");
       var gParentSize = gParent[0][0].getBoundingClientRect();
       var gParentItem = d3.select(gParent[0][0]);
-
+      
+      g.append("defs").append("clipPath")
+          .attr("id", "clip")
+          .append("rect")
+          .attr("width", width - margin.left - margin.right)
+          .attr("height", height - margin.top - margin.bottom)
+          .attr("transform", "translate(" + margin.left + "," +0 + ")");
+        
       var yAxisMapping = {},
         maxStack = 1,
         minTime = 0,
@@ -214,6 +222,8 @@
       var yzoom = d3.behavior.zoom()
                 .y(yScale)
                 .on("zoom", draw);
+        
+        
      gParent.call(xyzoom);   
       
       
@@ -232,52 +242,41 @@
           gParent.call(xyzoom);    
           
       }    
-        
+    var nodeFontSize = 12;
       function draw(){
         gParent.select('.axis').call(xAxis);
         gParent.select('.Yaxis').call(yAxis);
           
-        var rects = gParent.selectAll('rect')
-//        console.log(rects)
-        console.log(gParent.select('.axis'));
-          
-          
+        var rects = gParent.selectAll('.operationRect')       
+        var texts = gParent.selectAll('.operationText')
+        
         rects
             .attr("x", function (d) {
                 return xScale(d.starting_time * 1000)})
-            .attr("y", getStackPosition)
+            .attr("y", function(d){
+                return yScale(labelMap[d.label]-0.3) })
             .attr("width", function (d, i) {
-                console.log("start: " + xScale(d.starting_time * 1000))
-                console.log("end: " + xScale(d.ending_time * 1000))
-                console.log("time: " + xScale(d.ending_time * 1000 - d.starting_time * 1000))
                 return xScale(d.ending_time * 1000) - xScale(d.starting_time * 1000);})
-//            .attr("height", function(d){
-//                        return (yScale(index+1) - yScale(index) -itemMargin*3)
-//                    })
-//            .style("fill", function (d, i) {
-//                if (d.starting_time > traveledTime) return 'white';
-//                var dColorPropName;
-//                if (d.color) return d.color;
-//                if (colorPropertyName) {
-//                    dColorPropName = d[colorPropertyName];
-//                    if (dColorPropName) {
-//                        return colorCycle(dColorPropName);
-//                    }
-//                    else {
-//                        return colorCycle(datum[colorPropertyName]);
-//                    }
-//                }
-//                return colorCycle[d.productId];
-//            })
-         
-//        rects
-//        .exit()
-//        .remove()
-//        
+            .attr("height", function(d){
+                return (yScale(labelMap[d.label]+1) - yScale(labelMap[d.label]) -itemMargin*3)});
+        
+        texts  
+            .attr("x", function(d){
+                return xScale((d.starting_time*1000 + d.ending_time*1000)/2) })
+            .attr("y", function(d){
+                return yScale(labelMap[d.label]+0.1)})
+            .style('text-anchor', 'middle')
+            .style('text-align', 'text-bottom')
+            .style('font-weight', 'bold')
+            .style('font-size', function(d){
+                return d.scale +'px';
+            })
+            .style('fill', 'white')
+            .text(function (d) {
+                return d.lotId;
+            });
           
-          
-          
-        zoom_update();
+//        zoom_update();
       }  
     
 
@@ -348,8 +347,11 @@
                     var operations = g.selectAll("svg").data(data);
                     var operationsEnter = operations.enter().append('g');
                     operationsEnter.append(function (d, i) {
+                        d.label = datum.label;
+                        labelMap[d.label] = index;
                         return document.createElementNS(d3.ns.prefix.svg, "display" in d ? d.display : display);
-                    }).attr("x", function(d){
+                    })
+                    .attr("x", function(d){
                         return xScale(d.starting_time*1000)
                        })
                       .attr("y", function(d){
@@ -386,10 +388,15 @@
                         mouseout(d, i, datum);
                     }).on("click", function (d, i) {
                         click(d, index, datum);
-                    }).attr("class", function (d, i) {
-                        return datum.class ? "timelineSeries_" + datum.class : d.productId;
+                    })
+//                    .attr('class', 'operationRect')
+                    .attr("clip-path", "url(#clip)")
+                    .attr("class", function (d, i) {
+                        return 'operationRect ' + d.productId;
+                        // return datum.class ? "timelineSeries_" + datum.class : d.productId;
                         // return datum.class ? "timelineSeries_"+datum.class : "timelineSeries_"+index;
-                    }).attr("id", function (d, i) {
+                    })
+                    .attr("id", function (d, i) {
                         // use deprecated id field
                         if (datum.id && !d.id) {
                             return 'timelineItem_' + datum.id;
@@ -400,6 +407,8 @@
                     // FIX
                     operationsEnter
                         .append("text")
+                        .attr('class','operationText')
+                        .attr("clip-path", "url(#clip)")
                         .attr("x", function(d){
                           return xScale((d.starting_time*1000 + d.ending_time*1000)/2)
                         })
@@ -409,7 +418,7 @@
                         .style('text-anchor', 'middle')
                         .style('text-align', 'text-bottom')
                         .style('font-weight', 'bold')
-                        .style('fill', 'black')
+                        .style('fill', 'white')
                         .text(function (d) {
                         return d.lotId;
                     });
@@ -432,6 +441,7 @@
                     }
                 });
             });
+         
         }
     }
 

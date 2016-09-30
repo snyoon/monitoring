@@ -225,7 +225,7 @@ function timelineHover(traveledTime) {
 //            div.find('.coloredDiv').css('background-color', colors[d.productId])
 //            div.find('#name').text(d.lotId);
         }).click(function (d, i, datum) {
-            alert(d.lotId);
+//            alert(d.lotId);
             var selectedLotId = d.lotId;
             d3.selectAll('#'+selectedLotId)
                
