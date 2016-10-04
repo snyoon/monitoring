@@ -5,13 +5,15 @@
     <link rel="stylesheet" type="text/css" href="css/style.css" />
     <link rel="stylesheet" type="text/css" href="css/bootstrap.css" /> </head>
 
-<body>
+<body class='cbp-spmenu-push'>
     <div id='left'>
         <div id='views'>
-            <!--            <div class="btn-group" role="group" aria-label="...">-->
+            <!--  <div class="btn-group" role="group" aria-label="...">-->
+            <input type='file' accept='text/plain' onchange='openFile(event)'>
             <button type="button" class="btn btn-default" id='resourceView'>Resource View</button>
             <button type="button" class="btn btn-default" id='productView'>Product View</button>
             <button type="button" class="btn btn-default" id='lotView'>Lot Status View</button>
+            <button type="button" class="btn btn-default" id='showRight'>접기/펴기</button>
             <!--            </div>-->
         </div>
         <div id='chart'>
@@ -25,13 +27,12 @@
         </div>
         <div id='attribute'> attribute </div>
     </div>
-    <div id='right'>
+    <nav class='cbp-spmenu cbp-spmenu-vertical cbp-spmenu-right' id='right'>
         <div id='timeTravel' class='rightContent'>
             <div class='title'> Time Traveler </div>
             <ul></ul>
             <div class="col-lg-6">
                 <div class="input-group">
-                   
                     <input type="text" id='traveledTime' class="form-control" placeholder="Search for..."> 
                     <span class="input-group-btn">
                     <button class="btn btn-default" type="button" id='timeButton'>Go!</button>
@@ -50,11 +51,13 @@
             <div class='title'> KPI Status Viewer </div> kpi </div>
         <div id='decision' class='rightContent'>
             <div class='title'> Decision Viewer </div>decision </div>
-    </div>
+    </nav>
     <script src='js/d3.v3.min.js'></script>
     <script src='js/flexibility.js'></script>
     <script src='js/d3-timeline.js'></script>
     <script src='js/monitor.js'></script>
 <!--    <script src='js/d3.v4.min.js'></script>-->
+   	<script src="js/classie.js"></script>
+   	<script src="js/modernizr.custom.js"></script>
     <script src="http://code.jquery.com/jquery-latest.min.js"></script>
 </body>

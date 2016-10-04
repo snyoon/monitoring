@@ -13,7 +13,7 @@
         navigateRight = function () {},
         orient = "bottom",
         width = null,
-        height = 300,
+        height = 600,
         rowSeparatorsColor = null,
         backgroundColor = null,
         // http://d3-wiki.readthedocs.io/zh_CN/master/Time-Formatting/
@@ -30,7 +30,17 @@
             'SDP_02': '#AEC6EB',
             'SDP_03': '#FD7E12',
             'DDP_01': '#FCB972',
-            'DDP_02': '#2AA12D'
+            'DDP_02': '#2AA12D',
+            'DDP_03': '#A0D993',
+            'DDP_04': '#CC2B1D',
+            'QDP_01': '#FF9894',
+            'QDP_02': '#9663C3',
+            '2MCP_01': '#C8ADDB',
+            '2MCP_02': '#8B5844',
+            '3MCP_01': '#C19992',
+            '3MCP_02': '#D87CC6',
+            '4MCP_01': '#F9B8D3',
+            '4MCP_02': '#7E7E7E'
         },
         colorPropertyName = null,
         display = "rect",
@@ -43,7 +53,7 @@
         timeIsRelative = false,
         fullLengthBackgrounds = false,
         itemHeight = 20,
-        itemMargin = 5,
+        itemMargin = 0,
         navMargin = 60,
         showTimeAxis = true,
         showAxisTop = false,
@@ -64,8 +74,9 @@
         labelAxis
         labelMap = {};
       ;
+       
     
-      var appendLabelAxis = function(g, yAxis) {
+    var appendLabelAxis = function(g, yAxis) {
 
       if(showAxisHeaderBackground){ appendAxisHeaderBackground(g, 0, 0); }
 
@@ -159,6 +170,7 @@
       var yAxis = d3.svg.axis()
         .scale(yScale)
         .orient('left')
+        .ticks(labelArr.length)
         .tickFormat(function(d){
             return labelArr[d]
         })
@@ -254,7 +266,7 @@
             .attr("x", function (d) {
                 return xScale(d.starting_time * 1000)})
             .attr("y", function(d){
-                return yScale(labelMap[d.label]-0.3) })
+                return yScale(labelMap[d.label]) })
             .attr("width", function (d, i) {
                 return xScale(d.ending_time * 1000) - xScale(d.starting_time * 1000);})
             .attr("height", function(d){
@@ -264,13 +276,12 @@
             .attr("x", function(d){
                 return xScale((d.starting_time*1000 + d.ending_time*1000)/2) })
             .attr("y", function(d){
-                return yScale(labelMap[d.label]+0.1)})
+                return yScale(labelMap[d.label]) + 0.5*(yScale(labelMap[d.label]+1)-yScale(labelMap[d.label])) })
             .style('text-anchor', 'middle')
-            .style('text-align', 'text-bottom')
+            .style('vertical-align', 'middle')
             .style('font-weight', 'bold')
             .style('font-size', function(d){
-                return d.scale +'px';
-            })
+                return 0.4*(yScale(labelMap[d.label]+1) - yScale(labelMap[d.label])) + 'px'})
             .style('fill', 'white')
             .text(function (d) {
                 return d.lotId;
@@ -413,12 +424,14 @@
                           return xScale((d.starting_time*1000 + d.ending_time*1000)/2)
                         })
                         .attr("y", function(d){
-                        return yScale(index+0.4)   
-                       })
+                        return yScale(index) + 0.7*(yScale(index+1) - yScale(index))
+                        })
                         .style('text-anchor', 'middle')
-                        .style('text-align', 'text-bottom')
+                        .style('vertical-align', 'middle')
                         .style('font-weight', 'bold')
                         .style('fill', 'white')
+                        .style('font-size', function(d){
+                            return 0.2*((yScale(index+1) - yScale(index))) + 'px'})
                         .text(function (d) {
                         return d.lotId;
                     });

@@ -1,7 +1,26 @@
-processWidth = d3.select('#process').style('width').replace("px", "");
+processWidth = document.body.clientWidth
+//processWidth = d3.select('#process').style('width').replace("px", "");
 //machineWidth = d3.select('#machine').style('width').replace('px', '');
+var testOut;
+var fileTest;
+var labelTestData;
+var openFile = function (event) {
+     var input = event.target;
+     var reader = new FileReader();
+     reader.onload = function () {
+         var text = reader.result;
+         var node = document.getElementById('output');
+//         console.log(reader.result)
+         testOut = reader.result;
+         labelTestData = JSON.parse(testOut)
+         timelineHover(traveledTime);
+     };
+     reader.readAsText(input.files[0]);
+ };
+
+
 var margin = {
-        left: 30
+        left: 100
         , right: 30
         , top: 30
         , bottom: 30
@@ -17,153 +36,7 @@ var statusColorMap = {
         , 'down': 'FF0000'
     }
     // 추후에 txt 파일에서 읽어오게 해야함
-var labelTestData = [
-    {
-        label: "DA001"
-        , times: [{
-                "starting_time": 0
-                , "ending_time": 7200
-                , "lotId": "L00001"
-                , 'productId': 'SDP_01'
-            }
-            , {
-                "starting_time": 10000
-                , "ending_time": 12000
-                , "lotId": "L00002"
-                , 'productId': 'SDP_03'
-            }]
-    }
-    , {
-        label: "DA002"
-        , times: [{
-            "starting_time": 4000
-            , "ending_time": 8000
-            , "lotId": "L00001"
-            , 'productId': 'DDP_01'
-        }, ]
-    }
-    , {
-        label: "DA003"
-        , times: [{
-            "starting_time": 200
-            , "ending_time": 8570
-            , "lotId": "L00004"
-            , 'productId': 'DDP_02'
-        },
-          {
-            "starting_time": 9000
-            , "ending_time": 12500
-            , "lotId": "L00013"
-            , 'productId': 'DDP_02'
-        }]
-    }
-    , {
-        label: "DA004"
-        , times: [{
-            "starting_time": 2000
-            , "ending_time": 7900
-            , "lotId": "L00005"
-            , 'productId': 'SDP_01'
-        }]
-    }
-    , {
-        label: "DA005"
-        , times: [{
-                "starting_time": 20000
-                , "ending_time": 27000
-                , "lotId": "L00007"
-                , 'productId': 'SDP_03'
-        }
-            , {
-                "starting_time": 40000
-                , "ending_time": 43000
-                , "lotId": "L00008"
-                , 'productId': 'SDP_03'
-        }]
-    }
-    , {
-        label: "DA006"
-        , times: [{
-                "starting_time": 7000
-                , "ending_time": 16000
-                , "lotId": "L00009"
-                , 'productId': 'SDP_01'
-        }
-            , {
-                "starting_time": 79000
-                , "ending_time": 85000
-                , "lotId": "L00010"
-                , 'productId': 'DDP_02'
-        }]
-    }, {
-        label: "DA007"
-        , times: [{
-                "starting_time": 10000
-                , "ending_time": 25000
-                , "lotId": "L00011"
-                , 'productId': 'SDP_01'
-        }
-            , {
-                "starting_time": 28000
-                , "ending_time": 42000
-                , "lotId": "L00012"
-                , 'productId': 'DDP_02'
-        }]
-    }
-      ];
-//var labelTestData = [
-//    {
-//        label: "DA001"
-//        , times: [{
-//                "starting_time": 1355752800000
-//                , "ending_time": 1355759900000
-//                , "lotId": "L00001"
-//                , 'productId': 'SDP_01'
-//            }
-//            , {
-//                "starting_time": 1355767900000
-//                , "ending_time": 1355774400000
-//                , "lotId": "L00002"
-//                , 'productId': 'SDP_03'
-//            }]
-//    }
-//    , {
-//        label: "DA002"
-//        , times: [{
-//            "starting_time": 1355759910000
-//            , "ending_time": 1355761900000
-//            , "lotId": "L00003"
-//            , 'productId': 'DDP_01'
-//        }, ]
-//    }
-//    , {
-//        label: "DA003"
-//        , times: [{
-//            "starting_time": 1355762910000
-//            , "ending_time": 1355769010000
-//            , "lotId": "L00004"
-//            , 'productId': 'DDP_02'
-//        }]
-//    }
-//    , {
-//        label: "DA004"
-//        , times: [{
-//            "starting_time": 1355761910000
-//            , "ending_time": 1355763910000
-//            , "lotId": "L00005"
-//            , 'productId': 'SDP_01'
-//        }]
-//    }
-//    , {
-//        label: "DA005"
-//        , times: [{
-//            "starting_time": 1355756000000
-//            , "ending_time": 1355762010000
-//            , "lotId": "L00007"
-//            , 'productId': 'SDP_03'
-//        }]
-//    }
-//      ];
+
 var machineStatusTestData = [
     {
         label: "DA001"
@@ -211,7 +84,7 @@ function zoomed() {
 
 function timelineHover(traveledTime) {
     var chart = d3.timeline().width(processWidth).stack().margin({
-            left: 60
+            left: 80
             , right: 30
             , top: 10
             , bottom: 20
@@ -274,5 +147,21 @@ d3.select('#timeButton').on('click', function(){
     
 });
 
-timelineHover(traveledTime);
+// right side expand
+var menuRight = document.getElementById( 'right' ),
+    showRightPush = document.getElementById( 'showRight' ),
+    body = document.body;
+
+ showRightPush.onclick = function() {
+				classie.toggle( this, 'active' );
+				classie.toggle( menuRight, 'cbp-spmenu-open' );
+				disableOther( 'showRight' );
+			};
+ function disableOther( button ) {
+				if( button !== 'showRight' ) {
+					classie.toggle( showRightPush, 'disabled' );
+				}
+			}
+
+//timelineHover(traveledTime);
 //displayMachine();
