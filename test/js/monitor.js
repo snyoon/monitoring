@@ -107,8 +107,35 @@ function timelineHover(traveledTime) {
         //            $("#scrolled_date").text(scale.invert(x) + " to " + scale.invert(x+width));
         //          });
     var svg = d3.select("#process").append("svg").attr("width", processWidth);
-     svg.datum(labelTestData).call(chart);
+    svg.datum(labelTestData).call(chart);
 }
+
+function reDraw(traveledTime) {
+    var svg = d3.select("#process").selectAll('.operations')
+    var newLabelData = [];   
+    console.log(svg)
+    for(var i = 0; i < labelTestData.length; i++){
+        var tempLabel = labelTestData[i]['label'];
+        var tempTimes = labelTestData[i]['times']
+        var newTimes = [];
+        for(var j = 0; j < tempTimes.length; j++){
+            var startTime = tempTimes[j]['starting_time'];
+            if(startTime < traveledTime) newTimes.push(tempTimes[j])
+            else break;
+        }
+        var tempObject = {};
+        tempObject['label'] = tempLabel;
+        tempObject['times'] = newTimes;
+        newLabelData[i] = tempObject;
+    }
+    console.log(labelTestData);
+    console.log(newLabelData);
+
+    svg.datum(newLabelData);
+    console.log(svg);
+    
+}
+
 
 function getStackPosition(d, i) {
     return margin.top + (itemHeight + itemMargin) * (i) - 5;
@@ -142,12 +169,12 @@ function displayMachine() {
 // Time Travel
 d3.select('#timeButton').on('click', function(){
     time = document.getElementById("traveledTime").value;
-    d3.select('#process').selectAll('*').remove()
-    timelineHover(time);
+//    d3.select('#process').selectAll('*').remove()
+    reDraw(time);
     
 });
 
-// right side expand
+// Right side expand
 var menuRight = document.getElementById( 'right' ),
     showRightPush = document.getElementById( 'showRight' ),
     body = document.body;

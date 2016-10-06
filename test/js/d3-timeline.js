@@ -13,7 +13,7 @@
         navigateRight = function () {},
         orient = "bottom",
         width = null,
-        height = 600,
+        height = 900,
         rowSeparatorsColor = null,
         backgroundColor = null,
         // http://d3-wiki.readthedocs.io/zh_CN/master/Time-Formatting/
@@ -75,7 +75,7 @@
         labelMap = {};
       ;
        
-    
+    height = document.body.clientHeight;
     var appendLabelAxis = function(g, yAxis) {
 
       if(showAxisHeaderBackground){ appendAxisHeaderBackground(g, 0, 0); }
@@ -341,7 +341,7 @@
       }
         
      function drawChart(g) {
-         
+        g.attr('class', 'operations')
         g.each(function (d, i) {
             chartData = d;
                 d.forEach(function (datum, index) {
@@ -675,6 +675,7 @@
       showAxisNav = !showAxisNav;
       return timeline;
     };
+   
     timeline.traveledTime = function(t){
       traveledTime = t;
       return timeline;
