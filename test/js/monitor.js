@@ -4,20 +4,47 @@ processWidth = document.body.clientWidth
 var testOut;
 var fileTest;
 var labelTestData;
-var openFile = function (event) {
-     var input = event.target;
-     var reader = new FileReader();
-     reader.onload = function () {
-         var text = reader.result;
-         var node = document.getElementById('output');
-//         console.log(reader.result)
-         testOut = reader.result;
-         labelTestData = JSON.parse(testOut)
-         timelineHover(traveledTime);
-     };
-     reader.readAsText(input.files[0]);
- };
+var chart;
+var sortedTimes = [];
 
+var openFile = function (event) {
+    d3.selectAll('svg').remove();
+    var input = event.target;
+    var reader = new FileReader();
+    reader.onload = function () {
+        var text = reader.result;
+        var node = document.getElementById('output');
+        testOut = reader.result;
+        labelTestData = JSON.parse(testOut)
+        var index = 0;
+        for (var i = 0; i < labelTestData.length; i++) {
+            var tempLabel = labelTestData[i]['label'];
+            var tempTimes = labelTestData[i]['times'];
+            for (var j = 0; j < tempTimes.length; j++) {
+                tempTimes[j]['index'] = index;
+                index = index + 1;
+            }
+        }
+        timelineHover(traveledTime);
+        for (var i = 0; i < labelTestData.length; i++) {
+            var tempLabel = labelTestData[i]['label'];
+            var tempTimes = labelTestData[i]['times']
+            for (var j = 0; j < tempTimes.length; j++) {
+                sortedTimes.push(tempTimes[j])
+            }
+        }
+        sortedTimes.sort(function (a, b) {
+            return a.starting_time < b.starting_time ? -1 : a.starting_time > b.starting_time ? 1 : 0;
+        })
+    };
+    reader.readAsText(input.files[0]);
+};
+
+var xScale;
+var yScale;
+var colorCycle = {};
+
+var testSvg;
 
 var margin = {
         left: 100
@@ -35,55 +62,17 @@ var statusColorMap = {
         , 'setup': 'C2C2C2'
         , 'down': 'FF0000'
     }
-    // 추후에 txt 파일에서 읽어오게 해야함
+// 추후에 txt 파일에서 읽어오게 해야함
 
-var machineStatusTestData = [
-    {
-        label: "DA001"
-        , status: 'proc'
-}
-
-, {
-        label: "DA002"
-        , status: 'idle'
-}
-
-, {
-        label: "DA003"
-        , status: 'idle'
-}
-
-, {
-        label: "DA004"
-        , status: 'down'
-}
-    , {
-        label: "DA005"
-        , status: 'proc'
-}
-      , {
-        label: "DA006"
-        , status: 'proc'
-}
-          , {
-        label: "DA007"
-        , status: 'proc'
-}
-];
 var traveledTime = timeHorizon;
+var moveToX;
+var moveToY;
 
 
-var zoom = d3.behavior.zoom()
-    .scaleExtent([1, 10])
-    .on("zoom", zoomed);
-
-function zoomed() {
-  container.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
-}
 
 
 function timelineHover(traveledTime) {
-    var chart = d3.timeline().width(processWidth).stack().margin({
+    chart = d3.timeline().width(processWidth).stack().margin({
             left: 80
             , right: 30
             , top: 10
@@ -108,6 +97,11 @@ function timelineHover(traveledTime) {
         //          });
     var svg = d3.select("#process").append("svg").attr("width", processWidth);
     svg.datum(labelTestData).call(chart);
+    xScale = chart.exportXScale();
+    yScale = chart.exportYScale();
+    colorCycle = chart.exportColorCycle();
+    d3.select('.operations').data([labelTestData]).exit().remove();
+    
 }
 
 function reDraw(traveledTime) {
@@ -133,46 +127,145 @@ function reDraw(traveledTime) {
 
     svg.datum(newLabelData);
     console.log(svg);
+    svg.each(function (d, i) {        
+         d.forEach(function (datum, index) {
+                var data = datum.times;
+                var hasLabel = (typeof (datum.label) != "undefined");
+                // issue warning about using id per data set. Ids should be individual to data elements
+                // FIX
+                var operations = svg.selectAll("svg").data(data);
+                var operationsEnter = operations.enter().append('g');
+                operationsEnter.append(function (d, i) {
+                    d.label = datum.label;
+                    return document.createElementNS(d3.ns.prefix.svg, 'rect');
+                })
+                .attr("x", function(d){
+                    return xScale(d.starting_time*1000)
+                   })
+                  .attr("y", function(d){
+                    return yScale(index)  
+                  })
+                  .attr("width", function (d, i) {
+                    return xScale(d.ending_time *1000) - xScale(d.starting_time*1000) ;
+                })
+//                    .attr("cy", function (d, i) {
+//                        return getStackPosition(d, i) + itemHeight / 2;
+//                    }).attr("cx", getXPos).attr("r", itemHeight / 2)
+                 .attr("height", function(d){
+                    return (yScale(index+1) - yScale(index))
+                })
+                 .style("fill", function (d, i) {
+                    if(d.starting_time < traveledTime) return colorCycle[d.productId];
+                    else return 'white';
+                    
+                })
+                .attr("clip-path", "url(#clip)")
+                .attr("class", function (d, i) {
+                    return 'operationRect ' + d.productId;
+                    // return datum.class ? "timelineSeries_" + datum.class : d.productId;
+                    // return datum.class ? "timelineSeries_"+datum.class : "timelineSeries_"+index;
+                })
+                .attr("id", function (d, i) {
+                    // use deprecated id field
+                    if (datum.id && !d.id) {
+                        return 'timelineItem_' + datum.id;
+                    }
+                    return d.id ? d.id : d.lotId;
+                    // return d.id ? d.id : "timelineItem_"+index+"_"+i;
+                });
+                // FIX
+                operationsEnter
+                    .append("text")
+                    .attr('class','operationText')
+                    .attr("clip-path", "url(#clip)")
+                    .attr("x", function(d){
+                      return xScale((d.starting_time*1000 + d.ending_time*1000)/2)
+                    })
+                    .attr("y", function(d){
+                    return yScale(index) + 0.7*(yScale(index+1) - yScale(index))
+                    })
+                    .style('text-anchor', 'middle')
+                    .style('vertical-align', 'middle')
+                    .style('font-weight', 'bold')
+                    .style('fill', 'white')
+                    .style('font-size', function(d){
+                        return 0.2*((yScale(index+1) - yScale(index))) + 'px'})
+                    .text(function (d) {
+                    return d.lotId;
+                });
+                
+                operations.exit().remove();
+               
+            });
+        });
     
 }
 
-
-function getStackPosition(d, i) {
-    return margin.top + (itemHeight + itemMargin) * (i) - 5;
-}
-
-function getStackTextPosition(d, i) {
-    return margin.top + (itemHeight + itemMargin) * (i) + itemHeight * 0.75 - 5;
-}
-
-function displayMachine() {
-    var chartSvg = d3.select('#process');
-    var height = chartSvg.style('height')
-    var svg = d3.select('#machine').append('svg').attr('width', machineWidth).attr('height', height);
-    var machines = svg.selectAll('.machineName').data(labelTestData).enter();
-    // Machine Names
-    machines.append('rect').attr('x', 0).attr('y', getStackPosition).attr("width", itemWidth).attr("height", itemHeight).style('fill', 'none').style('stroke', 'black')
-    machines.append('text').attr('x', itemWidth / 2).attr('y', getStackTextPosition).style('text-anchor', 'middle').style('font-weight', 'bold').style('fill', 'black').text(function (d) {
-            return d.label;
-        })
-        // Machine Status
-    var status = svg.selectAll('.machineStatus').data(machineStatusTestData).enter();
-    status.append('rect').attr('x', itemWidth + 10).attr('y', getStackPosition).
-    attr('rx', 6).attr('ry', 6).attr("width", itemWidth).attr("height", itemHeight).style('fill', function (d) {
-        return statusColorMap[d.status]
-    })
-    status.append('text').attr('x', itemWidth + 10 + itemWidth / 2).attr('y', getStackTextPosition).style('text-anchor', 'middle').style('font-weight', 'bold').style('fill', 'black').text(function (d) {
-        return d.status;
-    })
-}
 
 // Time Travel
 d3.select('#timeButton').on('click', function(){
     time = document.getElementById("traveledTime").value;
-//    d3.select('#process').selectAll('*').remove()
-    reDraw(time);
+    
+    var index = 0;
+    for(var i = 0; i < sortedTimes.length; i++){
+        var tempObject = sortedTimes[i]
+        if(time > tempObject.starting_time) index = i;
+        else break;
+    }
+    
+    var element = d3.select('#event_'+index);
+    var x = element.attr('x')
+    var y = element.attr('y')
+    
+    console.log(d3.select('svg'))
+    var svg = d3.select('svg')
+    
+    svg.call()
+    
+    svg.attr('transform', 'translate(' +x+','+y +')')
+    
+    
+    //reDraw(time);
     
 });
+
+var zoom = d3.behavior.zoom()
+    .scaleExtent([1, 10])
+    .on("zoom", zoomed);
+
+function zoomed() {
+  container.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
+}
+
+
+// Time Travel
+d3.select('#timeButton').on('click', function(){
+    time = document.getElementById("traveledTime").value;
+    
+    var index = 0;
+    for(var i = 0; i < sortedTimes.length; i++){
+        var tempObject = sortedTimes[i]
+        if(time > tempObject.starting_time) index = i;
+        else break;
+    }
+    
+    var element = d3.select('#event_'+index);
+    var x = element.attr('x')
+    var y = element.attr('y')
+    
+    console.log(d3.select('svg'))
+    var svg = d3.select('svg')
+    
+    svg.call()
+    
+    svg.attr('transform', 'translate(' +x+','+y +')')
+    
+    
+    //reDraw(time);
+    
+});
+
+
 
 // Right side expand
 var menuRight = document.getElementById( 'right' ),

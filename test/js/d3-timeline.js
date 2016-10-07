@@ -71,10 +71,15 @@
         traveledTime = 0,
         labelArr = [],
         timeAxis,
-        labelAxis
-        labelMap = {};
+        labelAxis,
+        labelMap = {},
+        xScale,
+        yScale
+      
+      
       ;
-       
+      
+            
     height = document.body.clientHeight;
     var appendLabelAxis = function(g, yAxis) {
 
@@ -153,7 +158,7 @@
       }
 
       // draw the axis
-      var xScale = d3.time.scale()
+      xScale = d3.time.scale()
         .domain([0, ending])
         .range([margin.left, width - margin.right]); // FIX
         
@@ -163,7 +168,7 @@
         .tickFormat(tickFormat.format)
         .tickSize(tickFormat.tickSize);
         
-      var yScale = d3.scale.linear()
+      yScale = d3.scale.linear()
          .domain([0, labelArr.length])
          .range([(itemHeight + itemMargin), (height-margin.bottom) ]);
         
@@ -185,6 +190,7 @@
         
       // draw the chart
       drawChart(g);
+      
         
       var belowLastItem = (margin.top + (itemHeight + itemMargin) * maxStack);
       var aboveFirstItem = margin.top;
@@ -341,6 +347,7 @@
       }
         
      function drawChart(g) {
+       
         g.attr('class', 'operations')
         g.each(function (d, i) {
             chartData = d;
@@ -355,12 +362,14 @@
                         appendBackgroundBar(yAxisMapping, index, g, data, datum);
                     }
                     // FIX
-                    var operations = g.selectAll("svg").data(data);
+                    var operations = g.selectAll(".operations")
+                                       .data(data);
                     var operationsEnter = operations.enter().append('g');
+//                    var operationsEnter = operations.enter().append('g');
                     operationsEnter.append(function (d, i) {
                         d.label = datum.label;
                         labelMap[d.label] = index;
-                        return document.createElementNS(d3.ns.prefix.svg, "display" in d ? d.display : display);
+                         return document.createElementNS(d3.ns.prefix.svg, "display" in d ? d.display : display);
                     })
                     .attr("x", function(d){
                         return xScale(d.starting_time*1000)
@@ -378,7 +387,6 @@
                         return (yScale(index+1) - yScale(index) -itemMargin*3)
                     })
                      .style("fill", function (d, i) {
-                        if (d.starting_time > traveledTime) return 'white';
                         var dColorPropName;
                         if (d.color) return d.color;
                         if (colorPropertyName) {
@@ -412,7 +420,8 @@
                         if (datum.id && !d.id) {
                             return 'timelineItem_' + datum.id;
                         }
-                        return d.id ? d.id : d.lotId;
+                        // return d.id ? d.id : d.lotId;
+                        return 'event_' + d.index;
                         // return d.id ? d.id : "timelineItem_"+index+"_"+i;
                     });
                     // FIX
@@ -439,27 +448,15 @@
                     // add the label
                     // FIX Label Represent
                     // if (hasLabel) { appendLabel(gParent, yAxisMapping, index, hasLabel, datum); }
-                    function getStackPosition(d, i) {
-                        if (stacked) {
-                            return margin.top + (itemHeight + itemMargin) * yAxisMapping[index];
-                        }
-                        return margin.top;
-                    }
-
-                    function getStackTextPosition(d, i) {
-                        if (stacked) {
-                            return margin.top + (itemHeight + itemMargin) * yAxisMapping[index] + itemHeight * 0.75;
-                        }
-                        return margin.top + itemHeight * 0.75;
-                    }
+                  
                 });
             });
+         
          
         }
     }
 
     // SETTINGS
-
     timeline.margin = function (p) {
       if (!arguments.length) return margin;
       margin = p;
@@ -680,6 +677,18 @@
       traveledTime = t;
       return timeline;
     };
+    
+    timeline.exportXScale = function(){
+        return xScale;
+    }
+    
+    timeline.exportYScale = function(){
+        return yScale;
+    }
+    
+    timeline.exportColorCycle = function(){
+        return colorCycle;
+    }
 
     return timeline;
   };
