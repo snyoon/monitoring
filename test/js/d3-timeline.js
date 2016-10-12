@@ -397,7 +397,7 @@
 //                    .attr('class', 'operationRect')
                     .attr("clip-path", "url(#clip)")
                     .attr("class", function (d, i) {
-                        return 'operationRect ' + d.productId;
+                        return 'operationRect ' + d.productId +' ' + d.lotId;
                         // return datum.class ? "timelineSeries_" + datum.class : d.productId;
                         // return datum.class ? "timelineSeries_"+datum.class : "timelineSeries_"+index;
                     })
@@ -407,7 +407,7 @@
                             return 'timelineItem_' + datum.id;
                         }
                         // return d.id ? d.id : d.lotId;
-                        return 'event_' + d.index;
+                        return 'event_' + d.eventId;
                         // return d.id ? d.id : "timelineItem_"+index+"_"+i;
                     });
                     // FIX
