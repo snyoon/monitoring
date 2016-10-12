@@ -3,7 +3,8 @@ processWidth = document.body.clientWidth
 //machineWidth = d3.select('#machine').style('width').replace('px', '');
 var testOut;
 var fileTest;
-var labelTestData;
+var inputData;
+var ganttData;
 var chart;
 var sortedTimes = [];
 
@@ -15,20 +16,14 @@ var openFile = function (event) {
         var text = reader.result;
         var node = document.getElementById('output');
         testOut = reader.result;
-        labelTestData = JSON.parse(testOut)
+        inputData = JSON.parse(testOut)
         var index = 0;
-        for (var i = 0; i < labelTestData.length; i++) {
-            var tempLabel = labelTestData[i]['label'];
-            var tempTimes = labelTestData[i]['times'];
-            for (var j = 0; j < tempTimes.length; j++) {
-                tempTimes[j]['index'] = index;
-                index = index + 1;
-            }
-        }
+        ganttData = inputData['Gantt']
+      
         timelineHover(traveledTime);
-        for (var i = 0; i < labelTestData.length; i++) {
-            var tempLabel = labelTestData[i]['label'];
-            var tempTimes = labelTestData[i]['times']
+        for (var i = 0; i < ganttData.length; i++) {
+            var tempLabel = ganttData[i]['label'];
+            var tempTimes = ganttData[i]['times']
             for (var j = 0; j < tempTimes.length; j++) {
                 sortedTimes.push(tempTimes[j])
             }
@@ -69,6 +64,24 @@ var moveToX;
 var moveToY;
 
 
+// Right side expand and Bottom expand
+var menuRight = document.getElementById( 'right' ),
+    menuBottom = document.getElementById( 'attribute' ),
+    showRightPush = document.getElementById( 'showRight' ),
+    body = document.body;
+
+
+ showRightPush.onclick = function() {
+				classie.toggle( this, 'active' );
+				classie.toggle( menuRight, 'cbp-spmenu-open' );
+				disableOther( 'showRight' );
+			};
+ function disableOther( button ) {
+				if( button !== 'showRight' ) {
+					classie.toggle( showRightPush, 'disabled' );
+				}
+			}
+
 
 
 function timelineHover(traveledTime) {
@@ -90,17 +103,22 @@ function timelineHover(traveledTime) {
 //            alert(d.lotId);
             var selectedLotId = d.lotId;
             d3.selectAll('#'+selectedLotId)
+             
+            classie.toggle( menuBottom, 'cbp-spmenu-open' );
+            displayAttribute(d, datum)
+            console.log(d)
                
         })
         //          .scroll(function (x, scale) {
         //            $("#scrolled_date").text(scale.invert(x) + " to " + scale.invert(x+width));
         //          });
     var svg = d3.select("#process").append("svg").attr("width", processWidth);
-    svg.datum(labelTestData).call(chart);
+    svg.datum(ganttData).call(chart);
+    
     xScale = chart.exportXScale();
     yScale = chart.exportYScale();
     colorCycle = chart.exportColorCycle();
-    d3.select('.operations').data([labelTestData]).exit().remove();
+    d3.select('.operations').data([ganttData]).exit().remove();
     
 }
 
@@ -108,9 +126,9 @@ function reDraw(traveledTime) {
     var svg = d3.select("#process").selectAll('.operations')
     var newLabelData = [];   
     console.log(svg)
-    for(var i = 0; i < labelTestData.length; i++){
-        var tempLabel = labelTestData[i]['label'];
-        var tempTimes = labelTestData[i]['times']
+    for(var i = 0; i < ganttData.length; i++){
+        var tempLabel = ganttData[i]['label'];
+        var tempTimes = ganttData[i]['times']
         var newTimes = [];
         for(var j = 0; j < tempTimes.length; j++){
             var startTime = tempTimes[j]['starting_time'];
@@ -122,7 +140,7 @@ function reDraw(traveledTime) {
         tempObject['times'] = newTimes;
         newLabelData[i] = tempObject;
     }
-    console.log(labelTestData);
+    console.log(ganttData);
     console.log(newLabelData);
 
     svg.datum(newLabelData);
@@ -238,50 +256,11 @@ function zoomed() {
 }
 
 
-// Time Travel
-d3.select('#timeButton').on('click', function(){
-    time = document.getElementById("traveledTime").value;
-    
-    var index = 0;
-    for(var i = 0; i < sortedTimes.length; i++){
-        var tempObject = sortedTimes[i]
-        if(time > tempObject.starting_time) index = i;
-        else break;
-    }
-    
-    var element = d3.select('#event_'+index);
-    var x = element.attr('x')
-    var y = element.attr('y')
-    
-    console.log(d3.select('svg'))
-    var svg = d3.select('svg')
-    
-    svg.call()
-    
-    svg.attr('transform', 'translate(' +x+','+y +')')
-    
-    
-    //reDraw(time);
-    
-});
 
-
-
-// Right side expand
-var menuRight = document.getElementById( 'right' ),
-    showRightPush = document.getElementById( 'showRight' ),
-    body = document.body;
-
- showRightPush.onclick = function() {
-				classie.toggle( this, 'active' );
-				classie.toggle( menuRight, 'cbp-spmenu-open' );
-				disableOther( 'showRight' );
-			};
- function disableOther( button ) {
-				if( button !== 'showRight' ) {
-					classie.toggle( showRightPush, 'disabled' );
-				}
-			}
-
-//timelineHover(traveledTime);
-//displayMachine();
+// Attribute View
+function displayAttribute(d, datum){    
+    
+    $('#attribute').html('<strong style="font-family:Sans-serif;">' +'lotId: '+ d.lotId + '<br>' + '</strong>' 
+                        +'<strong style="font-family:Sans-serif;">' +'productId: '+ d.productId + '<br>' + '</strong>' 
+                        +'<strong style="font-family:Sans-serif;">' +'currentMachine: '+ datum.label + '<br>' + '</strong>' );    
+}

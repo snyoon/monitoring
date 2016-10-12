@@ -17,7 +17,6 @@
             <!--            </div>-->
         </div>
         <div id='chart'>
-<!--            <div id='machine'></div>-->
             <div id='process'></div>
         </div>
         <div id="hoverRes">
@@ -25,34 +24,33 @@
             <div id="name"></div>
             <div id="scrolled_date"></div>
         </div>
-        <div id='attribute'> attribute </div>
+        <nav class="cbp-spmenu cbp-spmenu-horizontal cbp-spmenu-bottom" id='attribute'> </nav>
     </div>
-    <nav class='cbp-spmenu cbp-spmenu-vertical cbp-spmenu-right' id='right'>
-        <div id='timeTravel' class='rightContent'>
+<nav class='cbp-spmenu cbp-spmenu-vertical cbp-spmenu-right' id='right'>
+    <div id='decision' class='rightContent'>
+        <div class='title'> Decision Viewer </div>decision </div>
+    <div id='rightOthers' class='rightContent'>
+        <div id='timeTravel' class='rightOthersContent'>
             <div class='title'> Time Traveler </div>
             <ul></ul>
             <div class="col-lg-6">
                 <div class="input-group">
-                    <input type="text" id='traveledTime' class="form-control" placeholder="Search for..."> 
-                    <span class="input-group-btn">
+                    <input type="text" id='traveledTime' class="form-control" placeholder="Search for..."> <span class="input-group-btn">
                     <button class="btn btn-default" type="button" id='timeButton'>Go!</button>
-                    </span> 
-           </div>
+                    </span> </div>
             </div>
-            <!--
+        </div>
+        <!--
             <form name="myform" onSubmit="return handleClick()">
                 <input type="text" id="myVal" placeholder="Add some text&hellip;">
-                <input name="Submit" type="submit" value="Add to list"> </form>
--->
-        </div>
-        <div id='status' class='rightContent'>
+                <input name="Submit" type="submit" value="Add to list"> </form>-->
+        <div id='status' class='rightOthersContent'>
             <div class='title'> Production Status Viewer </div>status </div>
-        <div id='kpi' class='rightContent'>
+        <div id='kpi' class='rightOthersContent'>
             <div class='title'> KPI Status Viewer </div> kpi </div>
-        <div id='decision' class='rightContent'>
-            <div class='title'> Decision Viewer </div>decision </div>
-    </nav>
-    <script src='js/d3.v3.min.js'></script>
+    </div>
+</nav>
+<script src='js/d3.v3.min.js'></script>
     <script src='js/flexibility.js'></script>
     <script src='js/d3-timeline.js'></script>
     <script src='js/monitor.js'></script>

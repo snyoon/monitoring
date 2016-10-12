@@ -80,7 +80,7 @@
       ;
       
             
-    height = document.body.clientHeight;
+    height = document.body.clientHeight - margin.bottom - 10;
     var appendLabelAxis = function(g, yAxis) {
 
       if(showAxisHeaderBackground){ appendAxisHeaderBackground(g, 0, 0); }
@@ -101,6 +101,7 @@
       timeAxis = g.append("g")
         .attr("class", "axis")
         .attr("transform", "translate(" + 0 + "," + (height - margin.bottom) + ")")
+        //.attr("transform", "translate(" + 0 + "," + (20) + ")")
         .call(xAxis);
     };
 
@@ -191,32 +192,17 @@
       // draw the chart
       drawChart(g);
       
+      
         
       var belowLastItem = (margin.top + (itemHeight + itemMargin) * maxStack);
       var aboveFirstItem = margin.top;
       var timeAxisYPosition = showAxisTop ? aboveFirstItem : belowLastItem;
       
         // FIX
-      // Axis representation
+
       if (showTimeAxis) {appendTimeAxis(g, xAxis, timeAxisYPosition);}
        appendLabelAxis(g, yAxis);  
-      //if (timeAxisTick) { appendTimeAxisTick(g, xAxis, maxStack); }
-        
-      // FIX: For Scroll          
-//      if (width > gParentSize.width) {
-//        var move = function() {
-//          var x = Math.min(0, Math.max(gParentSize.width - width, d3.event.translate[0]));
-//          zoom.translate([x, 0]);
-//          g.attr("transform", "translate(" + x + ",0)");
-//          scroll(x*scaleFactor, xScale);
-//        };
-//
-//        var zoom = d3.behavior.zoom().x(xScale).on("zoom", move);
-//
-//        gParent
-//          .attr("class", "scrollable")
-//          .call(zoom);
-//      }
+
         
       var gSize = g[0][0].getBoundingClientRect();
       setHeight();
@@ -435,6 +421,7 @@
                         .attr("y", function(d){
                         return yScale(index) + 0.7*(yScale(index+1) - yScale(index))
                         })
+                    
                         .style('text-anchor', 'middle')
                         .style('vertical-align', 'middle')
                         .style('font-weight', 'bold')
@@ -443,7 +430,10 @@
                             return 0.2*((yScale(index+1) - yScale(index))) + 'px'})
                         .text(function (d) {
                         return d.lotId;
-                    });
+                        })
+                        .on("click", function (d, i) {
+                        click(d, index, datum);
+                        });
                     operations.exit().remove();
                     // add the label
                     // FIX Label Represent
