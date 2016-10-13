@@ -55,6 +55,12 @@ body {
     flex-direction: row;
 }
 
+.bottomViewer{
+    border-bottom: 2px solid white;
+    background-color: ghostwhite;
+    height: 100%;
+}
+
 .bottomViewer:nth-child(1){
     flex-grow: 1;
     flex-basis: 0;         

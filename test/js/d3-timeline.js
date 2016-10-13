@@ -273,7 +273,7 @@
             .style('vertical-align', 'middle')
             .style('font-weight', 'bold')
             .style('font-size', function(d){
-                return 0.4*(yScale(labelMap[d.label]+1) - yScale(labelMap[d.label])) + 'px'})
+                return 0.2*(yScale(labelMap[d.label]+1) - yScale(labelMap[d.label])) + 'px'})
             .style('fill', 'white')
             .text(function (d) {
                 return d.lotId;
@@ -398,8 +398,6 @@
                     .attr("clip-path", "url(#clip)")
                     .attr("class", function (d, i) {
                         return 'operationRect ' + d.productId +' ' + d.lotId;
-                        // return datum.class ? "timelineSeries_" + datum.class : d.productId;
-                        // return datum.class ? "timelineSeries_"+datum.class : "timelineSeries_"+index;
                     })
                     .attr("id", function (d, i) {
                         // use deprecated id field

@@ -8,6 +8,8 @@ var ganttData;
 var chart;
 var sortedTimes = [];
 var clickedElement;
+var productInfo = {};
+var boolSelected;
 
 var openFile = function (event) {
     d3.selectAll('svg').remove();
@@ -20,6 +22,7 @@ var openFile = function (event) {
         inputData = JSON.parse(testOut)
         var index = 0;
         ganttData = inputData['Gantt']
+        productInfo = inputData['Product']
       
         timelineHover(traveledTime);
         for (var i = 0; i < ganttData.length; i++) {
@@ -58,7 +61,6 @@ var statusColorMap = {
         , 'setup': 'C2C2C2'
         , 'down': 'FF0000'
     }
-// 추후에 txt 파일에서 읽어오게 해야함
 
 var traveledTime = timeHorizon;
 var moveToX;
@@ -101,8 +103,9 @@ function timelineHover(traveledTime) {
             // datum is the id object
             if (d.starting_time > traveledTime) return;
         }).click(function (d, i, datum) {
-        
-        if(d == clickedElement){
+        console.log(clickedElement)
+        console.log(boolSelected)
+        if(d.lotId.indexOf(clickedElement) > -1 && boolSelected == true){
          var rects = d3.selectAll('.operationRect')
          rects.style("fill", function (d, i) {
             return colorCycle[d.productId];
@@ -110,6 +113,11 @@ function timelineHover(traveledTime) {
             
             d3.selectAll('#attribute')
               .classed('cbp-spmenu-open', false)
+            boolSelected = false;
+            
+         }
+         else if(d.lotId != clickedElement && boolSelected == true){
+             
          }
          else{
             var selectedLotId = d.lotId;
@@ -117,7 +125,8 @@ function timelineHover(traveledTime) {
             classie.toggle( menuBottom, 'cbp-spmenu-open' );
             displayAttribute(d, datum)
             selectLots(selectedLotId)
-            clickedElement = d
+            clickedElement = d.lotId.substring(0, d.lotId.indexOf('_'))
+            boolSelected = true;
          }  
            
         })
@@ -262,17 +271,21 @@ function zoomed() {
 }
 
 
-
 // Attribute View
 function displayAttribute(d, datum){    
     $('#lotViewer')
         .html('<strong style="font-family:Sans-serif;">' +'Lot Id: '+ d.lotId + '<br>' + '</strong>' 
-             +'<strong style="font-family:Sans-serif;">' +'Product Id: '+ d.productId + '<br>' + '</strong>' 
              +'<strong style="font-family:Sans-serif;">' +'Quantity: '+ d.quantity + '<br>' + '</strong>'
              +'<strong style="font-family:Sans-serif;">' +'Processing Time: '+ (d.ending_time-d.starting_time) + '<br>' + '</strong>'
              +'<strong style="font-family:Sans-serif;">' +'Operation: '+ d.degree + '<br>' + '</strong>'
              +'<strong style="font-family:Sans-serif;">' +'Flow: '+ d.flow + '<br>' + '</strong>'
              );
+    $('#productViewer')
+        .html('<strong style="font-family:Sans-serif;">' +'Product Id: '+ d.productId + '<br>' + '</strong>' 
+             +'<strong style="font-family:Sans-serif;">' +'Product Group: '+ productInfo[d.productId]['productGroup'] + '<br>' + '</strong>'
+             +'<strong style="font-family:Sans-serif;">' +'Flow Id: '+ productInfo[d.productId]['flowId'] + '<br>' + '</strong>'
+             +'<strong style="font-family:Sans-serif;">' +'Operation Seq.: '+ productInfo[d.productId]['operationSequence'] + '<br>' + '</strong>'
+             );    
     $('#resourceViewer')
         .html('<strong style="font-family:Sans-serif;">' +'Resource: '+ datum.label + '<br>' + '</strong>'
              +'<strong style="font-family:Sans-serif;">' +'Resource Model: '+ datum.resourceModel + '<br>' + '</strong>'
@@ -285,11 +298,7 @@ function selectLots(lotId){
         lotId = lotId.substring(0, lotId.indexOf('_'))
     } 
     rects.style("fill", function (d, i) {
-        if(d.lotId.indexOf(lotId)>-1){
-            return colorCycle[d.productId];
-        }
-        else{
-            return 'white'
-        }
+        if(d.lotId.indexOf(lotId)>-1) return colorCycle[d.productId];
+        else return 'white'
     })
 }
