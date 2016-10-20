@@ -1,68 +1,47 @@
-<!doctype>
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Monitoring Tool | Log in</title>
+    <!-- Tell the browser to be responsive to screen width -->
+    <meta content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" name="viewport">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
+    <!-- Ionicons -->
+    <link rel="stylesheet" href="https://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
+    
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
+        <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+    <![endif]-->
+  </head>
+  <body class="hold-transition login-page">
+    <div class="login-box">
+      <div class="login-logo">
+        <b>PCG Step Tracer</b>
+      </div><!-- /.login-logo -->
+      <div class="login-box-body">
+        <p class="login-box-msg">Sign in to start your session</p>
+        <form action="index_main.jsp" method="post">
+          <div class="form-group has-feedback">
+            <input type="text" class="form-control" placeholder="ID" name="u_id">
+            <span class="glyphicon glyphicon-user form-control-feedback"></span>
+          </div>
+          <div class="form-group has-feedback">
+            <input type="password" class="form-control" placeholder="Password" name="u_pw">
+            <span class="glyphicon glyphicon-lock form-control-feedback"></span>
+          </div>
+          <div class="row">
+            <div class="col-xs-4">
+              <button type="submit" class="btn btn-primary btn-block btn-flat">Sign In</button>
+            </div><!-- /.col -->
+          </div>
+        </form>
+      </div><!-- /.login-box-body -->
+    </div><!-- /.login-box -->
 
-<head>
-    <meta charset='utf-8'>
-    <link rel="stylesheet" type="text/css" href="css/style.css" />
-    <link rel="stylesheet" type="text/css" href="css/bootstrap.css" /> </head>
-
-<body class='cbp-spmenu-push'>
-    <div id='left'>
-        <div id='views'>
-            <!--  <div class="btn-group" role="group" aria-label="...">-->
-            <input type='file' accept='text/plain' onchange='openFile(event)'>
-            <button type="button" class="btn btn-default" id='resourceView'>Resource View</button>
-            <button type="button" class="btn btn-default" id='productView'>Product View</button>
-            <button type="button" class="btn btn-default" id='lotView'>Lot Status View</button>
-            <button type="button" class="btn btn-default" id='showRight'>접기/펴기</button>
-            <!--            </div>-->
-        </div>
-        <div id='chart'>
-            <div id='process'></div>
-        </div>
-        <div id="hoverRes">
-            <div class="coloredDiv"></div>
-            <div id="name"></div>
-            <div id="scrolled_date"></div>
-        </div>
-      <nav class="cbp-spmenu cbp-spmenu-horizontal cbp-spmenu-bottom" id='attribute' class='bottomViewer'>
-    <div class='titleBottom'> Attribute Viewer </div>
-    <div id='attributeViewer' >
-        <div id='lotViewer' class='bottomViewer'></div>
-        <div id='productViewer' class='bottomViewer'></div>
-        <div id='resourceViewer' class='bottomViewer'></div>
-    </div>
-</nav>
-    </div>
-<nav class='cbp-spmenu cbp-spmenu-vertical cbp-spmenu-right' id='right'>
-    <div id='decision' class='rightContent'>
-        <div class='title'> Decision Viewer </div>decision </div>
-    <div id='rightOthers' class='rightContent'>
-        <div id='timeTravel' class='rightOthersContent'>
-            <div class='title'> Time Traveler </div>
-            <ul></ul>
-            <div class="col-lg-6">
-                <div class="input-group">
-                    <input type="text" id='traveledTime' class="form-control" placeholder="Search for..."> <span class="input-group-btn">
-                    <button class="btn btn-default" type="button" id='timeButton'>Go!</button>
-                    </span> </div>
-            </div>
-        </div>
-        <!--
-            <form name="myform" onSubmit="return handleClick()">
-                <input type="text" id="myVal" placeholder="Add some text&hellip;">
-                <input name="Submit" type="submit" value="Add to list"> </form>-->
-        <div id='status' class='rightOthersContent'>
-            <div class='title'> Production Status Viewer </div>status </div>
-        <div id='kpi' class='rightOthersContent'>
-            <div class='title'> KPI Status Viewer </div> kpi </div>
-    </div>
-</nav>
-<script src='js/d3.v3.min.js'></script>
-    <script src='js/flexibility.js'></script>
-    <script src='js/d3-timeline.js'></script>
-    <script src='js/monitor.js'></script>
-<!--    <script src='js/d3.v4.min.js'></script>-->
-   	<script src="js/classie.js"></script>
-   	<script src="js/modernizr.custom.js"></script>
-    <script src="http://code.jquery.com/jquery-latest.min.js"></script>
-</body>
+  </body>
+</html>

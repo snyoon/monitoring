@@ -46,10 +46,10 @@ var colorCycle = {};
 var testSvg;
 
 var margin = {
-        left: 100
+        left: 80
         , right: 30
-        , top: 30
-        , bottom: 30
+        , top: 10
+        , bottom: 70
     }
     , itemHeight = 20
     , itemMargin = 5
@@ -92,19 +92,13 @@ var showBottom;
 
 
 function timelineHover(traveledTime) {
-    chart = d3.timeline().width(processWidth).stack().margin({
-            left: 80
-            , right: 30
-            , top: 10
-            , bottom: 20
-        }).traveledTime(traveledTime).showTimeAxisTick().hover(function (d, i, datum) {
+    chart = d3.timeline().width(processWidth).stack().margin(margin)
+        .traveledTime(traveledTime).showTimeAxisTick().hover(function (d, i, datum) {
             // d is the current rendering object
             // i is the index during d3 rendering
             // datum is the id object
             if (d.starting_time > traveledTime) return;
         }).click(function (d, i, datum) {
-        console.log(clickedElement)
-        console.log(boolSelected)
         if(d.lotId.indexOf(clickedElement) > -1 && boolSelected == true){
          var rects = d3.selectAll('.operationRect')
          rects.style("fill", function (d, i) {
@@ -271,7 +265,7 @@ function zoomed() {
 }
 
 
-// Attribute View
+// ------------------------------------- Attribute View ------------------------------------------------
 function displayAttribute(d, datum){    
     $('#lotViewer')
         .html('<strong style="font-family:Sans-serif;">' +'Lot Id: '+ d.lotId + '<br>' + '</strong>' 
@@ -302,3 +296,7 @@ function selectLots(lotId){
         else return 'white'
     })
 }
+
+// -----------------------------------------------------------------------------------------------------
+// ------------------------------------- Vertical line -------------------------------------------------
+
