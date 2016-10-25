@@ -1,6 +1,4 @@
 processWidth = document.body.clientWidth
-//processWidth = d3.select('#process').style('width').replace("px", "");
-//machineWidth = d3.select('#machine').style('width').replace('px', '');
 var testOut;
 var fileTest;
 var inputData;
@@ -9,6 +7,7 @@ var chart;
 var sortedTimes = [];
 var clickedElement;
 var productInfo = {};
+var decisionInfo = {};
 var boolSelected;
 
 var openFile = function (event) {
@@ -89,8 +88,6 @@ var showBottom;
 				}
 			}
 
-
-
 function timelineHover(traveledTime) {
     chart = d3.timeline().width(processWidth).stack().margin(margin)
         .traveledTime(traveledTime).showTimeAxisTick().hover(function (d, i, datum) {
@@ -99,30 +96,26 @@ function timelineHover(traveledTime) {
             // datum is the id object
             if (d.starting_time > traveledTime) return;
         }).click(function (d, i, datum) {
-        if(d.lotId.indexOf(clickedElement) > -1 && boolSelected == true){
-         var rects = d3.selectAll('.operationRect')
-         rects.style("fill", function (d, i) {
-            return colorCycle[d.productId];
-            })   
-            
-            d3.selectAll('#attribute')
-              .classed('cbp-spmenu-open', false)
-            boolSelected = false;
-            
-         }
-         else if(d.lotId != clickedElement && boolSelected == true){
-             
-         }
-         else{
             var selectedLotId = d.lotId;
-            d3.selectAll('#'+selectedLotId)
-            classie.toggle( menuBottom, 'cbp-spmenu-open' );
-            displayAttribute(d, datum)
-            selectLots(selectedLotId)
-            clickedElement = d.lotId.substring(0, d.lotId.indexOf('_'))
-            boolSelected = true;
-         }  
-           
+            if(d.lotId.indexOf(clickedElement) > -1 && boolSelected == true){
+                 var rects = d3.selectAll('.operationRect')
+                 rects.style("fill", function (d, i) { return colorCycle[d.productId];})   
+                 d3.selectAll('#attribute').classed('cbp-spmenu-open', false)
+                 boolSelected = false;
+             }
+             else if(d.lotId != clickedElement && boolSelected == true){
+
+             }
+             else{
+                d3.selectAll('#'+selectedLotId)
+                classie.toggle( menuBottom, 'cbp-spmenu-open' );
+                displayAttribute(d, datum)
+                selectLots(selectedLotId)
+                clickedElement = d.lotId.substring(0, d.lotId.indexOf('_'))
+                boolSelected = true;
+                if(selectedLotId.indexOf('_')>0) selectedLotId = selectedLotId.substring(0, selectedLotId.indexOf('_'))
+                console.log(selectedLotId+'_'+d.degree) 
+            }
         })
     var svg = d3.select("#process").append("svg").attr("width", processWidth);
     svg.datum(ganttData).call(chart);
@@ -132,6 +125,79 @@ function timelineHover(traveledTime) {
     colorCycle = chart.exportColorCycle();
     d3.select('.operations').data([ganttData]).exit().remove();
     
+}
+
+
+// Time Travel
+d3.select('#timeButton').on('click', function(){
+    time = document.getElementById("traveledTime").value;
+    
+    var index = 0;
+    for(var i = 0; i < sortedTimes.length; i++){
+        var tempObject = sortedTimes[i]
+        if(time > tempObject.starting_time) index = i;
+        else break;
+    }
+    
+    var element = d3.select('#event_'+index);
+    var x = element.attr('x')
+    var y = element.attr('y')
+    
+    console.log(d3.select('svg'))
+    var svg = d3.select('svg')
+    svg.call()
+    
+    svg.attr('transform', 'translate(' +x+','+y +')')
+    //reDraw(time);
+    
+});
+
+var zoom = d3.behavior.zoom()
+    .scaleExtent([1, 10])
+    .on("zoom", zoomed);
+
+function zoomed() {
+  container.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
+}
+
+
+// ------------------------------------- Attribute View ------------------------------------------------
+function displayAttribute(d, datum){    
+    $('#lotViewer')
+        .html('<strong style="font-family:Sans-serif;">' +'Lot Id: '+ d.lotId + '<br>' + '</strong>' 
+             +'<strong style="font-family:Sans-serif;">' +'Quantity: '+ d.quantity + '<br>' + '</strong>'
+             +'<strong style="font-family:Sans-serif;">' +'Processing Time: '+ (d.ending_time-d.starting_time) + '<br>' + '</strong>'
+             +'<strong style="font-family:Sans-serif;">' +'Operation: '+ d.degree + '<br>' + '</strong>'
+             +'<strong style="font-family:Sans-serif;">' +'Flow: '+ d.flow + '<br>' + '</strong>'
+             );
+    $('#productViewer')
+        .html('<strong style="font-family:Sans-serif;">' +'Product Id: '+ d.productId + '<br>' + '</strong>' 
+             +'<strong style="font-family:Sans-serif;">' +'Product Group: '+ productInfo[d.productId]['productGroup'] + '<br>' + '</strong>'
+             +'<strong style="font-family:Sans-serif;">' +'Flow Id: '+ productInfo[d.productId]['flowId'] + '<br>' + '</strong>'
+             +'<strong style="font-family:Sans-serif;">' +'Operation Seq.: '+ productInfo[d.productId]['operationSequence'] + '<br>' + '</strong>'
+             );    
+    $('#resourceViewer')
+        .html('<strong style="font-family:Sans-serif;">' +'Resource: '+ datum.label + '<br>' + '</strong>'
+             +'<strong style="font-family:Sans-serif;">' +'Resource Model: '+ datum.resourceModel + '<br>' + '</strong>'
+             );    
+}
+
+// ------------------------------------- Decision View ------------------------------------------------
+function displayDecisions(){
+    
+    
+}
+
+
+function selectLots(lotId){
+    var rects = d3.selectAll('.operationRect')
+    if (lotId.indexOf('_' ) >0){
+        lotId = lotId.substring(0, lotId.indexOf('_'))
+    } 
+    rects.style("fill", function (d, i) {
+        if(d.lotId.indexOf(lotId)>-1) return colorCycle[d.productId];
+        else return 'white'
+    })
 }
 
 function reDraw(traveledTime) {
@@ -231,72 +297,4 @@ function reDraw(traveledTime) {
     
 }
 
-
-// Time Travel
-d3.select('#timeButton').on('click', function(){
-    time = document.getElementById("traveledTime").value;
-    
-    var index = 0;
-    for(var i = 0; i < sortedTimes.length; i++){
-        var tempObject = sortedTimes[i]
-        if(time > tempObject.starting_time) index = i;
-        else break;
-    }
-    
-    var element = d3.select('#event_'+index);
-    var x = element.attr('x')
-    var y = element.attr('y')
-    
-    console.log(d3.select('svg'))
-    var svg = d3.select('svg')
-    svg.call()
-    
-    svg.attr('transform', 'translate(' +x+','+y +')')
-    //reDraw(time);
-    
-});
-
-var zoom = d3.behavior.zoom()
-    .scaleExtent([1, 10])
-    .on("zoom", zoomed);
-
-function zoomed() {
-  container.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
-}
-
-
-// ------------------------------------- Attribute View ------------------------------------------------
-function displayAttribute(d, datum){    
-    $('#lotViewer')
-        .html('<strong style="font-family:Sans-serif;">' +'Lot Id: '+ d.lotId + '<br>' + '</strong>' 
-             +'<strong style="font-family:Sans-serif;">' +'Quantity: '+ d.quantity + '<br>' + '</strong>'
-             +'<strong style="font-family:Sans-serif;">' +'Processing Time: '+ (d.ending_time-d.starting_time) + '<br>' + '</strong>'
-             +'<strong style="font-family:Sans-serif;">' +'Operation: '+ d.degree + '<br>' + '</strong>'
-             +'<strong style="font-family:Sans-serif;">' +'Flow: '+ d.flow + '<br>' + '</strong>'
-             );
-    $('#productViewer')
-        .html('<strong style="font-family:Sans-serif;">' +'Product Id: '+ d.productId + '<br>' + '</strong>' 
-             +'<strong style="font-family:Sans-serif;">' +'Product Group: '+ productInfo[d.productId]['productGroup'] + '<br>' + '</strong>'
-             +'<strong style="font-family:Sans-serif;">' +'Flow Id: '+ productInfo[d.productId]['flowId'] + '<br>' + '</strong>'
-             +'<strong style="font-family:Sans-serif;">' +'Operation Seq.: '+ productInfo[d.productId]['operationSequence'] + '<br>' + '</strong>'
-             );    
-    $('#resourceViewer')
-        .html('<strong style="font-family:Sans-serif;">' +'Resource: '+ datum.label + '<br>' + '</strong>'
-             +'<strong style="font-family:Sans-serif;">' +'Resource Model: '+ datum.resourceModel + '<br>' + '</strong>'
-             );    
-}
-
-function selectLots(lotId){
-    var rects = d3.selectAll('.operationRect')
-    if (lotId.indexOf('_' ) >0){
-        lotId = lotId.substring(0, lotId.indexOf('_'))
-    } 
-    rects.style("fill", function (d, i) {
-        if(d.lotId.indexOf(lotId)>-1) return colorCycle[d.productId];
-        else return 'white'
-    })
-}
-
-// -----------------------------------------------------------------------------------------------------
-// ------------------------------------- Vertical line -------------------------------------------------
 
