@@ -52,7 +52,10 @@ if (session.getAttribute("u_id")==null) {
     </div>
     <nav class='cbp-spmenu cbp-spmenu-vertical cbp-spmenu-right' id='right'>
         <div id='decision' class='rightContent'>
-            <div class='title'> Decision Viewer </div>decision </div>
+            <div class='title'> Decision Viewer </div>
+            <div id='decisionViewer'> </div>
+            
+        </div>
         <div id='rightOthers' class='rightContent'>
             <div id='timeTravel' class='rightOthersContent'>
                 <div class='title'> Time Traveler </div>
@@ -64,19 +67,15 @@ if (session.getAttribute("u_id")==null) {
                     </span> </div>
                 </div>
             </div>
-            <!--
-            <form name="myform" onSubmit="return handleClick()">
-                <input type="text" id="myVal" placeholder="Add some text&hellip;">
-                <input name="Submit" type="submit" value="Add to list"> </form>-->
             <div id='status' class='rightOthersContent'>
-                <div class='title'> Production Status Viewer </div>status </div>
-            <div id='kpi' class='rightOthersContent'>
-                <div class='title'> KPI Status Viewer </div> kpi </div>
+                    <div class='title'> Production Status Viewer </div>status </div>
+            </div>
         </div>
     </nav>
     <script src='js/d3.v3.min.js'></script>
     <script src='js/flexibility.js'></script>
     <script src='js/d3-timeline.js'></script>
+    <script src='js/d3-jetpack.js'></script>
     <script src='js/monitor.js'></script>
     <!--    <script src='js/d3.v4.min.js'></script>-->
     <script src="js/classie.js"></script>

@@ -1,6 +1,7 @@
 body {
     display: flex;
     flex-direction: row;
+    { font-family: 'Helvetica Neue', Helvetica; font-weight: 300; padding: 20px;}
 }
 
 #left {
@@ -37,7 +38,7 @@ body {
 #right {
     display: flex;
     border-left: 1px solid gray;
-    flex-direction: row;
+    flex-direction: column;
 /*    height: 800px;*/
 
 }
@@ -49,6 +50,46 @@ body {
     flex-flow: column;
 
 }
+
+.rightContent {
+    border-bottom: 2px solid white;
+    background-color: ghostwhite;
+}
+
+#status_kpi{
+    display: flex;
+    border-left: 1px solid gray;
+    flex-direction: row;
+    flex-flow: row;
+}
+
+.rightContent:nth-child(1) {
+    flex-grow: 1;
+    flex-basis: 0; 
+    /* flex-direction이 row면 flex-basis를 0으로 해야 한다 */
+}
+
+.rightContent:nth-child(2) {
+    flex-grow: 1;
+    flex-basis: 0;
+}
+
+
+
+.rightOthersContent:nth-child(1) {
+    flex-grow: 1;
+}
+
+
+.rightOthersContent:nth-child(2) {
+    flex-grow: 6;
+}
+
+/*
+.rightOthersContent:nth-child(3) {
+    flex-grow: 2;
+}
+*/
 
 #attributeViewer{
     display: flex;
@@ -74,35 +115,6 @@ body {
 .bottomViewer:nth-child(3){
     flex-grow: 1;
     flex-basis: 0; 
-}
-
-.rightContent {
-    border-bottom: 2px solid white;
-    background-color: ghostwhite;
-}
-
-.rightContent:nth-child(1) {
-    flex-grow: 3;
-    flex-basis: 0; 
-    /* flex-direction이 row면 flex-basis를 0으로 해야 한다 */
-}
-
-.rightContent:nth-child(2) {
-    flex-grow: 2;
-    flex-basis: 0;
-}
-
-.rightOthersContent:nth-child(1) {
-    flex-grow: 1;
-}
-
-
-.rightOthersContent:nth-child(2) {
-    flex-grow: 2;
-}
-
-.rightOthersContent:nth-child(3) {
-    flex-grow: 2;
 }
 
 
@@ -156,7 +168,7 @@ body {
 }
 
 .cbp-spmenu-right {
-	right: -600px;
+	right: -500px;
 }
 
 .cbp-spmenu-right.cbp-spmenu-open {
@@ -164,7 +176,7 @@ body {
 }
 
 .cbp-spmenu-vertical {
-	width: 600px;
+	width: 500px;
 	height: 100%;
 	top: 0;
 	z-index: 1000;
@@ -234,4 +246,20 @@ body {
 
 .cbp-spmenu-bottom.cbp-spmenu-open {
 	bottom: 0px;
+}
+
+/*For Decision Viewer*/
+table {
+    width: 100%;
+}
+
+th { text-align: left; 
+     border-bottom: 1px solid black;
+}
+    th, td {padding: 15px;}
+    th.center, td.center { text-align: center; }
+    th.num, td.num { text-align: right; }
+
+.tableTitle{
+    font-weight: bolder;
 }

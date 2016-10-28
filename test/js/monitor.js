@@ -22,7 +22,7 @@ var openFile = function (event) {
         var index = 0;
         ganttData = inputData['Gantt']
         productInfo = inputData['Product']
-      
+        decisionInfo = inputData['Decision']      
         timelineHover(traveledTime);
         for (var i = 0; i < ganttData.length; i++) {
             var tempLabel = ganttData[i]['label'];
@@ -77,14 +77,15 @@ var showBottom;
  showRightPush.onclick = function() {
 				classie.toggle( this, 'active' );
 				classie.toggle( menuRight, 'cbp-spmenu-open' );
-				disableOther( 'showRight' );
+//				disableOther( 'showRight' );
 			};
  function disableOther( button ) {
 				if( button !== 'showRight' ) {
-					classie.toggle( showRightPush, 'disabled' );
+//                    d3.selectAll('#showRight')
+//					classie.toggle( showRightPush, 'disabled' );
 				}
                 if( button !== 'showBottom' ) {
-					classie.toggle( showBottom, 'disabled' );
+//					classie.toggle( showBottom, 'disabled' );
 				}
 			}
 
@@ -113,8 +114,7 @@ function timelineHover(traveledTime) {
                 selectLots(selectedLotId)
                 clickedElement = d.lotId.substring(0, d.lotId.indexOf('_'))
                 boolSelected = true;
-                if(selectedLotId.indexOf('_')>0) selectedLotId = selectedLotId.substring(0, selectedLotId.indexOf('_'))
-                console.log(selectedLotId+'_'+d.degree) 
+                displayDecisions(d)                
             }
         })
     var svg = d3.select("#process").append("svg").attr("width", processWidth);
@@ -183,9 +183,150 @@ function displayAttribute(d, datum){
 }
 
 // ------------------------------------- Decision View ------------------------------------------------
-function displayDecisions(){
+var columns = [
+        { head: 'Decision', cl: 'tableTitle', html: ƒ('decision') },
+        { head: 'DecisionType', cl: 'num', html: ƒ('decisionType') },
+        { head: 'ProductType', cl: 'center', html: ƒ('productType') },
+        { head: 'LotQuantiy', cl: 'center', html: ƒ('lotSize') },
+        { head: 'Reward', cl: 'num', html: ƒ('reward', d3.format('.5f')) }
+    ];
+
+
+function displayDecisions(d, datum){
+    d3.selectAll('table').remove();
+    var lotId = d.lotId;
+    if(lotId.indexOf('_')>0) lotId = lotId.substring(0, lotId.indexOf('_'))
+    var decisionKey = d.degree + '_' + lotId
+    var decisionsArray = decisionInfo[decisionKey]
+    
+    var DASelection = 5;
+    var WBSelection = 5;
+    var WBSplit = 5;
+    
+    var DASelDecisions = [];
+    var WBSelDecisions = [];
+    var boorder = [
+        {'decision' : '---------', 'decisionType' : '---------', 'productType' : '---------', 'lotSize': '-----------', 'reward': ''}
+    ];
+    var WBSplitDecisions = [];
+    
+    if(d.degree.indexOf('WB')>-1){
+        for(var i = 0; i < decisionsArray.length; i++){
+            var tempDecision = decisionsArray[i];
+            if(tempDecision.decisionType == 'WB_SELECTION'){
+                if(WBSelDecisions.length == WBSelection) continue;
+                WBSelDecisions.push(tempDecision)
+            }
+            else if(tempDecision.decisionType == 'SPLIT'){
+                if(WBSplitDecisions.length == WBSplit) continue;
+                WBSplitDecisions.push(tempDecision)
+            }
+        }
+    }
+    else{
+        DASelection = Math.min(DASelection, decisionsArray.length)
+        for(var i = 0; i < DASelection; i++){
+            DASelDecisions.push(decisionsArray[i])
+        }
+    }
+    var table = d3.select('#decisionViewer')
+                  .append('table');
     
     
+    if(d.degree.indexOf('WB')>-1){
+     // create table header
+    table.append('thead').append('tr')
+            .selectAll('th')
+            .data(columns).enter()
+            .append('th')
+            .attr('class', ƒ('cl'))
+            .text(ƒ('head'));
+    
+     table.append('tbody')
+        .selectAll('tr')
+        .data(WBSelDecisions).enter()
+        .append('tr')
+        .selectAll('td')
+        .data(function(row, i) {
+            return columns.map(function(c) {
+                // compute cell values for this specific row
+                var cell = {};
+                d3.keys(c).forEach(function(k) {
+                    cell[k] = typeof c[k] == 'function' ? c[k](row,i) : c[k];
+                });
+                return cell;
+            });
+        }).enter()
+        .append('td')
+        .html(ƒ('html'))
+        .attr('class', ƒ('cl'));
+        
+     table.append('tbody')
+        .selectAll('tr')
+        .data(boorder).enter()
+        .append('tr')
+        .selectAll('td')
+        .data(function(row, i) {
+            return columns.map(function(c) {
+                // compute cell values for this specific row
+                var cell = {};
+                d3.keys(c).forEach(function(k) {
+                    cell[k] = typeof c[k] == 'function' ? c[k](row,i) : c[k];
+                });
+                return cell;
+            });
+        }).enter()
+        .append('td')
+        .html(ƒ('html'))
+        .attr('class', ƒ('cl'));    
+        
+    // create table body
+    table.append('tbody')
+        .selectAll('tr')
+        .data(WBSplitDecisions).enter()
+        .append('tr')
+        .selectAll('td')
+        .data(function(row, i) {
+            return columns.map(function(c) {
+                // compute cell values for this specific row
+                var cell = {};
+                d3.keys(c).forEach(function(k) {
+                    cell[k] = typeof c[k] == 'function' ? c[k](row,i) : c[k];
+                });
+                return cell;
+            });
+        }).enter()
+        .append('td')
+        .html(ƒ('html'))
+        .attr('class', ƒ('cl'));
+    }
+    else{
+        table.append('thead').append('tr')
+            .selectAll('th')
+            .data(columns).enter()
+            .append('th')
+            .attr('class', ƒ('cl'))
+            .text(ƒ('head'));
+     
+     table.append('tbody')
+        .selectAll('tr')
+        .data(DASelDecisions).enter()
+        .append('tr')
+        .selectAll('td')
+        .data(function(row, i) {
+            return columns.map(function(c) {
+                // compute cell values for this specific row
+                var cell = {};
+                d3.keys(c).forEach(function(k) {
+                    cell[k] = typeof c[k] == 'function' ? c[k](row,i) : c[k];
+                });
+                return cell;
+            });
+        }).enter()
+        .append('td')
+        .html(ƒ('html'))
+        .attr('class', ƒ('cl'));
+    }
 }
 
 
