@@ -341,6 +341,39 @@ function selectLots(lotId){
     })
 }
 
+// Tab View
+d3.select('#wipView').on('click', function(){
+	d3.select('#resourceView')
+		.classed('active', false)
+		.classed('de-active', true)
+	d3.select('#wipView')
+		.classed('de-active', false)
+		.classed('active', true)
+	d3.select('#wipLevel')
+		.classed('myHidden', false)
+	d3.select('#process')
+		.classed('myHidden', true)
+	d3.event.preventDefault();
+	return false;
+	});
+
+d3.select('#resourceView').on('click', function(){
+	d3.select('#wipView')
+		.classed('active', false)
+		.classed('de-active', true)
+	d3.select('#resourceView')
+		.classed('de-active', false)
+		.classed('active', true)
+	d3.select('#process')
+		.classed('myHidden', false)
+	d3.select('#wipLevel')
+		.classed('myHidden', true)
+	d3.event.preventDefault();
+	return false;
+	});
+
+
+
 function reDraw(traveledTime) {
     var svg = d3.select("#process").selectAll('.operations')
     var newLabelData = [];   

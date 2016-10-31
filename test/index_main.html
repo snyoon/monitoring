@@ -28,13 +28,13 @@ if (session.getAttribute("u_id")==null) {
             <!--  <div class="btn-group" role="group" aria-label="...">-->
             <input type='file' accept='text/plain' onchange='openFile(event)'>
             <button type="button" class="btn btn-default" id='resourceView'>Resource View</button>
-            <button type="button" class="btn btn-default" id='productView'>Product View</button>
-            <button type="button" class="btn btn-default" id='lotView'>Lot Status View</button>
+            <button type="button" class="btn btn-default" id='wipView'>Wip View</button>
             <button type="button" class="btn btn-default" id='showRight'>접기/펴기</button>
             <!--            </div>-->
         </div>
         <div id='chart'>
             <div id='process'></div>
+            <div id='wipLevel' class='myHidden'></div>
         </div>
         <div id="hoverRes">
             <div class="coloredDiv"></div>

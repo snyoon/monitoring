@@ -263,3 +263,9 @@ th { text-align: left;
 .tableTitle{
     font-weight: bolder;
 }
+
+/* Tab View */
+.myHidden {
+  display: none !important;
+  /*fill: gray;*/
+}
