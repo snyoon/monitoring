@@ -10,6 +10,25 @@ var productInfo = {};
 var decisionInfo = {};
 var boolSelected;
 
+// ProductionStatus Info
+var maxTime;
+var productionStatus = {}
+var graphMargin = {
+        left: 30
+        , right: 30
+        , top: 30
+        , bottom: 30
+    }
+var tickFormat = { format: d3.time.format("%H %M"),
+          tickTime: d3.time.hour,
+          tickInterval: 2,
+          tickSize: 6,
+          tickValues: null
+        }
+
+// KPI Info
+var KPI = {}
+
 var openFile = function (event) {
     d3.selectAll('svg').remove();
     var input = event.target;
@@ -22,8 +41,15 @@ var openFile = function (event) {
         var index = 0;
         ganttData = inputData['Gantt']
         productInfo = inputData['Product']
-        decisionInfo = inputData['Decision']      
+        decisionInfo = inputData['Decision']
+        KPI = inputData['KPI']
+        maxTime = inputData['KPIMaxTime']
+        for(var i = 0; i < inputData['ProductionStatus'].length; i++){
+            var tempProduction = inputData['ProductionStatus'][i];
+            productionStatus[tempProduction.id] = tempProduction.values;
+        }
         timelineHover(traveledTime);
+        ProductionStatus();
         for (var i = 0; i < ganttData.length; i++) {
             var tempLabel = ganttData[i]['label'];
             var tempTimes = ganttData[i]['times']
@@ -31,6 +57,7 @@ var openFile = function (event) {
                 sortedTimes.push(tempTimes[j])
             }
         }
+        displayKPI();
         sortedTimes.sort(function (a, b) {
             return a.starting_time < b.starting_time ? -1 : a.starting_time > b.starting_time ? 1 : 0;
         })
@@ -341,15 +368,15 @@ function selectLots(lotId){
     })
 }
 
-// Tab View
-d3.select('#wipView').on('click', function(){
+// ---------------------------------- Tab View ---------------------------------------
+d3.select('#statusView').on('click', function(){
 	d3.select('#resourceView')
 		.classed('active', false)
 		.classed('de-active', true)
-	d3.select('#wipView')
+	d3.select('#statusView')
 		.classed('de-active', false)
 		.classed('active', true)
-	d3.select('#wipLevel')
+	d3.select('#status')
 		.classed('myHidden', false)
 	d3.select('#process')
 		.classed('myHidden', true)
@@ -358,7 +385,7 @@ d3.select('#wipView').on('click', function(){
 	});
 
 d3.select('#resourceView').on('click', function(){
-	d3.select('#wipView')
+	d3.select('#statusView')
 		.classed('active', false)
 		.classed('de-active', true)
 	d3.select('#resourceView')
@@ -366,13 +393,213 @@ d3.select('#resourceView').on('click', function(){
 		.classed('active', true)
 	d3.select('#process')
 		.classed('myHidden', false)
-	d3.select('#wipLevel')
+	d3.select('#status')
 		.classed('myHidden', true)
 	d3.event.preventDefault();
 	return false;
 	});
 
 
+//------------------------------- Production Status Graphs ----------------------------------
+function ProductionStatus(){
+    var canvasWidth = processWidth/3.3;
+    var graphWidth = canvasWidth - graphMargin.left - graphMargin.right;
+    var graphHeight = 400 - graphMargin.top - graphMargin.bottom;
+    
+    var xScale = d3.time.scale()
+        .domain([0, maxTime*1000])
+        .range([0, graphWidth]); // FIX
+    
+    var xAxis = d3.svg.axis()
+        .scale(xScale)
+        .orient('bottom')
+        .tickFormat(tickFormat.format)
+        .tickSize(tickFormat.tickSize);
+    
+    
+    // WIP Level
+    var svg1 = d3.select("#status_1").append('svg').attr('width', canvasWidth).attr('height', 400)
+               .append('g').attr("transform", "translate(" + graphMargin.left + "," + graphMargin.top+ ")");
+    
+    var yScale = d3.scale.linear()
+         .domain([0, d3.max(productionStatus['WIPLevel'], function(d){return d.number})])
+         .range([graphHeight, 0]);
+        
+    var yAxis = d3.svg.axis()
+        .scale(yScale)
+        .orient('left')
+        .tickSize(2);    
+    
+    var line = d3.svg.line()
+            .x(function(d) { return xScale(d.time*1000); })
+            .y(function(d) { return yScale(+d.number); })
+//            .inperpolate('linear') ;
+
+    svg1.append("text")
+        .attr('class', 'statusTitle')
+        .attr("x", (graphWidth / 2))             
+        .attr("y", 0 - (margin.top / 2))
+        .text("WIP Level");
+    
+    svg1.append('path')
+        .attr('class', 'statusLine')
+        .attr("d", line(productionStatus['WIPLevel']))
+    
+	svg1.append("g")
+		.attr("class", "x axis")
+		.attr("transform", "translate(0," + graphHeight + ")")
+		.call(xAxis);
+
+	svg1.append("g")
+		.attr("class", "y axis")
+		.call(yAxis);
+    
+     // Input Count
+    svg1 = d3.select("#status_1").append('svg').attr('width', canvasWidth).attr('height', 400)
+               .append('g').attr("transform", "translate(" + graphMargin.left + "," + graphMargin.top+ ")");
+    
+     
+    var yScale = d3.scale.linear()
+         .domain([0, d3.max(productionStatus['InputCount'], function(d){return d.number})])
+         .range([graphHeight, 0]);
+        
+    var yAxis = d3.svg.axis()
+        .scale(yScale)
+        .orient('left')
+        .tickSize(2);    
+    
+    svg1.append("text")
+        .attr('class', 'statusTitle')
+        .attr("x", (graphWidth / 2))             
+        .attr("y", 0 - (margin.top / 2))
+        .text("투입량");
+    
+    svg1.append('path')
+        .attr('class', 'statusLine')
+        .attr("d", line(productionStatus['InputCount']))
+    
+	svg1.append("g")
+		.attr("class", "x axis")
+		.attr("transform", "translate(0," + graphHeight + ")")
+		.call(xAxis);
+
+	svg1.append("g")
+		.attr("class", "y axis")
+		.call(yAxis);
+    
+    
+    // Ship Count
+    svg1 = d3.select("#status_1").append('svg').attr('width', canvasWidth).attr('height', 400)
+               .append('g').attr("transform", "translate(" + graphMargin.left + "," + graphMargin.top+ ")");
+    
+     
+    var yScale = d3.scale.linear()
+         .domain([0, d3.max(productionStatus['ShipCount'], function(d){return d.number})])
+         .range([graphHeight, 0]);
+        
+    var yAxis = d3.svg.axis()
+        .scale(yScale)
+        .orient('left')
+        .tickSize(2);    
+    
+    svg1.append("text")
+        .attr('class', 'statusTitle')
+        .attr("x", (graphWidth / 2))             
+        .attr("y", 0 - (margin.top / 2))
+        .text("산출물");
+    
+    svg1.append('path')
+        .attr('class', 'statusLine')
+        .attr("d", line(productionStatus['ShipCount']))
+    
+	svg1.append("g")
+		.attr("class", "x axis")
+		.attr("transform", "translate(0," + graphHeight + ")")
+		.call(xAxis);
+
+	svg1.append("g")
+		.attr("class", "y axis")
+		.call(yAxis);
+    
+    
+    // Split Count
+    svg1 = d3.select("#status_2").append('svg').attr('width', canvasWidth).attr('height', 400)
+               .append('g').attr("transform", "translate(" + graphMargin.left + "," + (graphMargin.top)+ ")");
+    
+     
+    var yScale = d3.scale.linear()
+         .domain([0, d3.max(productionStatus['SplitCount'], function(d){return d.number})])
+         .range([graphHeight, 0]);
+        
+    var yAxis = d3.svg.axis()
+        .scale(yScale)
+        .orient('left')
+        .tickSize(2);    
+    
+    svg1.append("text")
+        .attr('class', 'statusTitle')
+        .attr("x", (graphWidth / 2))             
+        .attr("y", 0 - (margin.top / 2))
+        .text("Split Count");
+    
+    svg1.append('path')
+        .attr('class', 'statusLine')
+        .attr("d", line(productionStatus['SplitCount']))
+    
+	svg1.append("g")
+		.attr("class", "x axis")
+		.attr("transform", "translate(0," + graphHeight + ")")
+		.call(xAxis);
+
+	svg1.append("g")
+		.attr("class", "y axis")
+		.call(yAxis);
+    
+     // Merge Count
+    svg1 = d3.select("#status_2").append('svg').attr('width', canvasWidth).attr('height', 400)
+               .append('g').attr("transform", "translate(" + graphMargin.left + "," + (graphMargin.top)+ ")");
+    
+     
+    var yScale = d3.scale.linear()
+         .domain([0, d3.max(productionStatus['MergeCount'], function(d){return d.number})])
+         .range([graphHeight, 0]);
+        
+    var yAxis = d3.svg.axis()
+        .scale(yScale)
+        .orient('left')
+        .tickSize(2);    
+    
+    svg1.append("text")
+        .attr('class', 'statusTitle')
+        .attr("x", (graphWidth / 2))             
+        .attr("y", 0 - (margin.top / 2))
+        .text("Merge Count");
+    
+    svg1.append('path')
+        .attr('class', 'statusLine')
+        .attr("d", line(productionStatus['MergeCount']))
+    
+	svg1.append("g")
+		.attr("class", "x axis")
+		.attr("transform", "translate(0," + graphHeight + ")")
+		.call(xAxis);
+
+	svg1.append("g")
+		.attr("class", "y axis")
+		.call(yAxis);
+    
+}
+
+//-------------------------------------- KPI Status -----------------------------------------
+function displayKPI(){
+      $('#KPI')
+        .html('<strong style="font-family:Sans-serif;font-size:20px;">' +'TAT: '+ KPI['TAT'].toFixed(3) + '<br>' + '</strong>' 
+             +'<strong style="font-family:Sans-serif;font-size:20px;">' +'Target: '+ KPI['Target'].toFixed(3) + '<br>' + '</strong>'
+             +'<strong style="font-family:Sans-serif;font-size:20px;">' +'DA Util: '+ KPI['Util_DA'].toFixed(3) + '<br>' + '</strong>'
+             +'<strong style="font-family:Sans-serif;font-size:20px;">' +'WB Util: '+ KPI['Util_WB'].toFixed(3) + '<br>' + '</strong>'
+             );
+    
+}
 
 function reDraw(traveledTime) {
     var svg = d3.select("#process").selectAll('.operations')

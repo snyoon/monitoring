@@ -77,12 +77,12 @@ body {
 
 
 .rightOthersContent:nth-child(1) {
-    flex-grow: 1;
+    flex-grow: 5;
 }
 
 
 .rightOthersContent:nth-child(2) {
-    flex-grow: 6;
+    flex-grow: 1;
 }
 
 /*
@@ -266,6 +266,22 @@ th { text-align: left;
 
 /* Tab View */
 .myHidden {
-  display: none !important;
+  display: none ;
   /*fill: gray;*/
 }
+
+/*For Status Viewer*/
+.statusTitle{
+    text-anchor: middle;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.statusLine{
+    stroke: blue;
+    stroke-width: 2;
+    fill: none
+}
+
+
+
