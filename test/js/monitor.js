@@ -19,7 +19,7 @@ var graphMargin = {
         , top: 30
         , bottom: 30
     }
-var tickFormat = { format: d3.time.format("%H %M"),
+var tickFormat = { format: d3.time.format("%H"),
           tickTime: d3.time.hour,
           tickInterval: 2,
           tickSize: 6,
@@ -27,7 +27,8 @@ var tickFormat = { format: d3.time.format("%H %M"),
         }
 
 // KPI Info
-var KPI = {}
+var KPI = {};
+var KPIs = [];
 
 var openFile = function (event) {
     d3.selectAll('svg').remove();
@@ -43,6 +44,12 @@ var openFile = function (event) {
         productInfo = inputData['Product']
         decisionInfo = inputData['Decision']
         KPI = inputData['KPI']
+        for(var key in KPI){
+            var tempObject = {};
+            tempObject['key'] = key
+            tempObject['value'] = KPI[key]
+            KPIs.push(tempObject)
+        }
         maxTime = inputData['KPIMaxTime']
         for(var i = 0; i < inputData['ProductionStatus'].length; i++){
             var tempProduction = inputData['ProductionStatus'][i];
@@ -125,6 +132,7 @@ function timelineHover(traveledTime) {
             if (d.starting_time > traveledTime) return;
         }).click(function (d, i, datum) {
             var selectedLotId = d.lotId;
+            var eventId = d.eventId;
             if(d.lotId.indexOf(clickedElement) > -1 && boolSelected == true){
                  var rects = d3.selectAll('.operationRect')
                  rects.style("fill", function (d, i) { return colorCycle[d.productId];})   
@@ -138,7 +146,7 @@ function timelineHover(traveledTime) {
                 d3.selectAll('#'+selectedLotId)
                 classie.toggle( menuBottom, 'cbp-spmenu-open' );
                 displayAttribute(d, datum)
-                selectLots(selectedLotId)
+                selectLots(selectedLotId, eventId)
                 clickedElement = d.lotId.substring(0, d.lotId.indexOf('_'))
                 boolSelected = true;
                 displayDecisions(d)                
@@ -251,7 +259,8 @@ function displayDecisions(d, datum){
         }
     }
     else{
-        DASelection = Math.min(DASelection, decisionsArray.length)
+//        DASelection = Math.min(DASelection, decisionsArray.length)
+        DASelection = decisionsArray.length
         for(var i = 0; i < DASelection; i++){
             DASelDecisions.push(decisionsArray[i])
         }
@@ -354,11 +363,21 @@ function displayDecisions(d, datum){
         .html(ƒ('html'))
         .attr('class', ƒ('cl'));
     }
+    
+    var currentStatus =  decisionsArray[0];
+    $('#currentStatus')
+        .html('<strong style="font-family:Sans-serif;font-size:20px;">' +'WIP Level: '+ currentStatus['wipLevel'] + '<br>' + '</strong>' 
+             +'<strong style="font-family:Sans-serif;font-size:20px;">' +'Working DA: '+ currentStatus['workingDA'] + '<br>' + '</strong>'
+             +'<strong style="font-family:Sans-serif;font-size:20px;">' +'Working WB: '+ currentStatus['workingWB'] + '<br>' + '</strong>'
+             +'<strong style="font-family:Sans-serif;font-size:20px;">' +'투입량: '+ currentStatus['inputCount'] + '<br>' + '</strong>'
+             );
+    
 }
 
 
-function selectLots(lotId){
+function selectLots(lotId, eventId){
     var rects = d3.selectAll('.operationRect')
+    
     if (lotId.indexOf('_' ) >0){
         lotId = lotId.substring(0, lotId.indexOf('_'))
     } 
@@ -366,6 +385,13 @@ function selectLots(lotId){
         if(d.lotId.indexOf(lotId)>-1) return colorCycle[d.productId];
         else return 'white'
     })
+    rects.style('stroke', function(d){
+        if(d.eventId == eventId) return 'red'
+    })
+    rects.style('stroke-width', function(d){
+        if(d.eventId == eventId) return 4
+    })
+    
 }
 
 // ---------------------------------- Tab View ---------------------------------------
@@ -588,16 +614,38 @@ function ProductionStatus(){
 		.attr("class", "y axis")
 		.call(yAxis);
     
+    // KPI
+    svg1 = d3.select("#status_2").append('svg').attr('width', canvasWidth).attr('height', 400)
+               .append('g').attr("transform", "translate(" + graphMargin.left + "," + (graphMargin.top)+ ")");
+    
+    var fontSize = 18; 
+    svg1.append("text")
+        .attr('class', 'statusTitle')
+        .attr("x", (graphWidth / 2))             
+        .attr("y", 0 - (margin.top / 2))
+        .text("KPI");
+    
+    var kpis = svg1.selectAll('.KPIs')
+        .data(KPIs)
+        .enter()
+        .append('g')
+        .attr('class', 'KPIs')
+        .attr("transform", function(d, i) { return "translate(0," + (i * (fontSize*2) +30)+ ")"; });
+    
+    kpis.append('text')
+        .attr('x', 12)
+        .attr('y', 3)
+        .text(function(d){
+            return d.key + ": " + d.value.toFixed(3);
+        })
+        .style('font-size', fontSize)
+    
+    
 }
 
 //-------------------------------------- KPI Status -----------------------------------------
-function displayKPI(){
-      $('#KPI')
-        .html('<strong style="font-family:Sans-serif;font-size:20px;">' +'TAT: '+ KPI['TAT'].toFixed(3) + '<br>' + '</strong>' 
-             +'<strong style="font-family:Sans-serif;font-size:20px;">' +'Target: '+ KPI['Target'].toFixed(3) + '<br>' + '</strong>'
-             +'<strong style="font-family:Sans-serif;font-size:20px;">' +'DA Util: '+ KPI['Util_DA'].toFixed(3) + '<br>' + '</strong>'
-             +'<strong style="font-family:Sans-serif;font-size:20px;">' +'WB Util: '+ KPI['Util_WB'].toFixed(3) + '<br>' + '</strong>'
-             );
+function displayKPI(lotId){
+      
     
 }
 
