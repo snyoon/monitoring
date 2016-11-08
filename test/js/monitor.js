@@ -389,7 +389,7 @@ function selectLots(lotId, eventId){
         if(d.eventId == eventId) return 'red'
     })
     rects.style('stroke-width', function(d){
-        if(d.eventId == eventId) return 4
+        if(d.eventId == eventId) return 6;
     })
     
 }
@@ -441,6 +441,32 @@ function ProductionStatus(){
         .orient('bottom')
         .tickFormat(tickFormat.format)
         .tickSize(tickFormat.tickSize);
+    
+     // KPI
+    svg1 = d3.select("#status_1").append('svg').attr('width', canvasWidth).attr('height', 400)
+               .append('g').attr("transform", "translate(" + graphMargin.left + "," + (graphMargin.top)+ ")");
+    
+    var fontSize = 18; 
+    svg1.append("text")
+        .attr('class', 'statusTitle')
+        .attr("x", (graphWidth / 2))             
+        .attr("y", 0 - (margin.top / 2))
+        .text("KPI");
+    
+    var kpis = svg1.selectAll('.KPIs')
+        .data(KPIs)
+        .enter()
+        .append('g')
+        .attr('class', 'KPIs')
+        .attr("transform", function(d, i) { return "translate(0," + (i * (fontSize*2) +30)+ ")"; });
+    
+    kpis.append('text')
+        .attr('x', 12)
+        .attr('y', 3)
+        .text(function(d){
+            return d.key + ": " + d.value.toFixed(3);
+        })
+        .style('font-size', fontSize)
     
     
     // WIP Level
@@ -515,7 +541,7 @@ function ProductionStatus(){
     
     
     // Ship Count
-    svg1 = d3.select("#status_1").append('svg').attr('width', canvasWidth).attr('height', 400)
+    svg1 = d3.select("#status_2").append('svg').attr('width', canvasWidth).attr('height', 400)
                .append('g').attr("transform", "translate(" + graphMargin.left + "," + graphMargin.top+ ")");
     
      
@@ -614,33 +640,7 @@ function ProductionStatus(){
 		.attr("class", "y axis")
 		.call(yAxis);
     
-    // KPI
-    svg1 = d3.select("#status_2").append('svg').attr('width', canvasWidth).attr('height', 400)
-               .append('g').attr("transform", "translate(" + graphMargin.left + "," + (graphMargin.top)+ ")");
-    
-    var fontSize = 18; 
-    svg1.append("text")
-        .attr('class', 'statusTitle')
-        .attr("x", (graphWidth / 2))             
-        .attr("y", 0 - (margin.top / 2))
-        .text("KPI");
-    
-    var kpis = svg1.selectAll('.KPIs')
-        .data(KPIs)
-        .enter()
-        .append('g')
-        .attr('class', 'KPIs')
-        .attr("transform", function(d, i) { return "translate(0," + (i * (fontSize*2) +30)+ ")"; });
-    
-    kpis.append('text')
-        .attr('x', 12)
-        .attr('y', 3)
-        .text(function(d){
-            return d.key + ": " + d.value.toFixed(3);
-        })
-        .style('font-size', fontSize)
-    
-    
+   
 }
 
 //-------------------------------------- KPI Status -----------------------------------------
