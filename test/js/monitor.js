@@ -234,143 +234,151 @@ function displayDecisions(d, datum){
     var decisionKey = d.degree + '_' + lotId
     var decisionsArray = decisionInfo[decisionKey]
     
-    var DASelection = 5;
-    var WBSelection = 5;
-    var WBSplit = 5;
-    
-    var DASelDecisions = [];
-    var WBSelDecisions = [];
-    var boorder = [
-        {'decision' : '---------', 'decisionType' : '---------', 'productType' : '---------', 'lotSize': '-----------', 'reward': ''}
-    ];
-    var WBSplitDecisions = [];
-    
-    if(d.degree.indexOf('WB')>-1){
-        for(var i = 0; i < decisionsArray.length; i++){
-            var tempDecision = decisionsArray[i];
-            if(tempDecision.decisionType == 'WB_SELECTION'){
-                if(WBSelDecisions.length == WBSelection) continue;
-                WBSelDecisions.push(tempDecision)
-            }
-            else if(tempDecision.decisionType == 'SPLIT'){
-                if(WBSplitDecisions.length == WBSplit) continue;
-                WBSplitDecisions.push(tempDecision)
+    if(decisionsArray != undefined){
+        var DASelection = 5;
+        var WBSelection = 5;
+        var WBSplit = 5;
+
+        var DASelDecisions = [];
+        var WBSelDecisions = [];
+        var boorder = [
+            {'decision' : '---------', 'decisionType' : '---------', 'productType' : '---------', 'lotSize': '-----------', 'reward': ''}
+        ];
+        var WBSplitDecisions = [];
+
+        if(d.degree.indexOf('WB')>-1){
+            for(var i = 0; i < decisionsArray.length; i++){
+                var tempDecision = decisionsArray[i];
+                if(tempDecision.decisionType == 'WB_SELECTION'){
+                    if(WBSelDecisions.length == WBSelection) continue;
+                    WBSelDecisions.push(tempDecision)
+                }
+                else if(tempDecision.decisionType == 'SPLIT'){
+                    if(WBSplitDecisions.length == WBSplit) continue;
+                    WBSplitDecisions.push(tempDecision)
+                }
             }
         }
-    }
-    else{
-//        DASelection = Math.min(DASelection, decisionsArray.length)
-        DASelection = decisionsArray.length
-        for(var i = 0; i < DASelection; i++){
-            DASelDecisions.push(decisionsArray[i])
+        else{
+    //        DASelection = Math.min(DASelection, decisionsArray.length)
+            DASelection = decisionsArray.length
+            for(var i = 0; i < DASelection; i++){
+                DASelDecisions.push(decisionsArray[i])
+            }
         }
-    }
-    var table = d3.select('#decisionViewer')
-                  .append('table');
-    
-    
-    if(d.degree.indexOf('WB')>-1){
-     // create table header
-    table.append('thead').append('tr')
-            .selectAll('th')
-            .data(columns).enter()
-            .append('th')
-            .attr('class', ƒ('cl'))
-            .text(ƒ('head'));
-    
-     table.append('tbody')
-        .selectAll('tr')
-        .data(WBSelDecisions).enter()
-        .append('tr')
-        .selectAll('td')
-        .data(function(row, i) {
-            return columns.map(function(c) {
-                // compute cell values for this specific row
-                var cell = {};
-                d3.keys(c).forEach(function(k) {
-                    cell[k] = typeof c[k] == 'function' ? c[k](row,i) : c[k];
-                });
-                return cell;
-            });
-        }).enter()
-        .append('td')
-        .html(ƒ('html'))
-        .attr('class', ƒ('cl'));
-        
-     table.append('tbody')
-        .selectAll('tr')
-        .data(boorder).enter()
-        .append('tr')
-        .selectAll('td')
-        .data(function(row, i) {
-            return columns.map(function(c) {
-                // compute cell values for this specific row
-                var cell = {};
-                d3.keys(c).forEach(function(k) {
-                    cell[k] = typeof c[k] == 'function' ? c[k](row,i) : c[k];
-                });
-                return cell;
-            });
-        }).enter()
-        .append('td')
-        .html(ƒ('html'))
-        .attr('class', ƒ('cl'));    
-        
-    // create table body
-    table.append('tbody')
-        .selectAll('tr')
-        .data(WBSplitDecisions).enter()
-        .append('tr')
-        .selectAll('td')
-        .data(function(row, i) {
-            return columns.map(function(c) {
-                // compute cell values for this specific row
-                var cell = {};
-                d3.keys(c).forEach(function(k) {
-                    cell[k] = typeof c[k] == 'function' ? c[k](row,i) : c[k];
-                });
-                return cell;
-            });
-        }).enter()
-        .append('td')
-        .html(ƒ('html'))
-        .attr('class', ƒ('cl'));
-    }
-    else{
+        var table = d3.select('#decisionViewer')
+                      .append('table');
+
+
+        if(d.degree.indexOf('WB')>-1){
+         // create table header
         table.append('thead').append('tr')
-            .selectAll('th')
-            .data(columns).enter()
-            .append('th')
-            .attr('class', ƒ('cl'))
-            .text(ƒ('head'));
-     
-     table.append('tbody')
-        .selectAll('tr')
-        .data(DASelDecisions).enter()
-        .append('tr')
-        .selectAll('td')
-        .data(function(row, i) {
-            return columns.map(function(c) {
-                // compute cell values for this specific row
-                var cell = {};
-                d3.keys(c).forEach(function(k) {
-                    cell[k] = typeof c[k] == 'function' ? c[k](row,i) : c[k];
+                .selectAll('th')
+                .data(columns).enter()
+                .append('th')
+                .attr('class', ƒ('cl'))
+                .text(ƒ('head'));
+
+         table.append('tbody')
+            .selectAll('tr')
+            .data(WBSelDecisions).enter()
+            .append('tr')
+            .selectAll('td')
+            .data(function(row, i) {
+                return columns.map(function(c) {
+                    // compute cell values for this specific row
+                    var cell = {};
+                    d3.keys(c).forEach(function(k) {
+                        cell[k] = typeof c[k] == 'function' ? c[k](row,i) : c[k];
+                    });
+                    return cell;
                 });
-                return cell;
-            });
-        }).enter()
-        .append('td')
-        .html(ƒ('html'))
-        .attr('class', ƒ('cl'));
-    }
-    
-    var currentStatus =  decisionsArray[0];
-    $('#currentStatus')
+            }).enter()
+            .append('td')
+            .html(ƒ('html'))
+            .attr('class', ƒ('cl'));
+
+         table.append('tbody')
+            .selectAll('tr')
+            .data(boorder).enter()
+            .append('tr')
+            .selectAll('td')
+            .data(function(row, i) {
+                return columns.map(function(c) {
+                    // compute cell values for this specific row
+                    var cell = {};
+                    d3.keys(c).forEach(function(k) {
+                        cell[k] = typeof c[k] == 'function' ? c[k](row,i) : c[k];
+                    });
+                    return cell;
+                });
+            }).enter()
+            .append('td')
+            .html(ƒ('html'))
+            .attr('class', ƒ('cl'));    
+
+        // create table body
+        table.append('tbody')
+            .selectAll('tr')
+            .data(WBSplitDecisions).enter()
+            .append('tr')
+            .selectAll('td')
+            .data(function(row, i) {
+                return columns.map(function(c) {
+                    // compute cell values for this specific row
+                    var cell = {};
+                    d3.keys(c).forEach(function(k) {
+                        cell[k] = typeof c[k] == 'function' ? c[k](row,i) : c[k];
+                    });
+                    return cell;
+                });
+            }).enter()
+            .append('td')
+            .html(ƒ('html'))
+            .attr('class', ƒ('cl'));
+        }
+        else{
+            table.append('thead').append('tr')
+                .selectAll('th')
+                .data(columns).enter()
+                .append('th')
+                .attr('class', ƒ('cl'))
+                .text(ƒ('head'));
+
+         table.append('tbody')
+            .selectAll('tr')
+            .data(DASelDecisions).enter()
+            .append('tr')
+            .selectAll('td')
+            .data(function(row, i) {
+                return columns.map(function(c) {
+                    // compute cell values for this specific row
+                    var cell = {};
+                    d3.keys(c).forEach(function(k) {
+                        cell[k] = typeof c[k] == 'function' ? c[k](row,i) : c[k];
+                    });
+                    return cell;
+                });
+            }).enter()
+            .append('td')
+            .html(ƒ('html'))
+            .attr('class', ƒ('cl'));
+        }
+        
+        var currentStatus =  decisionsArray[0];
+        $('#currentStatus')
         .html('<strong style="font-family:Sans-serif;font-size:20px;">' +'WIP Level: '+ currentStatus['wipLevel'] + '<br>' + '</strong>' 
              +'<strong style="font-family:Sans-serif;font-size:20px;">' +'Working DA: '+ currentStatus['workingDA'] + '<br>' + '</strong>'
              +'<strong style="font-family:Sans-serif;font-size:20px;">' +'Working WB: '+ currentStatus['workingWB'] + '<br>' + '</strong>'
              +'<strong style="font-family:Sans-serif;font-size:20px;">' +'투입량: '+ currentStatus['inputCount'] + '<br>' + '</strong>'
              );
+    }
+    else{
+        $('#currentStatus')
+            .html(' ');
+    }
+    
+    
     
 }
 
