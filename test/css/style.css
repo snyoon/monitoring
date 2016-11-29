@@ -278,8 +278,8 @@ th { text-align: left;
 }
 
 .statusLine{
-    stroke: blue;
-    stroke-width: 2;
+    stroke: #3366cc;
+    stroke-width: 1;
     fill: none
 }
 

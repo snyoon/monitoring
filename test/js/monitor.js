@@ -149,7 +149,8 @@ function timelineHover(traveledTime) {
                 selectLots(selectedLotId, eventId)
                 clickedElement = d.lotId.substring(0, d.lotId.indexOf('_'))
                 boolSelected = true;
-                displayDecisions(d)                
+                displayDecisions(d);
+                
             }
         })
     var svg = d3.select("#process").append("svg").attr("width", processWidth);
@@ -385,12 +386,12 @@ function displayDecisions(d, datum){
 
 function selectLots(lotId, eventId){
     var rects = d3.selectAll('.operationRect')
-    
+    var motherLotId = lotId;
     if (lotId.indexOf('_' ) >0){
-        lotId = lotId.substring(0, lotId.indexOf('_'))
+        motherLotId = lotId.substring(0, lotId.indexOf('_'))
     } 
     rects.style("fill", function (d, i) {
-        if(d.lotId.indexOf(lotId)>-1) return colorCycle[d.productId];
+        if(d.lotId.indexOf(motherLotId)>-1) return colorCycle[d.productId];
         else return 'white'
     })
     rects.style('stroke', function(d){
@@ -400,6 +401,13 @@ function selectLots(lotId, eventId){
         if(d.eventId == eventId) return 6;
     })
     
+//    var operText = d3.selectAll('.operationText')
+//    operText.text(function(d){
+//        if(d.lotId.indexOf(motherLotId)>-1) {
+//            console.log('ddd')
+//            return d.lotId;
+//        }
+//    })
 }
 
 // ---------------------------------- Tab View ---------------------------------------
@@ -440,15 +448,7 @@ function ProductionStatus(){
     var graphWidth = canvasWidth - graphMargin.left - graphMargin.right;
     var graphHeight = 400 - graphMargin.top - graphMargin.bottom;
     
-    var xScale = d3.time.scale()
-        .domain([0, maxTime*1000])
-        .range([0, graphWidth]); // FIX
-    
-    var xAxis = d3.svg.axis()
-        .scale(xScale)
-        .orient('bottom')
-        .tickFormat(tickFormat.format)
-        .tickSize(tickFormat.tickSize);
+   
     
      // KPI
     svg1 = d3.select("#status_1").append('svg').attr('width', canvasWidth).attr('height', 400)
@@ -472,7 +472,9 @@ function ProductionStatus(){
         .attr('x', 12)
         .attr('y', 3)
         .text(function(d){
-            return d.key + ": " + d.value.toFixed(3);
+            if(d.key == 'Stocker_size') return d.key + ": " + d.value;
+            if(d.key == 'Makespan') return d.key + ": " + (d.value/60).toFixed(1) + " (min)";
+            else return d.key + ": " + d.value.toFixed(3);
         })
         .style('font-size', fontSize)
     
@@ -481,8 +483,18 @@ function ProductionStatus(){
     var svg1 = d3.select("#status_1").append('svg').attr('width', canvasWidth).attr('height', 400)
                .append('g').attr("transform", "translate(" + graphMargin.left + "," + graphMargin.top+ ")");
     
+    var xScale = d3.time.scale()
+        .domain([0, d3.max(productionStatus['WIPLevel'], function(d){return d.time * 1000})])
+        .range([0, graphWidth]); // FIX
+    
+    var xAxis = d3.svg.axis()
+        .scale(xScale)
+        .orient('bottom')
+        .tickFormat(tickFormat.format)
+        .tickSize(tickFormat.tickSize);
+    
     var yScale = d3.scale.linear()
-         .domain([0, d3.max(productionStatus['WIPLevel'], function(d){return d.number})])
+         .domain([0, KPI['Stocker_size']+1])
          .range([graphHeight, 0]);
         
     var yAxis = d3.svg.axis()
@@ -494,6 +506,15 @@ function ProductionStatus(){
             .x(function(d) { return xScale(d.time*1000); })
             .y(function(d) { return yScale(+d.number); })
 //            .inperpolate('linear') ;
+    
+    var horizontalLine = svg1
+                 .append('line')
+                 .attr("x1", xScale(0))
+                 .attr("y1", yScale(KPI['Stocker_size']))
+                 .attr("x2", xScale(d3.max(productionStatus['WIPLevel'], function(d){return d.time * 1000})))
+                 .attr("y2", yScale(KPI['Stocker_size']))
+                 .style("stroke-width", 1)
+                 .style("stroke", "red")
 
     svg1.append("text")
         .attr('class', 'statusTitle')
@@ -518,7 +539,16 @@ function ProductionStatus(){
     svg1 = d3.select("#status_1").append('svg').attr('width', canvasWidth).attr('height', 400)
                .append('g').attr("transform", "translate(" + graphMargin.left + "," + graphMargin.top+ ")");
     
-     
+    var xScale = d3.time.scale()
+        .domain([0, d3.max(productionStatus['InputCount'], function(d){return d.time*1000})])
+        .range([0, graphWidth]); // FIX
+    
+    var xAxis = d3.svg.axis()
+        .scale(xScale)
+        .orient('bottom')
+        .tickFormat(tickFormat.format)
+        .tickSize(tickFormat.tickSize);
+    
     var yScale = d3.scale.linear()
          .domain([0, d3.max(productionStatus['InputCount'], function(d){return d.number})])
          .range([graphHeight, 0]);
@@ -551,6 +581,16 @@ function ProductionStatus(){
     // Ship Count
     svg1 = d3.select("#status_2").append('svg').attr('width', canvasWidth).attr('height', 400)
                .append('g').attr("transform", "translate(" + graphMargin.left + "," + graphMargin.top+ ")");
+    
+    var xScale = d3.time.scale()
+        .domain([0, d3.max(productionStatus['ShipCount'], function(d){return d.time*1000})])
+        .range([0, graphWidth]); // FIX
+    
+    var xAxis = d3.svg.axis()
+        .scale(xScale)
+        .orient('bottom')
+        .tickFormat(tickFormat.format)
+        .tickSize(tickFormat.tickSize);
     
      
     var yScale = d3.scale.linear()
@@ -586,7 +626,17 @@ function ProductionStatus(){
     svg1 = d3.select("#status_2").append('svg').attr('width', canvasWidth).attr('height', 400)
                .append('g').attr("transform", "translate(" + graphMargin.left + "," + (graphMargin.top)+ ")");
     
-     
+    
+    var xScale = d3.time.scale()
+        .domain([0, d3.max(productionStatus['SplitCount'], function(d){return d.time*1000})])
+        .range([0, graphWidth]); // FIX
+    
+    var xAxis = d3.svg.axis()
+        .scale(xScale)
+        .orient('bottom')
+        .tickFormat(tickFormat.format)
+        .tickSize(tickFormat.tickSize);
+    
     var yScale = d3.scale.linear()
          .domain([0, d3.max(productionStatus['SplitCount'], function(d){return d.number})])
          .range([graphHeight, 0]);
@@ -619,7 +669,16 @@ function ProductionStatus(){
     svg1 = d3.select("#status_2").append('svg').attr('width', canvasWidth).attr('height', 400)
                .append('g').attr("transform", "translate(" + graphMargin.left + "," + (graphMargin.top)+ ")");
     
-     
+    var xScale = d3.time.scale()
+        .domain([0, d3.max(productionStatus['MergeCount'], function(d){return d.time*1000})])
+        .range([0, graphWidth]); // FIX
+    
+    var xAxis = d3.svg.axis()
+        .scale(xScale)
+        .orient('bottom')
+        .tickFormat(tickFormat.format)
+        .tickSize(tickFormat.tickSize); 
+    
     var yScale = d3.scale.linear()
          .domain([0, d3.max(productionStatus['MergeCount'], function(d){return d.number})])
          .range([graphHeight, 0]);

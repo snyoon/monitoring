@@ -276,7 +276,7 @@
                 return 0.2*(yScale(labelMap[d.label]+1) - yScale(labelMap[d.label])) + 'px'})
             .style('fill', 'white')
             .text(function (d) {
-                return d.lotId;
+                if(d.lotId != 'OVERFLOW') return d.lotId;
             });
           
 //        zoom_update();
@@ -411,7 +411,10 @@
                     // FIX
                     operationsEnter
                         .append("text")
-                        .attr('class','operationText')
+                        //.attr('class','operationText')
+                        .attr('class',function(d, i){
+                         return 'operationText ' + d.lotId;
+                        })
                         .attr("clip-path", "url(#clip)")
                         .attr("x", function(d){
                           return xScale((d.starting_time*1000 + d.ending_time*1000)/2)
@@ -427,7 +430,7 @@
                         .style('font-size', function(d){
                             return 0.2*((yScale(index+1) - yScale(index))) + 'px'})
                         .text(function (d) {
-                        return d.lotId;
+                            if(d.lotId != 'OVERFLOW') return d.lotId;
                         })
                         .on("click", function (d, i) {
                         click(d, index, datum);
