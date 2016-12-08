@@ -491,6 +491,8 @@ function ProductionStatus(){
         .text(function(d){
             if(d.key == 'Stocker_size') return d.key + ": " + d.value;
             if(d.key == 'Makespan') return d.key + ": " + (d.value/60).toFixed(1) + " (min)";
+            if(d.key == 'Total_Wiplevel') return d.key + ": " + d.value;
+            if(d.key == 'AVG_Wiplevel') return d.key + ": " + d.value.toFixed(2);
             else return d.key + ": " + d.value.toFixed(3);
         })
         .style('font-size', fontSize)
@@ -508,6 +510,7 @@ function ProductionStatus(){
     var xAxis = d3.svg.axis()
         .scale(xScale)
         .orient('bottom')
+        .ticks(8)
         .tickFormat(tickFormat.format)
         .tickSize(tickFormat.tickSize);
     

@@ -17,7 +17,7 @@
         rowSeparatorsColor = null,
         backgroundColor = null,
         // http://d3-wiki.readthedocs.io/zh_CN/master/Time-Formatting/
-        tickFormat = { format: d3.time.format("%H %M"),
+        tickFormat = { format: d3.time.format("%H"),
           tickTime: d3.time.hour,
           tickInterval: 2,
           tickSize: 6,
