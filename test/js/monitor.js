@@ -32,6 +32,8 @@ var KPI = {};
 var KPIs = [];
 
 var openFile = function (event) {
+    KPIs = [];
+    d3.select('.remove').remove()
     d3.selectAll('svg').remove();
     var input = event.target;
     var reader = new FileReader();
@@ -104,16 +106,25 @@ var moveToY;
 // Right side expand and Bottom expand
 var menuRight = document.getElementById( 'right' ),
     menuBottom = document.getElementById( 'attribute' ),
-    showRightPush = document.getElementById( 'showRight' ),
+    showRightPush = document.getElementById( 'showRight' )
+    showBottom = document.getElementById( 'showBottom' ),
     body = document.body;
 var showBottom;
 
 
- showRightPush.onclick = function() {
+showRightPush.onclick = function() {
 				classie.toggle( this, 'active' );
 				classie.toggle( menuRight, 'cbp-spmenu-open' );
 //				disableOther( 'showRight' );
 			};
+showBottom.onclick = function(){
+                classie.toggle( this, 'active' );
+                classie.toggle( menuBottom, 'cbp-spmenu-open' );
+            };
+
+
+
+
  function disableOther( button ) {
 				if( button !== 'showRight' ) {
 //                    d3.selectAll('#showRight')
@@ -137,7 +148,7 @@ function timelineHover(traveledTime) {
             if(d.lotId.indexOf(clickedElement) > -1 && boolSelected == true){
                  var rects = d3.selectAll('.operationRect')
                  rects.style("fill", function (d, i) { return colorCycle[d.productId];})   
-                 d3.selectAll('#attribute').classed('cbp-spmenu-open', false)
+                 // d3.selectAll('#attribute').classed('cbp-spmenu-open', false)
                  boolSelected = false;
              }
              else if(d.lotId != clickedElement && boolSelected == true){
@@ -145,7 +156,7 @@ function timelineHover(traveledTime) {
              }
              else{
                 d3.selectAll('#'+selectedLotId)
-                classie.toggle( menuBottom, 'cbp-spmenu-open' );
+                
                 displayAttribute(d, datum)
                 selectLots(selectedLotId, eventId)
                 clickedElement = d.lotId.substring(0, d.lotId.indexOf('_'))
@@ -457,7 +468,7 @@ function ProductionStatus(){
    
     
      // KPI
-    svg1 = d3.select("#status_1").append('svg').attr('width', canvasWidth).attr('height', 400)
+    var svg1 = d3.select("#status_1").append('svg').attr('id', 'KPIText').attr('width', canvasWidth).attr('height', 400)
                .append('g').attr("transform", "translate(" + graphMargin.left + "," + (graphMargin.top)+ ")");
     
     var fontSize = 18; 
@@ -469,12 +480,12 @@ function ProductionStatus(){
     
     var kpis = svg1.selectAll('.KPIs')
         .data(KPIs)
-        .enter()
+        
+    kpis.enter()
         .append('g')
         .attr('class', 'KPIs')
-        .attr("transform", function(d, i) { return "translate(0," + (i * (fontSize*2) +30)+ ")"; });
-    
-    kpis.append('text')
+        .attr("transform", function(d, i) { return "translate(0," + (i * (fontSize*2) +30)+ ")"; })
+        .append('text')
         .attr('x', 12)
         .attr('y', 3)
         .text(function(d){
@@ -484,9 +495,10 @@ function ProductionStatus(){
         })
         .style('font-size', fontSize)
     
-    
+    kpis.exit().remove();
+
     // WIP Level
-    var svg1 = d3.select("#status_1").append('svg').attr('width', canvasWidth).attr('height', 400)
+    svg1 = d3.select("#status_1").append('svg').attr('width', canvasWidth).attr('height', 400)
                .append('g').attr("transform", "translate(" + graphMargin.left + "," + graphMargin.top+ ")");
     
     var xScale = d3.time.scale()
