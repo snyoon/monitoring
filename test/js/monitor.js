@@ -19,9 +19,10 @@ var graphMargin = {
         , top: 30
         , bottom: 30
     }
-var tickFormat = { format: d3.time.format("%H"),
+var tickFormat = { 
+          format: d3.time.format("%e-%H"),
           tickTime: d3.time.hour,
-          tickInterval: 2,
+          tickInterval: 3,
           tickSize: 6,
           tickValues: null
         }
@@ -234,7 +235,6 @@ function displayDecisions(d, datum){
     if(lotId.indexOf('_')>0) lotId = lotId.substring(0, lotId.indexOf('_'))
     var decisionKey = d.degree + '_' + lotId
     var decisionsArray = decisionInfo[decisionKey]
-    
     if(decisionsArray != undefined){
         var DASelection = 5;
         var WBSelection = 5;
@@ -391,7 +391,13 @@ function selectLots(lotId, eventId){
         motherLotId = lotId.substring(0, lotId.indexOf('_'))
     } 
     rects.style("fill", function (d, i) {
-        if(d.lotId.indexOf(motherLotId)>-1) return colorCycle[d.productId];
+        if(d.lotId.indexOf(motherLotId)>-1){
+            if(d.lotId.indexOf('WIP')>-1){
+                if(motherLotId.indexOf('WIP')>-1) return colorCycle[d.productId];
+                else return 'white'
+            }
+            else return colorCycle[d.productId];
+        } 
         else return 'white'
     })
     rects.style('stroke', function(d){
