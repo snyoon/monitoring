@@ -5,11 +5,12 @@ var inputData;
 var ganttData;
 var chart;
 var sortedTimes = [];
-var clickedElement;
+var clickedElement = '';
 var productInfo = {};
 var decisionInfo = {};
-var boolSelected;
-
+var denominator = {};
+var boolSelected = false;
+var buttonOn = false;
 // ProductionStatus Info
 var maxTime;
 var productionStatus = {}
@@ -34,7 +35,7 @@ var KPIs = [];
 var openFile = function (event) {
     KPIs = [];
     d3.select('.remove').remove()
-    d3.selectAll('svg').remove();
+    d3.select('#chart').selectAll('svg').remove();
     var input = event.target;
     var reader = new FileReader();
     reader.onload = function () {
@@ -46,6 +47,7 @@ var openFile = function (event) {
         ganttData = inputData['Gantt']
         productInfo = inputData['Product']
         decisionInfo = inputData['Decision']
+        denominator = inputData['DENOMINATOR']
         KPI = inputData['KPI']
         for(var key in KPI){
             var tempObject = {};
@@ -147,20 +149,27 @@ function timelineHover(traveledTime) {
             var eventId = d.eventId;
             if(d.lotId.indexOf(clickedElement) > -1 && boolSelected == true){
                  var rects = d3.selectAll('.operationRect')
-                 rects.style("fill", function (d, i) { return colorCycle[d.productId];})   
+                 rects.style("fill", function (d, i) {
+                  if(d.lotId  == 'RESERVED') return 'url(#diagonal-stripe-1)'  
+                  else return colorCycle[d.productId];
+                })   
                  // d3.selectAll('#attribute').classed('cbp-spmenu-open', false)
                  boolSelected = false;
+                 clickedElement = '';
              }
              else if(d.lotId != clickedElement && boolSelected == true){
 
              }
              else{
                 d3.selectAll('#'+selectedLotId)
-                
                 displayAttribute(d, datum)
                 selectLots(selectedLotId, eventId)
-                clickedElement = d.lotId.substring(0, d.lotId.indexOf('_'))
+                if (d.lotId.indexOf('_' ) >0){
+                    clickedElement = d.lotId.substring(0, d.lotId.indexOf('_'))
+                }
+                else clickedElement = d.lotId
                 boolSelected = true;
+                buttonOn = false;
                 displayDecisions(d);
                 
             }
@@ -172,33 +181,12 @@ function timelineHover(traveledTime) {
     yScale = chart.exportYScale();
     colorCycle = chart.exportColorCycle();
     d3.select('.operations').data([ganttData]).exit().remove();
-    
+      
 }
 
 
-// Time Travel
-d3.select('#timeButton').on('click', function(){
-    time = document.getElementById("traveledTime").value;
-    
-    var index = 0;
-    for(var i = 0; i < sortedTimes.length; i++){
-        var tempObject = sortedTimes[i]
-        if(time > tempObject.starting_time) index = i;
-        else break;
-    }
-    
-    var element = d3.select('#event_'+index);
-    var x = element.attr('x')
-    var y = element.attr('y')
-    
-    console.log(d3.select('svg'))
-    var svg = d3.select('svg')
-    svg.call()
-    
-    svg.attr('transform', 'translate(' +x+','+y +')')
-    //reDraw(time);
-    
-});
+// ------------------------------------------- Lot Search ------------------------------------------------
+// Decision Viewr에서 선택하는 Interface로 
 
 var zoom = d3.behavior.zoom()
     .scaleExtent([1, 10])
@@ -233,7 +221,7 @@ function displayAttribute(d, datum){
 // ------------------------------------- Decision View ------------------------------------------------
 var columns = [
         { head: 'Decision', cl: 'tableTitle', html: ƒ('decision') },
-        { head: 'DecisionType', cl: 'num', html: ƒ('decisionType') },
+        { head: 'OperationId', cl: 'num', html: ƒ('operationId') },
         { head: 'ProductType', cl: 'center', html: ƒ('productType') },
         { head: 'LotQuantiy', cl: 'center', html: ƒ('lotSize') },
         { head: 'Reward', cl: 'num', html: ƒ('reward', d3.format('.5f')) }
@@ -242,6 +230,7 @@ var columns = [
 
 function displayDecisions(d, datum){
     d3.selectAll('table').remove();
+    d3.selectAll('#decisionLine').remove();
     var lotId = d.lotId;
     if(lotId.indexOf('_')>0) lotId = lotId.substring(0, lotId.indexOf('_'))
     var decisionKey = d.degree + '_' + lotId
@@ -252,9 +241,11 @@ function displayDecisions(d, datum){
         var WBSplit = 5;
 
         var DASelDecisions = [];
+        var DASelDecisionsDict = {};
+
         var WBSelDecisions = [];
         var boorder = [
-            {'decision' : '---------', 'decisionType' : '---------', 'productType' : '---------', 'lotSize': '-----------', 'reward': ''}
+            {'decision' : '---------', 'operationId' : '---------', 'productType' : '---------', 'lotSize': '-----------', 'reward': ''}
         ];
         var WBSplitDecisions = [];
 
@@ -373,24 +364,54 @@ function displayDecisions(d, datum){
                 });
             }).enter()
             .append('td')
+            .on("click", function (d, i) {
+                // console.log(d.html)
+                var decisionLotId = d.html.substring(d.html.indexOf('-')+1, d.html.length)
+                // console.log(decisionLotId)
+                var rects = d3.selectAll('.operationRect')
+                rects.style("fill", function (d, i){
+                    // console.log(d)
+                    if(d.lotId.indexOf(decisionLotId)>-1){
+                        if(d.lotId.indexOf('WIP')>-1){
+                            if(decisionLotId.indexOf('WIP')>-1) return colorCycle[d.productId];
+                            else return 'white'
+                        }
+                        else return colorCycle[d.productId];
+                    } 
+                    else return 'white'
+                })
+            })
             .html(ƒ('html'))
-            .attr('class', ƒ('cl'));
+            .attr('class', ƒ('cl'))
         }
         
         var currentStatus =  decisionsArray[0];
         $('#currentStatus')
-        .html('<strong style="font-family:Sans-serif;font-size:20px;">' +'WIP Level: '+ currentStatus['wipLevel'] + '<br>' + '</strong>' 
-             +'<strong style="font-family:Sans-serif;font-size:20px;">' +'Working DA: '+ currentStatus['workingDA'] + '<br>' + '</strong>'
-             +'<strong style="font-family:Sans-serif;font-size:20px;">' +'Working WB: '+ currentStatus['workingWB'] + '<br>' + '</strong>'
-             +'<strong style="font-family:Sans-serif;font-size:20px;">' +'투입량: '+ currentStatus['inputCount'] + '<br>' + '</strong>'
+        .html('<strong style="font-family:Sans-serif;font-size:20px;">' +'WIP Level: '+ currentStatus['wipLevel'] + ' / ' + denominator['Stocker_size']
+             + '<br>' + '</strong>' 
+             +'<strong style="font-family:Sans-serif;font-size:20px;">' +'Working DA: '+ currentStatus['workingDA'] + ' / ' + denominator['DA_resource']
+             + '<br>' + '</strong>'
+             +'<strong style="font-family:Sans-serif;font-size:20px;">' +'Working WB: '+ currentStatus['workingWB'] + ' / ' + denominator['WB_resource']
+             + '<br>' + '</strong>'
+             +'<strong style="font-family:Sans-serif;font-size:20px;">' +'투입량: '+ currentStatus['inputCount'] + ' / ' + denominator['MAX_inputcount']
+             + '<br>' + '</strong>'
              );
     }
     else{
         $('#currentStatus')
             .html(' ');
     }
-    
-    
+    lineHeight = chart.getHeight();
+    gantt = d3.select('#process').select('svg')
+    gantt.append("line")
+        .attr('id', 'decisionLine')    
+        .attr("x1", xScale(decisionsArray[0].decisionTime*1000))  //<<== change your code here
+        .attr("y1", margin.top)
+        .attr("x2", xScale(decisionsArray[0].decisionTime*1000))  //<<== and here
+        .attr("y2", lineHeight - margin.bottom)
+        .style("stroke-width", 2)
+        .style("stroke", "red")
+        .style("fill", "none");
     
 }
 
@@ -740,7 +761,6 @@ function displayKPI(lotId){
 function reDraw(traveledTime) {
     var svg = d3.select("#process").selectAll('.operations')
     var newLabelData = [];   
-    console.log(svg)
     for(var i = 0; i < ganttData.length; i++){
         var tempLabel = ganttData[i]['label'];
         var tempTimes = ganttData[i]['times']
@@ -755,11 +775,7 @@ function reDraw(traveledTime) {
         tempObject['times'] = newTimes;
         newLabelData[i] = tempObject;
     }
-    console.log(ganttData);
-    console.log(newLabelData);
-
     svg.datum(newLabelData);
-    console.log(svg);
     svg.each(function (d, i) {        
          d.forEach(function (datum, index) {
                 var data = datum.times;

@@ -276,7 +276,7 @@
                 return 0.2*(yScale(labelMap[d.label]+1) - yScale(labelMap[d.label])) + 'px'})
             .style('fill', 'white')
             .text(function (d) {
-                if(d.lotId != 'OVERFLOW') return d.lotId;
+                if(d.lotId != 'OVERFLOW' && d.lotId != 'RESERVED') return d.lotId;
             });
           
 //        zoom_update();
@@ -374,29 +374,39 @@
                     })
                      .style("fill", function (d, i) {
                         var dColorPropName;
-                        if (d.color) return d.color;
-                        if (colorPropertyName) {
-                            dColorPropName = d[colorPropertyName];
-                            if (dColorPropName) {
-                                return colorCycle(dColorPropName);
-                            }
-                            else {
-                                return colorCycle(datum[colorPropertyName]);
-                            }
-                        }
-                        return colorCycle[d.productId];
-                    }).on("mousemove", function (d, i) {
+                        // if (d.color) return d.color;
+                        // if (colorPropertyName) {
+                        //     dColorPropName = d[colorPropertyName];
+                        //     if (dColorPropName) {
+                        //         return colorCycle(dColorPropName);
+                        //     }
+                        //     else {
+                        //         return colorCycle(datum[colorPropertyName]);
+                        //     }
+                        // }
+                        // if(d.lotId  == 'RESERVED') return  'url(#diagonal-stripe-1)' 
+                        // else return colorCycle[d.productId];
+
+                        if(d.lotId !='RESERVED') return colorCycle[d.productId];
+                        else  return 'url(#diagonal-stripe-1) #fff'
+                    })
+                    /*.style('opacity', function(d, i){
+                      if(d.lotId  == 'RESERVED'){
+                        return 0.3
+                      }
+                    })*/.on("mousemove", function (d, i) {
                         hover(d, index, datum);
                     }).on("mouseover", function (d, i) {
                         mouseover(d, i, datum);
                     }).on("mouseout", function (d, i) {
                         mouseout(d, i, datum);
                     }).on("click", function (d, i) {
-                        click(d, index, datum);
+                        if(d.lotId !='RESERVED')  click(d, index, datum);
                     })
 //                    .attr('class', 'operationRect')
                     .attr("clip-path", "url(#clip)")
                     .attr("class", function (d, i) {
+                        // if(d.lotId == 'RESERVED') return 'operationRect ' + d.productId +' ' + d.lotId + ' ' + 'diagonal-stripe-1'
                         return 'operationRect ' + d.productId +' ' + d.lotId;
                     })
                     .attr("id", function (d, i) {
@@ -430,11 +440,12 @@
                         .style('font-size', function(d){
                             return 0.2*((yScale(index+1) - yScale(index))) + 'px'})
                         .text(function (d) {
-                            if(d.lotId != 'OVERFLOW') return d.lotId;
-                        })
-                        .on("click", function (d, i) {
-                        click(d, index, datum);
+                            if(d.lotId != 'OVERFLOW' && d.lotId != 'RESERVED') return d.lotId;
+
                         });
+                        // .on("click", function (d, i) {
+                        // click(d, index, datum);
+                        // });
                     operations.exit().remove();
                     // add the label
                     // FIX Label Represent
@@ -448,27 +459,27 @@
         
         
 // ---------- Vertical Line ------------
-    var vertical = d3.select("#process")
-        .append("div")
-        .attr("class", "remove")
-        .style("position", "absolute")
-        .style("z-index", "19")
-        .style("width", "2px")
-        .style("height", (height-margin.bottom-10)+"px")
-        .style("top", "50px")
-        .style("bottom", "10px")
-        .style("left", "0px")
-        .style("background", "red");
+    // var vertical = d3.select("#process")
+    //     .append("div")
+    //     .attr("class", "remove")
+    //     .style("position", "absolute")
+    //     .style("z-index", "19")
+    //     .style("width", "2px")
+    //     .style("height", (height-margin.bottom-10)+"px")
+    //     .style("top", "50px")
+    //     .style("bottom", "10px")
+    //     .style("left", "0px")
+    //     .style("background", "red");
 
-    d3.select("#process")
-        .on("mousemove", function(){  
-            mousex = d3.mouse(this);
-            mousex = mousex[0] + 5;
-            vertical.style("left", mousex + "px" )})
-        .on("mouseover", function(){  
-            mousex = d3.mouse(this);
-            mousex = mousex[0] + 5;
-            vertical.style("left", mousex + "px")});
+    // d3.select("#process")
+    //     .on("mousemove", function(){  
+    //         mousex = d3.mouse(this);
+    //         mousex = mousex[0] + 5;
+    //         vertical.style("left", mousex + "px" )})
+    //     .on("mouseover", function(){  
+    //         mousex = d3.mouse(this);
+    //         mousex = mousex[0] + 5;
+    //         vertical.style("left", mousex + "px")});
       
     }
 // ---------0----------------------
@@ -704,6 +715,10 @@
     
     timeline.exportColorCycle = function(){
         return colorCycle;
+    }
+
+    timeline.getHeight = function(){
+        return height;
     }
 
     return timeline;
