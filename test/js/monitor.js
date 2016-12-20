@@ -5,11 +5,16 @@ var inputData;
 var ganttData;
 var chart;
 var sortedTimes = [];
+
 var clickedElement = '';
+var boolSelected = false;
+var candidatedElement = 'can';
+var canBoolSelected = false;
+
 var productInfo = {};
 var decisionInfo = {};
 var denominator = {};
-var boolSelected = false;
+
 var buttonOn = false;
 // ProductionStatus Info
 var maxTime;
@@ -364,22 +369,58 @@ function displayDecisions(d, datum){
                 });
             }).enter()
             .append('td')
+            .on("mouseover", function(d) {
+                d3.select(this).style("cursor", "pointer")
+            })
+            .on("mouseout", function(d) {
+                d3.select(this).style("cursor", "default")
+            })
             .on("click", function (d, i) {
-                // console.log(d.html)
-                var decisionLotId = d.html.substring(d.html.indexOf('-')+1, d.html.length)
-                // console.log(decisionLotId)
-                var rects = d3.selectAll('.operationRect')
-                rects.style("fill", function (d, i){
-                    // console.log(d)
-                    if(d.lotId.indexOf(decisionLotId)>-1){
-                        if(d.lotId.indexOf('WIP')>-1){
-                            if(decisionLotId.indexOf('WIP')>-1) return colorCycle[d.productId];
+                if(boolSelected == true){
+                    var decisionLotId = d.html.substring(d.html.indexOf('-')+1, d.html.length)
+                    var rects = d3.selectAll('.operationRect')
+                    // 같은 랏을 두 번 선택했을 때는 다시 원래대로 돌아가게 함
+                    if(decisionLotId.indexOf(candidatedElement) > -1){
+                        rects.style('fill', function (d,i){
+                            if(d.lotId.indexOf(clickedElement)>-1){
+                                if(d.lotId.indexOf('WIP')>-1){
+                                    if(clickedElement.indexOf('WIP')>-1) return colorCycle[d.productId];
+                                    else return 'white';
+                                }
+                                else return colorCycle[d.productId];
+                            }
                             else return 'white'
-                        }
-                        else return colorCycle[d.productId];
-                    } 
-                    else return 'white'
-                })
+                        })
+                        candidatedElement = 'can'
+                    }
+                    else{
+                        // 최초 선택의 경우 
+                        rects.style("fill", function (d, i){
+                            // 선택된 lot을 색칠하기 위함
+                            if(d.lotId.indexOf(decisionLotId)>-1){
+                                // 지금 색칠해야 하는 lot이 WIP이라면 lot 이름을 공유하기 때문에
+                                // 만약, 선택된 lot이 WIP이 아니었으면 lot 이름을 공유하는 WIP들은 색칠하지 않는다
+                                // 만약, 선택된 lot이 WIP이면 원래대로 색칠을 해준다                            
+                                if(d.lotId.indexOf('WIP')>-1){
+                                    if(decisionLotId.indexOf('WIP')>-1) return colorCycle[d.productId];
+                                    else return 'white';
+                                }
+                                else return colorCycle[d.productId];
+                            } 
+                            else{
+                                if(d.lotId.indexOf(clickedElement) > -1) {
+                                    if(d.lotId.indexOf('WIP')>-1){
+                                        if(clickedElement.indexOf('WIP')>-1) return colorCycle[d.productId];
+                                        else return 'white';
+                                    }
+                                    else return colorCycle[d.productId];
+                                }
+                                else return 'white';
+                            } 
+                        }) 
+                        candidatedElement = decisionLotId;       
+                    }
+                }
             })
             .html(ƒ('html'))
             .attr('class', ƒ('cl'))
@@ -757,97 +798,4 @@ function displayKPI(lotId){
       
     
 }
-
-function reDraw(traveledTime) {
-    var svg = d3.select("#process").selectAll('.operations')
-    var newLabelData = [];   
-    for(var i = 0; i < ganttData.length; i++){
-        var tempLabel = ganttData[i]['label'];
-        var tempTimes = ganttData[i]['times']
-        var newTimes = [];
-        for(var j = 0; j < tempTimes.length; j++){
-            var startTime = tempTimes[j]['starting_time'];
-            if(startTime < traveledTime) newTimes.push(tempTimes[j])
-            else break;
-        }
-        var tempObject = {};
-        tempObject['label'] = tempLabel;
-        tempObject['times'] = newTimes;
-        newLabelData[i] = tempObject;
-    }
-    svg.datum(newLabelData);
-    svg.each(function (d, i) {        
-         d.forEach(function (datum, index) {
-                var data = datum.times;
-                var hasLabel = (typeof (datum.label) != "undefined");
-                // issue warning about using id per data set. Ids should be individual to data elements
-                // FIX
-                var operations = svg.selectAll("svg").data(data);
-                var operationsEnter = operations.enter().append('g');
-                operationsEnter.append(function (d, i) {
-                    d.label = datum.label;
-                    return document.createElementNS(d3.ns.prefix.svg, 'rect');
-                })
-                .attr("x", function(d){
-                    return xScale(d.starting_time*1000)
-                   })
-                  .attr("y", function(d){
-                    return yScale(index)  
-                  })
-                  .attr("width", function (d, i) {
-                    return xScale(d.ending_time *1000) - xScale(d.starting_time*1000) ;
-                })
-//                    .attr("cy", function (d, i) {
-//                        return getStackPosition(d, i) + itemHeight / 2;
-//                    }).attr("cx", getXPos).attr("r", itemHeight / 2)
-                 .attr("height", function(d){
-                    return (yScale(index+1) - yScale(index))
-                })
-                 .style("fill", function (d, i) {
-                    if(d.starting_time < traveledTime) return colorCycle[d.productId];
-                    else return 'white';
-                    
-                })
-                .attr("clip-path", "url(#clip)")
-                .attr("class", function (d, i) {
-                    return 'operationRect ' + d.productId;
-                    // return datum.class ? "timelineSeries_" + datum.class : d.productId;
-                    // return datum.class ? "timelineSeries_"+datum.class : "timelineSeries_"+index;
-                })
-                .attr("id", function (d, i) {
-                    // use deprecated id field
-                    if (datum.id && !d.id) {
-                        return 'timelineItem_' + datum.id;
-                    }
-                    return d.id ? d.id : d.lotId;
-                    // return d.id ? d.id : "timelineItem_"+index+"_"+i;
-                });
-                // FIX
-                operationsEnter
-                    .append("text")
-                    .attr('class','operationText')
-                    .attr("clip-path", "url(#clip)")
-                    .attr("x", function(d){
-                      return xScale((d.starting_time*1000 + d.ending_time*1000)/2)
-                    })
-                    .attr("y", function(d){
-                    return yScale(index) + 0.7*(yScale(index+1) - yScale(index))
-                    })
-                    .style('text-anchor', 'middle')
-                    .style('vertical-align', 'middle')
-                    .style('font-weight', 'bold')
-                    .style('fill', 'white')
-                    .style('font-size', function(d){
-                        return 0.2*((yScale(index+1) - yScale(index))) + 'px'})
-                    .text(function (d) {
-                    return d.lotId;
-                });
-                
-                operations.exit().remove();
-               
-            });
-        });
-    
-}
-
 

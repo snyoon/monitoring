@@ -276,7 +276,13 @@
                 return 0.2*(yScale(labelMap[d.label]+1) - yScale(labelMap[d.label])) + 'px'})
             .style('fill', 'white')
             .text(function (d) {
-                if(d.lotId != 'OVERFLOW' && d.lotId != 'RESERVED') return d.lotId;
+              if(d.lotId != 'OVERFLOW' && d.lotId != 'RESERVED'){
+                if(d.lotId.indexOf('WIP')>-1) return 'WIP'
+                else{
+                  var displayedLotId = d.lotId.substring(3, d.lotId.length)
+                  return displayedLotId
+                }
+              } 
             });
           
 //        zoom_update();
@@ -440,8 +446,14 @@
                         .style('font-size', function(d){
                             return 0.2*((yScale(index+1) - yScale(index))) + 'px'})
                         .text(function (d) {
-                            if(d.lotId != 'OVERFLOW' && d.lotId != 'RESERVED') return d.lotId;
-
+                            if(d.lotId != 'OVERFLOW' && d.lotId != 'RESERVED'){
+                              if(d.lotId.indexOf('WIP')>-1) return 'WIP'
+                              else{
+                                var displayedLotId = d.lotId.substring(3, d.lotId.length)
+                                return displayedLotId
+                                // return d.lotId.substring(1, d.lotId.length);  
+                              }
+                            } 
                         });
                         // .on("click", function (d, i) {
                         // click(d, index, datum);
