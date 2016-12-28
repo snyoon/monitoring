@@ -283,7 +283,11 @@ th { text-align: left;
     stroke-width: 1;
     fill: none
 }
-
+.statusLine2{
+    stroke: red;
+    stroke-width: 1;
+    fill: none
+}
 
 .bringFront{
     z-index: 40;

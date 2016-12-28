@@ -37,6 +37,12 @@ var tickFormat = {
 var KPI = {};
 var KPIs = [];
 
+// For Ship Count
+var shipSvg;
+var shipXScale
+var shipYScale
+var shipLine
+
 var openFile = function (event) {
     KPIs = [];
     d3.select('.remove').remove()
@@ -81,6 +87,46 @@ var openFile = function (event) {
     };
     reader.readAsText(input.files[0]);
 };
+
+var openCompareFile = function (event) {
+    var input = event.target;
+    var reader = new FileReader();
+    reader.onload = function () {
+        var text = reader.result;
+        var node = document.getElementById('output');
+        var compareTestOut = reader.result;
+        var compareInputData = JSON.parse(compareTestOut)
+        var index = 0;
+        var compareShipCount = []
+        for(var i = 0; i < compareInputData['ProductionStatus'].length; i++){
+            var tempProduction = compareInputData['ProductionStatus'][i];
+            if(tempProduction.id == 'ShipCount') compareShipCount = tempProduction.values;
+        }
+
+        d3.select('#defaultShipLine').remove()
+        var defaultTimeMax = d3.max(productionStatus['ShipCount'], function(d){return d.time*1000});
+        var compareTimeMax = d3.max(compareShipCount, function(d){return d.time*1000});
+        var totalMax;
+        if(defaultTimeMax > compareTimeMax) totalMax = defaultTimeMax
+        else totalMax = compareTimeMax
+        shipXScale.domain([0, totalMax])
+        shipLine = d3.svg.line()
+            .x(function(d) { return shipXScale(d.time*1000); })
+            .y(function(d) { return shipYScale(+d.number); })
+
+        shipSvg.append('path')
+            .attr('id', 'defaultShipLine')
+            .attr('class', 'statusLine')
+            .attr("d", shipLine(productionStatus['ShipCount']))
+
+        shipSvg.append('path')
+            .attr('class', 'statusLine2')
+            .attr("d", shipLine(compareShipCount))
+
+    };
+    reader.readAsText(input.files[0]);
+}
+
 
 var xScale;
 var yScale;
@@ -428,7 +474,9 @@ function displayDecisions(d, datum){
         
         var currentStatus =  decisionsArray[0];
         $('#currentStatus')
-        .html('<strong style="font-family:Sans-serif;font-size:20px;">' +'WIP Level: '+ currentStatus['wipLevel'] + ' / ' + denominator['Stocker_size']
+        .html('<strong style="font-family:Sans-serif;font-size:20px;">' +'DA WIP Level: '+ currentStatus['dawipLevel'] + ' / ' + denominator['Stocker_size']
+             + '<br>' + '</strong>'
+             +'<strong style="font-family:Sans-serif;font-size:20px;">' +'WB WIP Level: '+ currentStatus['wbwipLevel'] + ' / ' + denominator['Stocker_size']
              + '<br>' + '</strong>' 
              +'<strong style="font-family:Sans-serif;font-size:20px;">' +'Working DA: '+ currentStatus['workingDA'] + ' / ' + denominator['DA_resource']
              + '<br>' + '</strong>'
@@ -662,10 +710,10 @@ function ProductionStatus(){
     
     
     // Ship Count
-    svg1 = d3.select("#status_2").append('svg').attr('width', canvasWidth).attr('height', 400)
+    shipSvg = d3.select("#status_2").append('svg').attr('width', canvasWidth).attr('height', 400)
                .append('g').attr("transform", "translate(" + graphMargin.left + "," + graphMargin.top+ ")");
     
-    var xScale = d3.time.scale()
+    shipXScale = d3.time.scale()
         .domain([0, d3.max(productionStatus['ShipCount'], function(d){return d.time*1000})])
         .range([0, graphWidth]); // FIX
     
@@ -676,7 +724,7 @@ function ProductionStatus(){
         .tickSize(tickFormat.tickSize);
     
      
-    var yScale = d3.scale.linear()
+    shipYScale = d3.scale.linear()
          .domain([0, d3.max(productionStatus['ShipCount'], function(d){return d.number})])
          .range([graphHeight, 0]);
         
@@ -685,22 +733,27 @@ function ProductionStatus(){
         .orient('left')
         .tickSize(2);    
     
-    svg1.append("text")
+    shipSvg.append("text")
         .attr('class', 'statusTitle')
         .attr("x", (graphWidth / 2))             
         .attr("y", 0 - (margin.top / 2))
         .text("산출물");
     
-    svg1.append('path')
+    shipLine = d3.svg.line()
+            .x(function(d) { return shipXScale(d.time*1000); })
+            .y(function(d) { return shipYScale(+d.number); })
+
+    shipSvg.append('path')
+        .attr('id', 'defaultShipLine')
         .attr('class', 'statusLine')
         .attr("d", line(productionStatus['ShipCount']))
     
-	svg1.append("g")
+	shipSvg.append("g")
 		.attr("class", "x axis")
 		.attr("transform", "translate(0," + graphHeight + ")")
 		.call(xAxis);
 
-	svg1.append("g")
+	shipSvg.append("g")
 		.attr("class", "y axis")
 		.call(yAxis);
     
