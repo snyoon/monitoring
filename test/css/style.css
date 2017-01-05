@@ -145,6 +145,13 @@ body {
     shape-rendering: crispEdges;
 }
 
+.topAxis path,
+.topAxis line {
+    fill: none;
+    stroke: black;
+    shape-rendering: crispEdges;
+}
+
 .Yaxis path,
 .Yaxis line {
     fill: none;

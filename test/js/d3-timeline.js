@@ -80,7 +80,7 @@
       ;
       
     height = $(window).height();  
-    
+    var panExtent = {x: [0,width], y: [0,height] };
     var appendLabelAxis = function(g, yAxis) {
 
       if(showAxisHeaderBackground){ appendAxisHeaderBackground(g, 0, 0); }
@@ -105,6 +105,18 @@
         .call(xAxis);
     };
 
+    var appendTimeAxisTop = function(g, xAxis, yPosition) {
+
+      if(showAxisHeaderBackground){ appendAxisHeaderBackground(g, 0, 0); }
+
+      if(showAxisNav){ appendTimeAxisNav(g) };
+
+      timeAxis = g.append("g")
+        .attr("class", "topAxis")
+        // .attr("transform", "translate(" + 0 + "," + (height - margin.bottom) + ")")
+        .attr("transform", "translate(" + 0 + "," + (20) + ")")
+        .call(xAxis);
+    };
    
   
     function timeline (gParent) {
@@ -116,8 +128,8 @@
           .attr("id", "clip")
           .append("rect")
           .attr("width", width - margin.left - margin.right)
-          .attr("height", height - margin.top - margin.bottom)
-          .attr("transform", "translate(" + margin.left + "," +0 + ")");
+          .attr("height", height - margin.top - margin.bottom - margin.top)
+          .attr("transform", "translate(" + margin.left + "," + (margin.top*2) + ")");
         
       var yAxisMapping = {},
         maxStack = 1,
@@ -125,7 +137,7 @@
         maxTime = 0;
 
        setWidth();
-    
+      panExtent = {x: [0,width], y: [0,height] };
       // check how many stacks we're gonna need
       // do this here so that we can draw the axis before the graph
       if (stacked || ending === 0 || beginning === 0) {
@@ -168,7 +180,13 @@
         .orient(orient)
         .tickFormat(tickFormat.format)
         .tickSize(tickFormat.tickSize);
-        
+
+      var topXAxis = d3.svg.axis()
+        .scale(xScale)
+        .orient('top')
+        .tickFormat(tickFormat.format)
+        .tickSize(tickFormat.tickSize);
+       
       yScale = d3.scale.linear()
          .domain([0, labelArr.length])
          .range([(itemHeight + itemMargin), (height-margin.bottom) ]);
@@ -185,8 +203,10 @@
 
       if (tickFormat.tickValues != null) {
         xAxis.tickValues(tickFormat.tickValues);
+        topXAxis.tickValues(tickFormat.tickValues);
       } else {
         xAxis.ticks(tickFormat.numTicks || tickFormat.tickTime, tickFormat.tickInterval);
+        topXAxis.ticks(tickFormat.numTicks || tickFormat.tickTime, tickFormat.tickInterval);
       }
         
       // draw the chart
@@ -202,7 +222,7 @@
 
       if (showTimeAxis) {appendTimeAxis(g, xAxis, timeAxisYPosition);}
        appendLabelAxis(g, yAxis);  
-
+       appendTimeAxisTop(g, topXAxis,timeAxisYPosition)
         
       var gSize = g[0][0].getBoundingClientRect();
       setHeight();
@@ -211,10 +231,10 @@
      
      
       // FIX: Zoom In & Out
-      function zoomed() {
-            gParent.select('.axis').call(xAxis);
-            gParent.select('.Yaxis').call(yAxis);
-      }  
+      // function zoomed() {
+      //       gParent.select('.axis').call(xAxis);
+      //       gParent.select('.Yaxis').call(yAxis);
+      // }  
         
       var xyzoom = d3.behavior.zoom()
                 .x(xScale)
@@ -225,12 +245,8 @@
                 .on("zoom", draw);
       var yzoom = d3.behavior.zoom()
                 .y(yScale)
-                .on("zoom", draw);
-        
-        
-     gParent.call(xyzoom);   
-      
-      
+                .on("zoom", draw);      
+      gParent.call(xyzoom);   
       function zoom_update(){
           xyzoom = d3.behavior.zoom()
                 .x(xScale)
@@ -249,6 +265,7 @@
     var nodeFontSize = 12;
       function draw(){
         gParent.select('.axis').call(xAxis);
+        gParent.select('.topAxis').call(topXAxis);
         gParent.select('.Yaxis').call(yAxis);
           
         var rects = gParent.selectAll('.operationRect')       

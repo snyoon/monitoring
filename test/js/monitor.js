@@ -28,7 +28,7 @@ var graphMargin = {
 var tickFormat = { 
           format: d3.time.format("%e-%H"),
           tickTime: d3.time.hour,
-          tickInterval: 3,
+          tickInterval: 2,
           tickSize: 6,
           tickValues: null
         }
@@ -41,7 +41,13 @@ var KPIs = [];
 var shipSvg;
 var shipXScale
 var shipYScale
+var shipXAxis
+var shipYAxis
 var shipLine
+
+var graphWidth
+var graphHeight
+
 
 var openFile = function (event) {
     KPIs = [];
@@ -104,12 +110,21 @@ var openCompareFile = function (event) {
         }
 
         d3.select('#defaultShipLine').remove()
+        d3.selectAll('.dateDividerShip').remove()
         var defaultTimeMax = d3.max(productionStatus['ShipCount'], function(d){return d.time*1000});
         var compareTimeMax = d3.max(compareShipCount, function(d){return d.time*1000});
         var totalMax;
+        console.log(defaultTimeMax + '\t' + compareTimeMax)
+
         if(defaultTimeMax > compareTimeMax) totalMax = defaultTimeMax
         else totalMax = compareTimeMax
         shipXScale.domain([0, totalMax])
+        shipXAxis.scale(shipXScale)
+        d3.select('#shipXAxis').remove()
+        shipSvg.append("g")
+            .attr("class", "x axis")
+            .attr("transform", "translate(0," + graphHeight + ")")
+            .call(shipXAxis);
         shipLine = d3.svg.line()
             .x(function(d) { return shipXScale(d.time*1000); })
             .y(function(d) { return shipYScale(+d.number); })
@@ -122,6 +137,21 @@ var openCompareFile = function (event) {
         shipSvg.append('path')
             .attr('class', 'statusLine2')
             .attr("d", shipLine(compareShipCount))
+        drawVerticalLine(shipSvg, shipXScale, shipYScale, d3.max(productionStatus['ShipCount'], function(d){return d.number}))
+
+        shipSvg.append('text')
+                .attr("transform", function(d) { return "translate(" + shipXScale(compareTimeMax) + "," + shipYScale(d3.max(productionStatus['ShipCount'], function(d){return d.number})-10) + ")"; })
+                .attr("x", -20)
+                .attr("dy", "0.35em")
+                .style("font", "20px sans-serif")
+                .text(function(d) { return compareInputData['KPI']['Target'].toFixed(3); });
+
+        // shipSvg.append('text')
+        //         .attr("transform", function(d) { return "translate(" + shipXScale(defaultTimeMax) + "," + shipYScale(d3.max(productionStatus['ShipCount'], function(d){return d.number})) + ")"; })
+        //         .attr("x", -20)
+        //         .attr("dy", "0.35em")
+        //         .style("font", "20px sans-serif")
+        //         .text(function(d) { return KPI['Target'].toFixed(3); });
 
     };
     reader.readAsText(input.files[0]);
@@ -572,8 +602,8 @@ d3.select('#resourceView').on('click', function(){
 //------------------------------- Production Status Graphs ----------------------------------
 function ProductionStatus(){
     var canvasWidth = processWidth/3.3;
-    var graphWidth = canvasWidth - graphMargin.left - graphMargin.right;
-    var graphHeight = 400 - graphMargin.top - graphMargin.bottom;
+    graphWidth = canvasWidth - graphMargin.left - graphMargin.right;
+    graphHeight = 400 - graphMargin.top - graphMargin.bottom;
     
    
     
@@ -603,11 +633,14 @@ function ProductionStatus(){
             if(d.key == 'Makespan') return d.key + ": " + (d.value/60).toFixed(1) + " (min)";
             if(d.key == 'Total_Wiplevel') return d.key + ": " + d.value;
             if(d.key == 'AVG_Wiplevel') return d.key + ": " + d.value.toFixed(2);
+            if(d.key == 'Waiting_Time') return 'Waiting Time / TAT : ' + d.value.toFixed(3);
             else return d.key + ": " + d.value.toFixed(3);
         })
         .style('font-size', fontSize)
     
     kpis.exit().remove();
+
+    
 
     // WIP Level
     svg1 = d3.select("#status_1").append('svg').attr('width', canvasWidth).attr('height', 400)
@@ -638,6 +671,7 @@ function ProductionStatus(){
             .y(function(d) { return yScale(+d.number); })
 //            .inperpolate('linear') ;
     
+    
     var horizontalLine = svg1
                  .append('line')
                  .attr("x1", xScale(0))
@@ -646,6 +680,8 @@ function ProductionStatus(){
                  .attr("y2", yScale(KPI['Stocker_size']))
                  .style("stroke-width", 1)
                  .style("stroke", "red")
+
+    drawVerticalLine(svg1, xScale, yScale, KPI['Stocker_size'])
 
     svg1.append("text")
         .attr('class', 'statusTitle')
@@ -708,17 +744,17 @@ function ProductionStatus(){
 		.attr("class", "y axis")
 		.call(yAxis);
     
-    
+    drawVerticalLine(svg1, xScale, yScale, d3.max(productionStatus['InputCount'], function(d){return d.number}))
     // Ship Count
     shipSvg = d3.select("#status_2").append('svg').attr('width', canvasWidth).attr('height', 400)
                .append('g').attr("transform", "translate(" + graphMargin.left + "," + graphMargin.top+ ")");
     
     shipXScale = d3.time.scale()
-        .domain([0, d3.max(productionStatus['ShipCount'], function(d){return d.time*1000})])
+        .domain([0, d3.max(productionStatus['ShipCount'], function(d){return (+d.time)*1000})])
         .range([0, graphWidth]); // FIX
     
-    var xAxis = d3.svg.axis()
-        .scale(xScale)
+    shipXAxis = d3.svg.axis()
+        .scale(shipXScale)
         .orient('bottom')
         .tickFormat(tickFormat.format)
         .tickSize(tickFormat.tickSize);
@@ -728,8 +764,8 @@ function ProductionStatus(){
          .domain([0, d3.max(productionStatus['ShipCount'], function(d){return d.number})])
          .range([graphHeight, 0]);
         
-    var yAxis = d3.svg.axis()
-        .scale(yScale)
+    shipYAxis = d3.svg.axis()
+        .scale(shipYScale)
         .orient('left')
         .tickSize(2);    
     
@@ -746,18 +782,38 @@ function ProductionStatus(){
     shipSvg.append('path')
         .attr('id', 'defaultShipLine')
         .attr('class', 'statusLine')
-        .attr("d", line(productionStatus['ShipCount']))
+        .attr("d", shipLine(productionStatus['ShipCount']))
     
 	shipSvg.append("g")
 		.attr("class", "x axis")
+        .attr('id', 'shipXAxis')
 		.attr("transform", "translate(0," + graphHeight + ")")
-		.call(xAxis);
+		.call(shipXAxis);
 
 	shipSvg.append("g")
 		.attr("class", "y axis")
-		.call(yAxis);
+		.call(shipYAxis);
+   // drawVerticalLine(shipSvg, shipXScale, shipYScale, d3.max(productionStatus['ShipCount'], function(d){return d.number}))
     
-    
+    var verticalLine = shipSvg
+                 .append('line')
+                 .attr("x1", shipXScale(86399*1000))
+                 .attr("y1", shipYScale(0))
+                 .attr("x2", shipXScale(86399*1000))
+                 .attr("y2", shipYScale(d3.max(productionStatus['ShipCount'], function(d){return d.number})))
+                 .attr('class','dateDividerShip')
+                 .style("stroke-width", 1)
+                 .style("stroke", "gray")
+    var verticalLine2 = shipSvg
+                 .append('line')
+                 .attr("x1", shipXScale(86399*2*1000))
+                 .attr("y1", shipYScale(0))
+                 .attr("x2", shipXScale(86399*2*1000))
+                 .attr("y2", shipYScale(d3.max(productionStatus['ShipCount'], function(d){return d.number})))
+                 .attr('class','dateDividerShip')
+                 .style("stroke-width", 1)
+                 .style("stroke", "gray")
+
     // Split Count
     svg1 = d3.select("#status_2").append('svg').attr('width', canvasWidth).attr('height', 400)
                .append('g').attr("transform", "translate(" + graphMargin.left + "," + (graphMargin.top)+ ")");
@@ -800,7 +856,7 @@ function ProductionStatus(){
 	svg1.append("g")
 		.attr("class", "y axis")
 		.call(yAxis);
-    
+
      // Merge Count
     svg1 = d3.select("#status_2").append('svg').attr('width', canvasWidth).attr('height', 400)
                .append('g').attr("transform", "translate(" + graphMargin.left + "," + (graphMargin.top)+ ")");
@@ -852,3 +908,23 @@ function displayKPI(lotId){
     
 }
 
+function drawVerticalLine(inputSvg, scaleX, scaleY, max){
+         var verticalLine = inputSvg
+                 .append('line')
+                 .attr("x1", scaleX(86399*1000))
+                 .attr("y1", scaleY(0))
+                 .attr("x2", scaleX(86399*1000))
+                 .attr("y2", scaleY(max))
+                 .style('class','dateDivider')
+                 .style("stroke-width", 1)
+                 .style("stroke", "gray")
+        var verticalLine2 = inputSvg
+                 .append('line')
+                 .attr("x1", scaleX(86399*2*1000))
+                 .attr("y1", scaleY(0))
+                 .attr("x2", scaleX(86399*2*1000))
+                 .attr("y2", scaleY(max))
+                 .style('class','dateDivider')
+                 .style("stroke-width", 1)
+                 .style("stroke", "gray")
+    }
