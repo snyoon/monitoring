@@ -279,13 +279,20 @@ function zoomed() {
 
 
 // ------------------------------------- Attribute View ------------------------------------------------
-function displayAttribute(d, datum){    
+function displayAttribute(d, datum){
+    var lotId = d.lotId;
+    if(lotId.indexOf('_')>0) lotId = lotId.substring(0, lotId.indexOf('_'))
+    var decisionKey = d.degree + '_' + lotId;
+    var decisionsArray = decisionInfo[decisionKey];
+    var decisionTime = decisionsArray[0].decisionTime;
     $('#lotViewer')
         .html('<strong style="font-family:Sans-serif;">' +'Lot Id: '+ d.lotId + '<br>' + '</strong>' 
-             +'<strong style="font-family:Sans-serif;">' +'Quantity: '+ d.quantity + '<br>' + '</strong>'
-             +'<strong style="font-family:Sans-serif;">' +'Processing Time: '+ (d.ending_time-d.starting_time) + '<br>' + '</strong>'
+             +'<strong style="font-family:Sans-serif;">' +'Starting Time: '+ d.starting_time + '<br>' + '</strong>'
+             +'<strong style="font-family:Sans-serif;">' +'Ending Time: '+ d.ending_time + '<br>' + '</strong>'
+             +'<strong style="font-family:Sans-serif;">' +'Decision Time: '+ decisionTime + '<br>' + '</strong>'
              +'<strong style="font-family:Sans-serif;">' +'Operation: '+ d.degree + '<br>' + '</strong>'
-             +'<strong style="font-family:Sans-serif;">' +'Flow: '+ d.flow + '<br>' + '</strong>'
+             +'<strong style="font-family:Sans-serif;">' +'Quantity: '+ d.quantity + '<br>' + '</strong>'
+             // +'<strong style="font-family:Sans-serif;">' +'Flow: '+ d.flow + '<br>' + '</strong>'
              );
     $('#productViewer')
         .html('<strong style="font-family:Sans-serif;">' +'Product Id: '+ d.productId + '<br>' + '</strong>' 
@@ -513,6 +520,8 @@ function displayDecisions(d, datum){
              +'<strong style="font-family:Sans-serif;font-size:20px;">' +'Working WB: '+ currentStatus['workingWB'] + ' / ' + denominator['WB_resource']
              + '<br>' + '</strong>'
              +'<strong style="font-family:Sans-serif;font-size:20px;">' +'투입량: '+ currentStatus['inputCount'] + ' / ' + denominator['MAX_inputcount']
+             + '<br>' + '</strong>'
+             +'<strong style="font-family:Sans-serif;font-size:20px;">' +'생산량: '+ currentStatus['outputCount'] + ' / ' + denominator['MAX_outputcount']
              + '<br>' + '</strong>'
              );
     }
@@ -814,13 +823,13 @@ function ProductionStatus(){
                  .style("stroke-width", 1)
                  .style("stroke", "gray")
 
-    // Split Count
+    // Util Graph
     svg1 = d3.select("#status_2").append('svg').attr('width', canvasWidth).attr('height', 400)
                .append('g').attr("transform", "translate(" + graphMargin.left + "," + (graphMargin.top)+ ")");
     
     
     var xScale = d3.time.scale()
-        .domain([0, d3.max(productionStatus['SplitCount'], function(d){return d.time*1000})])
+        .domain([0, d3.max(productionStatus['WB_Util'], function(d){return d.time*1000})])
         .range([0, graphWidth]); // FIX
     
     var xAxis = d3.svg.axis()
@@ -830,7 +839,7 @@ function ProductionStatus(){
         .tickSize(tickFormat.tickSize);
     
     var yScale = d3.scale.linear()
-         .domain([0, d3.max(productionStatus['SplitCount'], function(d){return d.number})])
+         .domain([0, d3.max(productionStatus['WB_Util'], function(d){return d.number+0.02})])
          .range([graphHeight, 0]);
         
     var yAxis = d3.svg.axis()
@@ -842,12 +851,16 @@ function ProductionStatus(){
         .attr('class', 'statusTitle')
         .attr("x", (graphWidth / 2))             
         .attr("y", 0 - (margin.top / 2))
-        .text("Split Count");
+        .text("Util Graph");
     
     svg1.append('path')
+        .attr('class', 'statusLine2')
+        .attr("d", line(productionStatus['DA_Util']))
+
+     svg1.append('path')
         .attr('class', 'statusLine')
-        .attr("d", line(productionStatus['SplitCount']))
-    
+        .attr("d", line(productionStatus['WB_Util']))
+
 	svg1.append("g")
 		.attr("class", "x axis")
 		.attr("transform", "translate(0," + graphHeight + ")")
@@ -856,48 +869,78 @@ function ProductionStatus(){
 	svg1.append("g")
 		.attr("class", "y axis")
 		.call(yAxis);
+    var dataLabel = []
+          dataLabel.push('DA Util')
+          dataLabel.push('WB Util')
+    
+    var legend = svg1.selectAll(".legend")
+                     .data(dataLabel)
+                     .enter().append("g")
+                     .attr("class", "legend")
+                     .attr("transform", function(d, i) { return "translate(0," + ((i * 20) + graphHeight*0.87)+ ")"; });          
+    legend.append("rect")
+      .attr("x", graphWidth - graphWidth*0.98)
+      .attr("width", 18)
+      .attr("height", 18)
+      .style("fill", function(d, i){
+            if (d.indexOf('DA') > -1){
+                return 'tomato'
+            }else{
+                return '#3366cc'
+            }
+            
+        });
+
+      // draw legend text
+      legend.append("text")
+          .attr("x", graphWidth - graphWidth*0.98 + 20)
+          .attr("y", 9)
+          .attr("dy", ".35em")
+          .style("text-anchor", "front")
+          .text(function(d) { return d;})
+      
 
      // Merge Count
-    svg1 = d3.select("#status_2").append('svg').attr('width', canvasWidth).attr('height', 400)
-               .append('g').attr("transform", "translate(" + graphMargin.left + "," + (graphMargin.top)+ ")");
+ //    svg1 = d3.select("#status_2").append('svg').attr('width', canvasWidth).attr('height', 400)
+ //               .append('g').attr("transform", "translate(" + graphMargin.left + "," + (graphMargin.top)+ ")");
     
-    var xScale = d3.time.scale()
-        .domain([0, d3.max(productionStatus['MergeCount'], function(d){return d.time*1000})])
-        .range([0, graphWidth]); // FIX
+ //    var xScale = d3.time.scale()
+ //        .domain([0, d3.max(productionStatus['MergeCount'], function(d){return d.time*1000})])
+ //        .range([0, graphWidth]); // FIX
     
-    var xAxis = d3.svg.axis()
-        .scale(xScale)
-        .orient('bottom')
-        .tickFormat(tickFormat.format)
-        .tickSize(tickFormat.tickSize); 
+ //    var xAxis = d3.svg.axis()
+ //        .scale(xScale)
+ //        .orient('bottom')
+ //        .tickFormat(tickFormat.format)
+ //        .tickSize(tickFormat.tickSize); 
     
-    var yScale = d3.scale.linear()
-         .domain([0, d3.max(productionStatus['MergeCount'], function(d){return d.number})])
-         .range([graphHeight, 0]);
+ //    var yScale = d3.scale.linear()
+ //         .domain([0, d3.max(productionStatus['MergeCount'], function(d){return d.number})])
+ //         .range([graphHeight, 0]);
         
-    var yAxis = d3.svg.axis()
-        .scale(yScale)
-        .orient('left')
-        .tickSize(2);    
+ //    var yAxis = d3.svg.axis()
+ //        .scale(yScale)
+ //        .orient('left')
+ //        .tickSize(2);    
     
-    svg1.append("text")
-        .attr('class', 'statusTitle')
-        .attr("x", (graphWidth / 2))             
-        .attr("y", 0 - (margin.top / 2))
-        .text("Merge Count");
+ //    svg1.append("text")
+ //        .attr('class', 'statusTitle')
+ //        .attr("x", (graphWidth / 2))             
+ //        .attr("y", 0 - (margin.top / 2))
+ //        .text("Merge Count");
     
-    svg1.append('path')
-        .attr('class', 'statusLine')
-        .attr("d", line(productionStatus['MergeCount']))
+ //    svg1.append('path')
+ //        .attr('class', 'statusLine')
+ //        .attr("d", line(productionStatus['MergeCount']))
     
-	svg1.append("g")
-		.attr("class", "x axis")
-		.attr("transform", "translate(0," + graphHeight + ")")
-		.call(xAxis);
+	// svg1.append("g")
+	// 	.attr("class", "x axis")
+	// 	.attr("transform", "translate(0," + graphHeight + ")")
+	// 	.call(xAxis);
 
-	svg1.append("g")
-		.attr("class", "y axis")
-		.call(yAxis);
+	// svg1.append("g")
+	// 	.attr("class", "y axis")
+	// 	.call(yAxis);
     
    
 }

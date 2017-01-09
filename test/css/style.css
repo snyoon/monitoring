@@ -291,7 +291,7 @@ th { text-align: left;
     fill: none
 }
 .statusLine2{
-    stroke: red;
+    stroke: tomato;
     stroke-width: 1;
     fill: none
 }
