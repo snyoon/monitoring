@@ -153,11 +153,11 @@
             // figure out beginning and ending times if they are unspecified
             datum.times.forEach(function (time, i) {
               if(beginning === 0)
-                if (time.starting_time * 1000 < minTime || (minTime === 0 && timeIsRelative === false))
-                  minTime = time.starting_time * 1000;
+                if (time.starting_time  < minTime || (minTime === 0 && timeIsRelative === false))
+                  minTime = time.starting_time;
               if(ending === 0)
-                if (time.ending_time * 1000 > maxTime)
-                  maxTime = time.ending_time * 1000;
+                if (time.ending_time > maxTime)
+                  maxTime = time.ending_time;
             });
           });
         });
@@ -172,7 +172,7 @@
 
       // draw the axis
       xScale = d3.time.scale()
-        .domain([0, ending])
+        .domain([beginning, ending])
         .range([margin.left, width - margin.right]); // FIX
         
       var xAxis = d3.svg.axis()
@@ -273,17 +273,17 @@
         
         rects
             .attr("x", function (d) {
-                return xScale(d.starting_time * 1000)})
+                return xScale(d.starting_time )})
             .attr("y", function(d){
                 return yScale(labelMap[d.label]) })
             .attr("width", function (d, i) {
-                return xScale(d.ending_time * 1000) - xScale(d.starting_time * 1000);})
+                return xScale(d.ending_time ) - xScale(d.starting_time);})
             .attr("height", function(d){
                 return (yScale(labelMap[d.label]+1) - yScale(labelMap[d.label]) -itemMargin*3)});
         
         texts  
             .attr("x", function(d){
-                return xScale((d.starting_time*1000 + d.ending_time*1000)/2) })
+                return xScale((d.starting_time + d.ending_time)/2) })
             .attr("y", function(d){
                 return yScale(labelMap[d.label]) + 0.5*(yScale(labelMap[d.label]+1)-yScale(labelMap[d.label])) })
             .style('text-anchor', 'middle')
@@ -381,13 +381,13 @@
                          return document.createElementNS(d3.ns.prefix.svg, "display" in d ? d.display : display);
                     })
                     .attr("x", function(d){
-                        return xScale(d.starting_time*1000)
+                        return xScale(d.starting_time)
                        })
                       .attr("y", function(d){
                         return yScale(index)  
                       })
                       .attr("width", function (d, i) {
-                        return xScale(d.ending_time *1000) - xScale(d.starting_time*1000) ;
+                        return xScale(d.ending_time) - xScale(d.starting_time) ;
                     })
 //                    .attr("cy", function (d, i) {
 //                        return getStackPosition(d, i) + itemHeight / 2;
@@ -450,7 +450,7 @@
                         })
                         .attr("clip-path", "url(#clip)")
                         .attr("x", function(d){
-                          return xScale((d.starting_time*1000 + d.ending_time*1000)/2)
+                          return xScale((d.starting_time + d.ending_time)/2)
                         })
                         .attr("y", function(d){
                         return yScale(index) + 0.7*(yScale(index+1) - yScale(index))

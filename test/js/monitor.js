@@ -111,14 +111,13 @@ var openCompareFile = function (event) {
 
         d3.select('#defaultShipLine').remove()
         d3.selectAll('.dateDividerShip').remove()
-        var defaultTimeMax = d3.max(productionStatus['ShipCount'], function(d){return d.time*1000});
-        var compareTimeMax = d3.max(compareShipCount, function(d){return d.time*1000});
+        var defaultTimeMax = d3.max(productionStatus['ShipCount'], function(d){return d.time});
+        var compareTimeMax = d3.max(compareShipCount, function(d){return d.time});
         var totalMax;
-        console.log(defaultTimeMax + '\t' + compareTimeMax)
 
         if(defaultTimeMax > compareTimeMax) totalMax = defaultTimeMax
         else totalMax = compareTimeMax
-        shipXScale.domain([0, totalMax])
+        shipXScale.domain([d3.min(compareShipCount, function(d){return d.time}), totalMax])
         shipXAxis.scale(shipXScale)
         d3.select('#shipXAxis').remove()
         shipSvg.append("g")
@@ -126,7 +125,7 @@ var openCompareFile = function (event) {
             .attr("transform", "translate(0," + graphHeight + ")")
             .call(shipXAxis);
         shipLine = d3.svg.line()
-            .x(function(d) { return shipXScale(d.time*1000); })
+            .x(function(d) { return shipXScale(d.time); })
             .y(function(d) { return shipYScale(+d.number); })
 
         shipSvg.append('path')
@@ -266,30 +265,32 @@ function timelineHover(traveledTime) {
 }
 
 
-// ------------------------------------------- Lot Search ------------------------------------------------
-// Decision Viewr에서 선택하는 Interface로 
-
-var zoom = d3.behavior.zoom()
-    .scaleExtent([1, 10])
-    .on("zoom", zoomed);
-
-function zoomed() {
-  container.attr("transform", "translate(" + d3.event.translate + ")scale(" + d3.event.scale + ")");
+// ------------------------------------- Attribute View ------------------------------------------------
+function addZero(i) {
+    if (i < 10) {
+        i = "0" + i;
+    }
+    return i;
 }
 
-
-// ------------------------------------- Attribute View ------------------------------------------------
 function displayAttribute(d, datum){
     var lotId = d.lotId;
     if(lotId.indexOf('_')>0) lotId = lotId.substring(0, lotId.indexOf('_'))
     var decisionKey = d.degree + '_' + lotId;
     var decisionsArray = decisionInfo[decisionKey];
-    var decisionTime = decisionsArray[0].decisionTime;
+    var startingTime = new Date(d.starting_time);
+    var endingTime = new Date(d.ending_time);    
+    var decisionTime = 0;
+    if(decisionsArray != null)decisionTime = decisionsArray[0].decisionTime;
+    decisionTime = new Date(decisionTime);
     $('#lotViewer')
         .html('<strong style="font-family:Sans-serif;">' +'Lot Id: '+ d.lotId + '<br>' + '</strong>' 
-             +'<strong style="font-family:Sans-serif;">' +'Starting Time: '+ d.starting_time + '<br>' + '</strong>'
-             +'<strong style="font-family:Sans-serif;">' +'Ending Time: '+ d.ending_time + '<br>' + '</strong>'
-             +'<strong style="font-family:Sans-serif;">' +'Decision Time: '+ decisionTime + '<br>' + '</strong>'
+             +'<strong style="font-family:Sans-serif;">' +'Starting Time: '+ startingTime.getDate() + '일 ' + addZero(startingTime.getHours()) + ':' + addZero(startingTime.getMinutes())
+             + '<br>' + '</strong>'
+             +'<strong style="font-family:Sans-serif;">' +'Ending Time: '+ endingTime.getDate() + '일 ' + addZero(endingTime.getHours()) + ':' + addZero(endingTime.getMinutes()) 
+             + '<br>' + '</strong>'
+             +'<strong style="font-family:Sans-serif;">' +'Decision Time: '+ decisionTime.getDate() + '일 ' + addZero(decisionTime.getHours()) + ':' + addZero(decisionTime.getMinutes()) 
+             + '<br>' + '</strong>'
              +'<strong style="font-family:Sans-serif;">' +'Operation: '+ d.degree + '<br>' + '</strong>'
              +'<strong style="font-family:Sans-serif;">' +'Quantity: '+ d.quantity + '<br>' + '</strong>'
              // +'<strong style="font-family:Sans-serif;">' +'Flow: '+ d.flow + '<br>' + '</strong>'
@@ -524,22 +525,23 @@ function displayDecisions(d, datum){
              +'<strong style="font-family:Sans-serif;font-size:20px;">' +'생산량: '+ currentStatus['outputCount'] + ' / ' + denominator['MAX_outputcount']
              + '<br>' + '</strong>'
              );
+         lineHeight = chart.getHeight();
+        gantt = d3.select('#process').select('svg')
+        gantt.append("line")
+        .attr('id', 'decisionLine')    
+        .attr("x1", xScale(decisionsArray[0].decisionTime))  //<<== change your code here
+        .attr("y1", margin.top*2)
+        .attr("x2", xScale(decisionsArray[0].decisionTime))  //<<== and here
+        .attr("y2", lineHeight - margin.bottom)
+        .style("stroke-width", 2)
+        .style("stroke", "red")
+        .style("fill", "none");
     }
     else{
         $('#currentStatus')
             .html(' ');
     }
-    lineHeight = chart.getHeight();
-    gantt = d3.select('#process').select('svg')
-    gantt.append("line")
-        .attr('id', 'decisionLine')    
-        .attr("x1", xScale(decisionsArray[0].decisionTime*1000))  //<<== change your code here
-        .attr("y1", margin.top)
-        .attr("x2", xScale(decisionsArray[0].decisionTime*1000))  //<<== and here
-        .attr("y2", lineHeight - margin.bottom)
-        .style("stroke-width", 2)
-        .style("stroke", "red")
-        .style("fill", "none");
+   
     
 }
 
@@ -633,7 +635,7 @@ function ProductionStatus(){
     kpis.enter()
         .append('g')
         .attr('class', 'KPIs')
-        .attr("transform", function(d, i) { return "translate(0," + (i * (fontSize*2) +30)+ ")"; })
+        .attr("transform", function(d, i) { return "translate(0," + (i * (fontSize*1.7) +30)+ ")"; })
         .append('text')
         .attr('x', 12)
         .attr('y', 3)
@@ -656,7 +658,7 @@ function ProductionStatus(){
                .append('g').attr("transform", "translate(" + graphMargin.left + "," + graphMargin.top+ ")");
     
     var xScale = d3.time.scale()
-        .domain([0, d3.max(productionStatus['WIPLevel'], function(d){return d.time * 1000})])
+        .domain([d3.min(productionStatus['WIPLevel'], function(d){return d.time}), d3.max(productionStatus['WIPLevel'], function(d){return d.time})])
         .range([0, graphWidth]); // FIX
     
     var xAxis = d3.svg.axis()
@@ -676,16 +678,16 @@ function ProductionStatus(){
         .tickSize(2);    
     
     var line = d3.svg.line()
-            .x(function(d) { return xScale(d.time*1000); })
+            .x(function(d) { return xScale(d.time); })
             .y(function(d) { return yScale(+d.number); })
 //            .inperpolate('linear') ;
     
     
     var horizontalLine = svg1
                  .append('line')
-                 .attr("x1", xScale(0))
+                 .attr("x1", xScale(d3.min(productionStatus['WIPLevel'], function(d){return d.time})))
                  .attr("y1", yScale(KPI['Stocker_size']))
-                 .attr("x2", xScale(d3.max(productionStatus['WIPLevel'], function(d){return d.time * 1000})))
+                 .attr("x2", xScale(d3.max(productionStatus['WIPLevel'], function(d){return d.time})))
                  .attr("y2", yScale(KPI['Stocker_size']))
                  .style("stroke-width", 1)
                  .style("stroke", "red")
@@ -716,7 +718,7 @@ function ProductionStatus(){
                .append('g').attr("transform", "translate(" + graphMargin.left + "," + graphMargin.top+ ")");
     
     var xScale = d3.time.scale()
-        .domain([0, d3.max(productionStatus['InputCount'], function(d){return d.time*1000})])
+        .domain([d3.min(productionStatus['InputCount'], function(d){return d.time}), d3.max(productionStatus['InputCount'], function(d){return d.time})])
         .range([0, graphWidth]); // FIX
     
     var xAxis = d3.svg.axis()
@@ -743,6 +745,10 @@ function ProductionStatus(){
     svg1.append('path')
         .attr('class', 'statusLine')
         .attr("d", line(productionStatus['InputCount']))
+
+    svg1.append('path')
+        .attr('class', 'statusLine2')
+        .attr("d", line(productionStatus['InTargetCount']))
     
 	svg1.append("g")
 		.attr("class", "x axis")
@@ -752,6 +758,36 @@ function ProductionStatus(){
 	svg1.append("g")
 		.attr("class", "y axis")
 		.call(yAxis);
+
+    var dataLabel = []
+          dataLabel.push('In Target')
+          dataLabel.push('투입량')
+    
+    var legend = svg1.selectAll(".legend")
+                     .data(dataLabel)
+                     .enter().append("g")
+                     .attr("class", "legend")
+                     .attr("transform", function(d, i) { return "translate(0," + ((i * 20))+ ")"; });          
+    legend.append("rect")
+      .attr("x", graphWidth - graphWidth*0.98)
+      .attr("width", 18)
+      .attr("height", 18)
+      .style("fill", function(d, i){
+            if (d.indexOf('In') > -1){
+                return 'tomato'
+            }else{
+                return '#3366cc'
+            }
+            
+        });
+
+      // draw legend text
+      legend.append("text")
+          .attr("x", graphWidth - graphWidth*0.98 + 20)
+          .attr("y", 9)
+          .attr("dy", ".35em")
+          .style("text-anchor", "front")
+          .text(function(d) { return d;})
     
     drawVerticalLine(svg1, xScale, yScale, d3.max(productionStatus['InputCount'], function(d){return d.number}))
     // Ship Count
@@ -759,7 +795,7 @@ function ProductionStatus(){
                .append('g').attr("transform", "translate(" + graphMargin.left + "," + graphMargin.top+ ")");
     
     shipXScale = d3.time.scale()
-        .domain([0, d3.max(productionStatus['ShipCount'], function(d){return (+d.time)*1000})])
+        .domain([d3.min(productionStatus['ShipCount'], function(d){return (d.time)}), d3.max(productionStatus['ShipCount'], function(d){return (d.time)})])
         .range([0, graphWidth]); // FIX
     
     shipXAxis = d3.svg.axis()
@@ -785,7 +821,7 @@ function ProductionStatus(){
         .text("산출물");
     
     shipLine = d3.svg.line()
-            .x(function(d) { return shipXScale(d.time*1000); })
+            .x(function(d) { return shipXScale(d.time); })
             .y(function(d) { return shipYScale(+d.number); })
 
     shipSvg.append('path')
@@ -806,18 +842,18 @@ function ProductionStatus(){
     
     var verticalLine = shipSvg
                  .append('line')
-                 .attr("x1", shipXScale(86399*1000))
+                 .attr("x1", shipXScale(86399*1000-32400000))
                  .attr("y1", shipYScale(0))
-                 .attr("x2", shipXScale(86399*1000))
+                 .attr("x2", shipXScale(86399*1000-32400000))
                  .attr("y2", shipYScale(d3.max(productionStatus['ShipCount'], function(d){return d.number})))
                  .attr('class','dateDividerShip')
                  .style("stroke-width", 1)
                  .style("stroke", "gray")
     var verticalLine2 = shipSvg
                  .append('line')
-                 .attr("x1", shipXScale(86399*2*1000))
+                 .attr("x1", shipXScale(86399*2*1000-32400000))
                  .attr("y1", shipYScale(0))
-                 .attr("x2", shipXScale(86399*2*1000))
+                 .attr("x2", shipXScale(86399*2*1000-32400000))
                  .attr("y2", shipYScale(d3.max(productionStatus['ShipCount'], function(d){return d.number})))
                  .attr('class','dateDividerShip')
                  .style("stroke-width", 1)
@@ -829,7 +865,7 @@ function ProductionStatus(){
     
     
     var xScale = d3.time.scale()
-        .domain([0, d3.max(productionStatus['WB_Util'], function(d){return d.time*1000})])
+        .domain([d3.min(productionStatus['WB_Util'], function(d){return d.time}), d3.max(productionStatus['WB_Util'], function(d){return d.time})])
         .range([0, graphWidth]); // FIX
     
     var xAxis = d3.svg.axis()
@@ -857,7 +893,7 @@ function ProductionStatus(){
         .attr('class', 'statusLine2')
         .attr("d", line(productionStatus['DA_Util']))
 
-     svg1.append('path')
+    svg1.append('path')
         .attr('class', 'statusLine')
         .attr("d", line(productionStatus['WB_Util']))
 
@@ -869,11 +905,12 @@ function ProductionStatus(){
 	svg1.append("g")
 		.attr("class", "y axis")
 		.call(yAxis);
+    
     var dataLabel = []
           dataLabel.push('DA Util')
           dataLabel.push('WB Util')
     
-    var legend = svg1.selectAll(".legend")
+    legend = svg1.selectAll(".legend")
                      .data(dataLabel)
                      .enter().append("g")
                      .attr("class", "legend")
@@ -954,18 +991,18 @@ function displayKPI(lotId){
 function drawVerticalLine(inputSvg, scaleX, scaleY, max){
          var verticalLine = inputSvg
                  .append('line')
-                 .attr("x1", scaleX(86399*1000))
+                 .attr("x1", scaleX((86399)*1000-32400000))
                  .attr("y1", scaleY(0))
-                 .attr("x2", scaleX(86399*1000))
+                 .attr("x2", scaleX((86399)*1000-32400000))
                  .attr("y2", scaleY(max))
                  .style('class','dateDivider')
                  .style("stroke-width", 1)
                  .style("stroke", "gray")
         var verticalLine2 = inputSvg
                  .append('line')
-                 .attr("x1", scaleX(86399*2*1000))
+                 .attr("x1", scaleX(86399*2*1000-32400000))
                  .attr("y1", scaleY(0))
-                 .attr("x2", scaleX(86399*2*1000))
+                 .attr("x2", scaleX(86399*2*1000-32400000))
                  .attr("y2", scaleY(max))
                  .style('class','dateDivider')
                  .style("stroke-width", 1)
