@@ -80,7 +80,7 @@
       ;
       
     height = $(window).height();  
-    var panExtent = {x: [0,width], y: [0,height] };
+    var panExtent;
     var appendLabelAxis = function(g, yAxis) {
 
       if(showAxisHeaderBackground){ appendAxisHeaderBackground(g, 0, 0); }
@@ -137,7 +137,7 @@
         maxTime = 0;
 
        setWidth();
-      panExtent = {x: [0,width], y: [0,height] };
+      
       // check how many stacks we're gonna need
       // do this here so that we can draw the axis before the graph
       if (stacked || ending === 0 || beginning === 0) {
@@ -170,11 +170,13 @@
         }
       }
 
+      panExtent = {x: [beginning, ending], y: [0, labelArr.length] };
       // draw the axis
       xScale = d3.time.scale()
-        .domain([beginning, ending])
+        .domain([panExtent.x[0]>(-ending/ 2)?panExtent.x[0]:(-ending / 2),
+                panExtent.x[1]< ending ?panExtent.x[1]:ending])
         .range([margin.left, width - margin.right]); // FIX
-        
+      
       var xAxis = d3.svg.axis()
         .scale(xScale)
         .orient(orient)
@@ -187,8 +189,12 @@
         .tickFormat(tickFormat.format)
         .tickSize(tickFormat.tickSize);
        
+      // yScale = d3.scale.linear()
+      //    .domain([0, labelArr.length])
+      //    .range([(itemHeight + itemMargin), (height-margin.bottom) ]); 
       yScale = d3.scale.linear()
-         .domain([0, labelArr.length])
+         .domain([panExtent.y[0]>(-labelArr.length / 2)?panExtent.y[0]:(-labelArr.length / 2),
+                  panExtent.y[1]<labelArr.length ?panExtent.y[1]:labelArr.length ])
          .range([(itemHeight + itemMargin), (height-margin.bottom) ]);
         
       var yAxis = d3.svg.axis()
@@ -227,9 +233,6 @@
       var gSize = g[0][0].getBoundingClientRect();
       setHeight();
         
-     // Display Label at yAxis
-     
-     
       // FIX: Zoom In & Out
       // function zoomed() {
       //       gParent.select('.axis').call(xAxis);
@@ -240,70 +243,84 @@
                 .x(xScale)
                 .y(yScale)
                 .on("zoom", draw);
-      var xzoom = d3.behavior.zoom()
-                .x(xScale)
-                .on("zoom", draw);
-      var yzoom = d3.behavior.zoom()
-                .y(yScale)
-                .on("zoom", draw);      
+      // var xzoom = d3.behavior.zoom()
+      //           .x(xScale)
+      //           .on("zoom", draw);
+      // var yzoom = d3.behavior.zoom()
+      //           .y(yScale)
+      //           .on("zoom", draw);      
       gParent.call(xyzoom);   
-      function zoom_update(){
-          xyzoom = d3.behavior.zoom()
-                .x(xScale)
-                .y(yScale)
-                .on("zoom", draw);
-          xzoom = d3.behavior.zoom()
-                .x(xScale)
-                .on("zoom", draw);
-          yzoom = d3.behavior.zoom()
-                .y(yScale)
-                .on("zoom", draw);
-      
-          gParent.call(xyzoom);    
-          
-      }    
+
     var nodeFontSize = 12;
-      function draw(){
-        gParent.select('.axis').call(xAxis);
-        gParent.select('.topAxis').call(topXAxis);
-        gParent.select('.Yaxis').call(yAxis);
-          
-        var rects = gParent.selectAll('.operationRect')       
-        var texts = gParent.selectAll('.operationText')
+
+    // function panLimit() {
+    // /*
+    //   include boolean to work out the panExtent and return to zoom.translate()
+    // */
+    //   var divisor = {h: labelArr.length / ((yScale.domain()[1]-yScale.domain()[0])*xyzoom.scale()), w: ending / ((xScale.domain()[1]-xScale.domain()[0])*xyzoom.scale())},
+    //     minX = -(((xScale.domain()[0]-xScale.domain()[1])*xyzoom.scale())+(panExtent.x[1]-(panExtent.x[1]-(width/divisor.w)))),
+    //     minY = -(((yScale.domain()[0]-yScale.domain()[1])*xyzoom.scale())+(panExtent.y[1]-(panExtent.y[1]-(height*(xyzoom.scale())/divisor.h))))*divisor.h,
+    //     maxX = -(((xScale.domain()[0]-xScale.domain()[1]))+(panExtent.x[1]-panExtent.x[0]))*divisor.w*xyzoom.scale(),
+    //     maxY = (((yScale.domain()[0]-yScale.domain()[1])*xyzoom.scale())+(panExtent.y[1]-panExtent.y[0]))*divisor.h*xyzoom.scale(), 
+
+    //     tx = xScale.domain()[0] < panExtent.x[0] ? 
+    //         minX : 
+    //         xScale.domain()[1] > panExtent.x[1] ? 
+    //           maxX : 
+    //           xyzoom.translate()[0],
+    //     ty = yScale.domain()[0]  < panExtent.y[0]? 
+    //         minY : 
+    //         yScale.domain()[1] > panExtent.y[1] ? 
+    //           maxY : 
+    //           xyzoom.translate()[1];
+      
+    //   return [tx,ty];
+    // }
+    function draw(){
+    // var tx = d3.event.translate[0] > 0 ? 0 : d3.event.translate[0]
+    var tx = d3.event.translate[0] > 0 ? 0 : d3.event.translate[0],
+        ty = Math.min(0, d3.event.translate[1]);
+      xyzoom.translate([tx, ty]);
+      gParent.select('.axis').call(xAxis);
+      gParent.select('.topAxis').call(topXAxis);
+      gParent.select('.Yaxis').call(yAxis);
+
+      console.log(d3.event.translate)
+      var rects = gParent.selectAll('.operationRect')       
+      var texts = gParent.selectAll('.operationText')
+      
+      rects
+          .attr("x", function (d) {
+              return xScale(d.starting_time )})
+          .attr("y", function(d){
+              return yScale(labelMap[d.label]) })
+          .attr("width", function (d, i) {
+              return xScale(d.ending_time ) - xScale(d.starting_time);})
+          .attr("height", function(d){
+              return (yScale(labelMap[d.label]+1) - yScale(labelMap[d.label]) -itemMargin*3)});
+      
+      texts  
+          .attr("x", function(d){
+              return xScale((d.starting_time + d.ending_time)/2) })
+          .attr("y", function(d){
+              return yScale(labelMap[d.label]) + 0.5*(yScale(labelMap[d.label]+1)-yScale(labelMap[d.label])) })
+          .style('text-anchor', 'middle')
+          .style('vertical-align', 'middle')
+          .style('font-weight', 'bold')
+          .style('font-size', function(d){
+              return 0.2*(yScale(labelMap[d.label]+1) - yScale(labelMap[d.label])) + 'px'})
+          .style('fill', 'white')
+          .text(function (d) {
+            if(d.lotId != 'OVERFLOW' && d.lotId != 'RESERVED'){
+              if(d.lotId.indexOf('WIP')>-1) return 'WIP'
+              else{
+                var displayedLotId = d.lotId.substring(3, d.lotId.length)
+                return displayedLotId
+              }
+            } 
+          });
         
-        rects
-            .attr("x", function (d) {
-                return xScale(d.starting_time )})
-            .attr("y", function(d){
-                return yScale(labelMap[d.label]) })
-            .attr("width", function (d, i) {
-                return xScale(d.ending_time ) - xScale(d.starting_time);})
-            .attr("height", function(d){
-                return (yScale(labelMap[d.label]+1) - yScale(labelMap[d.label]) -itemMargin*3)});
-        
-        texts  
-            .attr("x", function(d){
-                return xScale((d.starting_time + d.ending_time)/2) })
-            .attr("y", function(d){
-                return yScale(labelMap[d.label]) + 0.5*(yScale(labelMap[d.label]+1)-yScale(labelMap[d.label])) })
-            .style('text-anchor', 'middle')
-            .style('vertical-align', 'middle')
-            .style('font-weight', 'bold')
-            .style('font-size', function(d){
-                return 0.2*(yScale(labelMap[d.label]+1) - yScale(labelMap[d.label])) + 'px'})
-            .style('fill', 'white')
-            .text(function (d) {
-              if(d.lotId != 'OVERFLOW' && d.lotId != 'RESERVED'){
-                if(d.lotId.indexOf('WIP')>-1) return 'WIP'
-                else{
-                  var displayedLotId = d.lotId.substring(3, d.lotId.length)
-                  return displayedLotId
-                }
-              } 
-            });
-          
-//        zoom_update();
-      }  
+    }  
     
 
       function setHeight() {
