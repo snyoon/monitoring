@@ -173,8 +173,9 @@
       panExtent = {x: [beginning, ending], y: [0, labelArr.length] };
       // draw the axis
       xScale = d3.time.scale()
-        .domain([panExtent.x[0]>(-ending/ 2)?panExtent.x[0]:(-ending / 2),
-                panExtent.x[1]< ending ?panExtent.x[1]:ending])
+        // .domain([panExtent.x[0]>(-ending/ 2)?panExtent.x[0]:(-ending / 2),
+        //         panExtent.x[1]< ending ?panExtent.x[1]:ending])
+        .domain([beginning, ending])
         .range([margin.left, width - margin.right]); // FIX
       
       var xAxis = d3.svg.axis()
@@ -281,11 +282,11 @@
     var tx = d3.event.translate[0] > 0 ? 0 : d3.event.translate[0],
         ty = Math.min(0, d3.event.translate[1]);
       xyzoom.translate([tx, ty]);
+
       gParent.select('.axis').call(xAxis);
       gParent.select('.topAxis').call(topXAxis);
       gParent.select('.Yaxis').call(yAxis);
 
-      console.log(d3.event.translate)
       var rects = gParent.selectAll('.operationRect')       
       var texts = gParent.selectAll('.operationText')
       
