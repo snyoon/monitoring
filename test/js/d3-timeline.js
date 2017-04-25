@@ -25,23 +25,7 @@
         },
         // FIX
         // colorCycle = d3.scale.category20(),
-        colorCycle = {
-            'SDP_01': '#2A75A6',
-            'SDP_02': '#AEC6EB',
-            'SDP_03': '#FD7E12',
-            'DDP_01': '#FCB972',
-            'DDP_02': '#2AA12D',
-            'DDP_03': '#A0D993',
-            'DDP_04': '#8BC432',
-            'QDP_01': '#FF9894',
-            'QDP_02': '#9663C3',
-            '2MCP_01': '#C8ADDB',
-            '2MCP_02': '#8B5844',
-            '3MCP_01': '#C19992',
-            '3MCP_02': '#D87CC6',
-            '4MCP_01': '#F9B8D3',
-            '4MCP_02': '#7E7E7E'
-        },
+
         colorPropertyName = null,
         display = "rect",
         beginning = 0,
@@ -74,10 +58,32 @@
         labelAxis,
         labelMap = {},
         xScale,
-        yScale
+        yScale,
+        // For Product Group Color
+        c10 = d3.scale.category10();
+        colorDomain = ["C12", "DDW", "MCP"]
+        c10.domain(colorDomain)
+    var colorCycle = {
+        "C12" : c10("C12"), 
+        "DDW" : c10("DDW"),
+        "MCP" : c10("MCP")
+        // 'SDP_01': '#2A75A6',
+        // 'SDP_02': '#AEC6EB',
+        // 'SDP_03': '#FD7E12',
+        // 'DDP_01': '#FCB972',
+        // 'DDP_02': '#2AA12D',
+        // 'DDP_03': '#A0D993',
+        // 'DDP_04': '#8BC432',
+        // 'QDP_01': '#FF9894',
+        // 'QDP_02': '#9663C3',
+        // '2MCP_01': '#C8ADDB',
+        // '2MCP_02': '#8B5844',
+        // '3MCP_01': '#C19992',
+        // '3MCP_02': '#D87CC6',
+        // '4MCP_01': '#F9B8D3',
+        // '4MCP_02': '#7E7E7E'
+    };
       
-      
-      ;
       
     height = $(window).height();  
     var panExtent;
@@ -169,7 +175,8 @@
           beginning = minTime;
         }
       }
-
+      // console.log(beginning);
+      // console.log(ending);
       panExtent = {x: [beginning, ending], y: [0, labelArr.length] };
       // draw the axis
       xScale = d3.time.scale()
@@ -218,8 +225,6 @@
         
       // draw the chart
       drawChart(g);
-      
-      
         
       var belowLastItem = (margin.top + (itemHeight + itemMargin) * maxStack);
       var aboveFirstItem = margin.top;
@@ -233,50 +238,14 @@
         
       var gSize = g[0][0].getBoundingClientRect();
       setHeight();
-        
-      // FIX: Zoom In & Out
-      // function zoomed() {
-      //       gParent.select('.axis').call(xAxis);
-      //       gParent.select('.Yaxis').call(yAxis);
-      // }  
-        
       var xyzoom = d3.behavior.zoom()
                 .x(xScale)
                 .y(yScale)
                 .on("zoom", draw);
-      // var xzoom = d3.behavior.zoom()
-      //           .x(xScale)
-      //           .on("zoom", draw);
-      // var yzoom = d3.behavior.zoom()
-      //           .y(yScale)
-      //           .on("zoom", draw);      
+ 
       gParent.call(xyzoom);   
-
     var nodeFontSize = 12;
 
-    // function panLimit() {
-    // /*
-    //   include boolean to work out the panExtent and return to zoom.translate()
-    // */
-    //   var divisor = {h: labelArr.length / ((yScale.domain()[1]-yScale.domain()[0])*xyzoom.scale()), w: ending / ((xScale.domain()[1]-xScale.domain()[0])*xyzoom.scale())},
-    //     minX = -(((xScale.domain()[0]-xScale.domain()[1])*xyzoom.scale())+(panExtent.x[1]-(panExtent.x[1]-(width/divisor.w)))),
-    //     minY = -(((yScale.domain()[0]-yScale.domain()[1])*xyzoom.scale())+(panExtent.y[1]-(panExtent.y[1]-(height*(xyzoom.scale())/divisor.h))))*divisor.h,
-    //     maxX = -(((xScale.domain()[0]-xScale.domain()[1]))+(panExtent.x[1]-panExtent.x[0]))*divisor.w*xyzoom.scale(),
-    //     maxY = (((yScale.domain()[0]-yScale.domain()[1])*xyzoom.scale())+(panExtent.y[1]-panExtent.y[0]))*divisor.h*xyzoom.scale(), 
-
-    //     tx = xScale.domain()[0] < panExtent.x[0] ? 
-    //         minX : 
-    //         xScale.domain()[1] > panExtent.x[1] ? 
-    //           maxX : 
-    //           xyzoom.translate()[0],
-    //     ty = yScale.domain()[0]  < panExtent.y[0]? 
-    //         minY : 
-    //         yScale.domain()[1] > panExtent.y[1] ? 
-    //           maxY : 
-    //           xyzoom.translate()[1];
-      
-    //   return [tx,ty];
-    // }
     function draw(){
     // var tx = d3.event.translate[0] > 0 ? 0 : d3.event.translate[0]
     var tx = d3.event.translate[0] > 0 ? 0 : d3.event.translate[0],
@@ -312,7 +281,7 @@
               return 0.2*(yScale(labelMap[d.label]+1) - yScale(labelMap[d.label])) + 'px'})
           .style('fill', 'white')
           .text(function (d) {
-            if(d.lotId != 'OVERFLOW' && d.lotId != 'RESERVED'){
+            if(d.lotId != 'OVERFLOW' && d.lotId != 'RESERVED' && d.lotId.indexOf('Setup') < 0 ){
               if(d.lotId.indexOf('WIP')>-1) return 'WIP'
               else{
                 var displayedLotId = d.lotId.substring(3, d.lotId.length)
@@ -407,9 +376,6 @@
                       .attr("width", function (d, i) {
                         return xScale(d.ending_time) - xScale(d.starting_time) ;
                     })
-//                    .attr("cy", function (d, i) {
-//                        return getStackPosition(d, i) + itemHeight / 2;
-//                    }).attr("cx", getXPos).attr("r", itemHeight / 2)
                      .attr("height", function(d){
                         return (yScale(index+1) - yScale(index) -itemMargin*3)
                     })
@@ -427,9 +393,13 @@
                         // }
                         // if(d.lotId  == 'RESERVED') return  'url(#diagonal-stripe-1)' 
                         // else return colorCycle[d.productId];
-
-                        if(d.lotId !='RESERVED') return colorCycle[d.productId];
-                        else  return 'url(#diagonal-stripe-1) #fff'
+                        // console.log(d);
+                        // if(d.lotId !='RESERVED') return colorCycle[d.productId];
+                        if(d.lotId  == 'RESERVED') return  'url(#diagonal-stripe-1)' 
+                        else if(d.lotId =='HeteroSetup') return '000000'
+                        else if (d.lotId =='HomoSetup') return '545454'
+                        else return c10(d.productGroup)
+                        // else  return 'url(#diagonal-stripe-1) #fff'
                     })
                     /*.style('opacity', function(d, i){
                       if(d.lotId  == 'RESERVED'){
@@ -481,18 +451,18 @@
                         .style('font-size', function(d){
                             return 0.2*((yScale(index+1) - yScale(index))) + 'px'})
                         .text(function (d) {
-                            if(d.lotId != 'OVERFLOW' && d.lotId != 'RESERVED'){
+                            if(d.lotId != 'OVERFLOW' && d.lotId != 'RESERVED' && d.lotId.indexOf('Setup') < 0 ){
                               if(d.lotId.indexOf('WIP')>-1) return 'WIP'
                               else{
                                 var displayedLotId = d.lotId.substring(3, d.lotId.length)
                                 return displayedLotId
                                 // return d.lotId.substring(1, d.lotId.length);  
                               }
-                            } 
+                            }
+                            else if(d.lotId.indexOf('Setup') > -1) {
+                              // return 'Setup'
+                            }
                         });
-                        // .on("click", function (d, i) {
-                        // click(d, index, datum);
-                        // });
                     operations.exit().remove();
                     // add the label
                     // FIX Label Represent
@@ -762,6 +732,10 @@
     
     timeline.exportColorCycle = function(){
         return colorCycle;
+    }
+
+    timeline.exportC10 = function(){
+        return c10;
     }
 
     timeline.getHeight = function(){

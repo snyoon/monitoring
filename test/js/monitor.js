@@ -231,7 +231,9 @@ function timelineHover(traveledTime) {
                  var rects = d3.selectAll('.operationRect')
                  rects.style("fill", function (d, i) {
                   if(d.lotId  == 'RESERVED') return 'url(#diagonal-stripe-1)'  
-                  else return colorCycle[d.productId];
+                  else if(d.lotId =='HeteroSetup') return '000000'
+                  else if (d.lotId =='HomoSetup') return '545454'  
+                  else return colorCycle[d.productGroup];
                 })   
                  // d3.selectAll('#attribute').classed('cbp-spmenu-open', false)
                  boolSelected = false;
@@ -312,8 +314,9 @@ var columns = [
         { head: 'Decision', cl: 'tableTitle', html: ƒ('decision') },
         { head: 'OperationId', cl: 'num', html: ƒ('operationId') },
         { head: 'ProductType', cl: 'center', html: ƒ('productType') },
-        { head: 'LotQuantiy', cl: 'center', html: ƒ('lotSize') },
-        { head: 'Reward', cl: 'num', html: ƒ('reward', d3.format('.5f')) }
+        // { head: 'LotQuantiy', cl: 'center', html: ƒ('lotSize') },
+        { head: 'actionVector', cl: 'center', html: ƒ('actionvector') },
+        { head: 'Score', cl: 'num', html: ƒ('reward', d3.format('.5f')) }
     ];
 
 
@@ -323,7 +326,9 @@ function displayDecisions(d, datum){
     var lotId = d.lotId;
     if(lotId.indexOf('_')>0) lotId = lotId.substring(0, lotId.indexOf('_'))
     var decisionKey = d.degree + '_' + lotId
+    console.log(decisionKey)
     var decisionsArray = decisionInfo[decisionKey]
+    console.log(decisionsArray)
     if(decisionsArray != undefined){
         var DASelection = 5;
         var WBSelection = 5;
@@ -334,7 +339,7 @@ function displayDecisions(d, datum){
 
         var WBSelDecisions = [];
         var boorder = [
-            {'decision' : '---------', 'operationId' : '---------', 'productType' : '---------', 'lotSize': '-----------', 'reward': ''}
+            {'decision' : '---------', 'operationId' : '---------', 'productType' : '---------', 'lotSize': '-----------', 'score': ''}
         ];
         var WBSplitDecisions = [];
 
@@ -468,10 +473,10 @@ function displayDecisions(d, datum){
                         rects.style('fill', function (d,i){
                             if(d.lotId.indexOf(clickedElement)>-1){
                                 if(d.lotId.indexOf('WIP')>-1){
-                                    if(clickedElement.indexOf('WIP')>-1) return colorCycle[d.productId];
+                                    if(clickedElement.indexOf('WIP')>-1) return colorCycle[d.productGroup];
                                     else return 'white';
                                 }
-                                else return colorCycle[d.productId];
+                                else return colorCycle[d.productGroup];
                             }
                             else return 'white'
                         })
@@ -486,18 +491,18 @@ function displayDecisions(d, datum){
                                 // 만약, 선택된 lot이 WIP이 아니었으면 lot 이름을 공유하는 WIP들은 색칠하지 않는다
                                 // 만약, 선택된 lot이 WIP이면 원래대로 색칠을 해준다                            
                                 if(d.lotId.indexOf('WIP')>-1){
-                                    if(decisionLotId.indexOf('WIP')>-1) return colorCycle[d.productId];
+                                    if(decisionLotId.indexOf('WIP')>-1) return colorCycle[d.productGroup];
                                     else return 'white';
                                 }
-                                else return colorCycle[d.productId];
+                                else return colorCycle[d.productGroup];
                             } 
                             else{
                                 if(d.lotId.indexOf(clickedElement) > -1) {
                                     if(d.lotId.indexOf('WIP')>-1){
-                                        if(clickedElement.indexOf('WIP')>-1) return colorCycle[d.productId];
+                                        if(clickedElement.indexOf('WIP')>-1) return colorCycle[d.productGroup];
                                         else return 'white';
                                     }
-                                    else return colorCycle[d.productId];
+                                    else return colorCycle[d.productGroup];
                                 }
                                 else return 'white';
                             } 
@@ -555,10 +560,10 @@ function selectLots(lotId, eventId){
     rects.style("fill", function (d, i) {
         if(d.lotId.indexOf(motherLotId)>-1){
             if(d.lotId.indexOf('WIP')>-1){
-                if(motherLotId.indexOf('WIP')>-1) return colorCycle[d.productId];
+                if(motherLotId.indexOf('WIP')>-1) return colorCycle[d.productGroup];
                 else return 'white'
             }
-            else return colorCycle[d.productId];
+            else return colorCycle[d.productGroup];
         } 
         else return 'white'
     })
