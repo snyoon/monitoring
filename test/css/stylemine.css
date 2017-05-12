@@ -1,0 +1,315 @@
+body {
+    display: flex;
+    flex-direction: row;
+    { font-family: 'Helvetica Neue', Helvetica; font-weight: 300; padding: 20px;}
+}
+
+#left {
+    display: flex;
+    border-left: 1px solid gray;
+    flex-direction: column;
+    width: 100%;
+    /*    height: 300px*/
+    /*    padding-left: 20px;*/
+}
+
+#views {
+    display: flex;
+/*    justify-content: space-around;*/
+    border-bottom: 1px solid gray;
+}
+#chart{
+    display: flex;
+    flex-direction: row;
+}
+
+#machine{
+    flex-basis: 200px;
+}
+
+#process{
+/*    flex-basis: 1000px;*/
+}
+
+.btn-group {
+    display: flex;
+}
+
+#right {
+    display: flex;
+    border-left: 1px solid gray;
+    flex-direction: column;
+/*    height: 800px;*/
+
+}
+
+#rightOthers {
+    display: flex;
+    border-left: 1px solid gray;
+    flex-direction: column;
+    flex-flow: column;
+
+}
+
+.rightContent {
+    border-bottom: 2px solid white;
+    background-color: ghostwhite;
+    overflow: auto;
+}
+
+#status_kpi{
+    display: flex;
+    border-left: 1px solid gray;
+    flex-direction: row;
+    flex-flow: row;
+}
+
+.rightContent:nth-child(1) {
+    flex-grow: 1;
+    flex-basis: 0; 
+    /* flex-direction이 row면 flex-basis를 0으로 해야 한다 */
+}
+
+.rightContent:nth-child(2) {
+    flex-grow: 1;
+    flex-basis: 0;
+}
+
+
+
+.rightOthersContent:nth-child(1) {
+    flex-grow: 5;
+}
+
+
+.rightOthersContent:nth-child(2) {
+    flex-grow: 1;
+}
+
+/*
+.rightOthersContent:nth-child(3) {
+    flex-grow: 2;
+}
+*/
+
+#attributeViewer{
+    display: flex;
+    flex-direction: row;
+}
+
+.bottomViewer{
+    border-bottom: 2px solid white;
+    background-color: ghostwhite;
+/*    height: 100%;*/
+}
+
+.bottomViewer:nth-child(1){
+    flex-grow: 1;
+    flex-basis: 0;         
+}
+
+.bottomViewer:nth-child(2){
+    flex-grow: 1;
+    flex-basis: 0; 
+}
+
+.bottomViewer:nth-child(3){
+    flex-grow: 1;
+    flex-basis: 0; 
+}
+
+
+
+.title {
+    background-color: orange;
+    color: darkblue;
+    font-size: 30px;
+    font-family: sans-serif;
+    font-weight: bolder;
+    text-align: center;
+}
+
+.titleBottom {
+    background-color: orange;
+    color: darkblue;
+    font-size: 20px;
+    font-family: sans-serif;
+    font-weight: bolder;
+    text-align: center;
+}
+
+.axis path,
+.axis line {
+    fill: none;
+    stroke: black;
+    shape-rendering: crispEdges;
+}
+
+.topAxis path,
+.topAxis line {
+    fill: none;
+    stroke: black;
+    shape-rendering: crispEdges;
+}
+
+.Yaxis path,
+.Yaxis line {
+    fill: none;
+    stroke: black;
+/*    shape-rendering: crispEdges;*/
+}
+
+
+/*       For right push menu      */
+.cbp-spmenu {
+	background: white;
+	position: fixed;
+}
+.cbp-spmenu-push {
+	overflow-x: hidden;
+	position: relative;
+	left: 0;
+}
+
+.cbp-spmenu-push-toleft {
+	left: -400px;
+}
+
+.cbp-spmenu-right {
+	right: -500px;
+}
+
+.cbp-spmenu-right.cbp-spmenu-open {
+	right: 0px;
+}
+
+.cbp-spmenu-vertical {
+	width: 500px;
+	height: 100%;
+	top: 0;
+	z-index: 1000;
+}
+
+.cbp-spmenu-horizontal {
+	width: 70%;
+	height: 150px;
+	left: 80;
+	z-index: 1000;
+	overflow: hidden;
+}
+
+.cbp-spmenu-bottom {
+	bottom: -200px;
+}
+
+@media screen and (max-height: 26.375em){
+
+	.cbp-spmenu-vertical {
+		font-size: 90%;
+		width: 190px;
+	}
+
+	.cbp-spmenu-left,
+	.cbp-spmenu-push-toleft {
+		left: -190px;
+	}
+
+	.cbp-spmenu-right {
+		right: -190px;
+	}
+
+	.cbp-spmenu-push-toright {
+		left: 190px;
+	}
+}
+
+@media screen and (max-width: 55.1875em){
+
+	.cbp-spmenu-horizontal {
+		font-size: 75%;
+		height: 110px;
+	}
+
+	.cbp-spmenu-top {
+		top: -110px;
+	}
+
+	.cbp-spmenu-bottom {
+		bottom: -110px;
+	}
+
+}
+
+.cbp-spmenu,
+.cbp-spmenu-push {
+	-webkit-transition: all 0.3s ease;
+	-moz-transition: all 0.3s ease;
+	transition: all 0.3s ease;
+}
+
+.cbp-spmenu-right.cbp-spmenu-open {
+	right: 0px;
+}
+
+
+.cbp-spmenu-bottom.cbp-spmenu-open {
+	bottom: 0px;
+}
+
+/*For Decision Viewer*/
+table {
+    width: 100%;
+}
+
+th { text-align: left; 
+     border-bottom: 1px solid black;
+}
+    th, td {padding: 15px;}
+    th.center, td.center { text-align: center; }
+    th.num, td.num { text-align: right; }
+
+.tableTitle{
+    font-weight: bolder;
+}
+
+/* Tab View */
+.myHidden {
+  display: none ;
+  /*fill: gray;*/
+}
+/*controls the viewing of setuptab*/
+.myHiddenSetup {
+    display: none;
+}
+
+/*For Status Viewer*/
+.statusTitle{
+    text-anchor: middle;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.statusLine{
+    stroke: #3366cc;
+    stroke-width: 1;
+    fill: none
+}
+.statusLine2{
+    stroke: tomato;
+    stroke-width: 1;
+    fill: none
+}
+
+.bringFront{
+    z-index: 40;
+}
+.bringBack{
+    z-index: -11;
+}
+
+/*Pattern*/
+
+.diagonal-stripe-1 {
+  background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHdpZHRoPScxMCcgaGVpZ2h0PScxMCc+CiAgPHJlY3Qgd2lkdGg9JzEwJyBoZWlnaHQ9JzEwJyBmaWxsPSd3aGl0ZScvPgogIDxwYXRoIGQ9J00tMSwxIGwyLC0yCiAgICAgICAgICAgTTAsMTAgbDEwLC0xMAogICAgICAgICAgIE05LDExIGwyLC0yJyBzdHJva2U9J2JsYWNrJyBzdHJva2Utd2lkdGg9JzEnLz4KPC9zdmc+Cg==");
+  background-repeat: repeat;
+}
