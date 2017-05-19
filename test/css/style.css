@@ -7,7 +7,7 @@ body {
 #chooseFileBar {
     display: flex;
     position: relative;
-    left: 20%;
+    left: 3em;
     width: 100%;
 
 }
