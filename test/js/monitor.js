@@ -1,4 +1,4 @@
-processWidth = document.body.clientWidth
+    processWidth = document.body.clientWidth
 var testOut;
 var fileTest;
 var inputData;
@@ -103,6 +103,7 @@ var openFile = function (event) {
         document.getElementById("views").classList.remove("hiddenBar");
         document.getElementById("views").classList.add("visibleBar");
     };
+<<<<<<< HEAD
 
     try{
         reader.readAsText(input.files[0]);
@@ -111,6 +112,10 @@ var openFile = function (event) {
     }
     
     
+=======
+    reader.readAsText(input.files[0]);
+
+>>>>>>> origin/Window-Adjustment
 };
 
 var openCompareFile = function (event) {
@@ -118,7 +123,9 @@ var openCompareFile = function (event) {
     var reader = new FileReader();
     reader.onload = function () {
         var text = reader.result;
+
         var node = document.getElementById('output');
+        //console.log("hello" + node);
         var compareTestOut = reader.result;
         var compareInputData = JSON.parse(compareTestOut)
         var index = 0;
@@ -173,6 +180,7 @@ var openCompareFile = function (event) {
 
     };
     reader.readAsText(input.files[0]);
+    console.log("WHY WONT THIS SHOW UP JESUS CHRIST")
 }
 
 
