@@ -241,15 +241,28 @@
       var xyzoom = d3.behavior.zoom()
                 .x(xScale)
                 .y(yScale)
+                //controlls how far you scroll out - jy
+                .scaleExtent([1,5])
                 .on("zoom", draw);
  
       gParent.call(xyzoom);   
     var nodeFontSize = 12;
 
     function draw(){
+
+      
     // var tx = d3.event.translate[0] > 0 ? 0 : d3.event.translate[0]
-    var tx = d3.event.translate[0] > 0 ? 0 : d3.event.translate[0],
-        ty = Math.min(0, d3.event.translate[1]);
+    //Gonna make the window fixed 
+    //var tx = d3.event.translate[0] > 0 ? 0 : d3.event.translate[0],
+      //  ty = Math.min(0, d3.event.translate[1]);
+
+      //jy fixing window. 
+      var outwidth = window.outerWidth,
+          outheight = window.outerHeight;
+
+      var ee = d3.event,
+          tx = Math.min(0, Math.max(ee.translate[0], outwidth - outwidth * ee.scale)),
+          ty = Math.min(0, Math.max(ee.translate[1], outheight - outheight * ee.scale));
       xyzoom.translate([tx, ty]);
 
       gParent.select('.axis').call(xAxis);
