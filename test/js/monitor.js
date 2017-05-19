@@ -103,8 +103,6 @@ var openFile = function (event) {
         document.getElementById("views").classList.remove("hiddenBar");
         document.getElementById("views").classList.add("visibleBar");
     };
-<<<<<<< HEAD
-
     try{
         reader.readAsText(input.files[0]);
     }catch(err){
@@ -112,10 +110,6 @@ var openFile = function (event) {
     }
     
     
-=======
-    reader.readAsText(input.files[0]);
-
->>>>>>> origin/Window-Adjustment
 };
 
 var openCompareFile = function (event) {
