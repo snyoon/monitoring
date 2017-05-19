@@ -265,6 +265,8 @@
           ty = Math.min(0, Math.max(ee.translate[1], outheight - outheight * ee.scale));
       xyzoom.translate([tx, ty]);
 
+
+
       gParent.select('.axis').call(xAxis);
       gParent.select('.topAxis').call(topXAxis);
       gParent.select('.Yaxis').call(yAxis);

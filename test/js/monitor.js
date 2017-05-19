@@ -92,6 +92,7 @@ var openFile = function (event) {
         })
     };
     reader.readAsText(input.files[0]);
+    document.getElementById("views").classList.toggle("hiddenBar");
 };
 
 var openCompareFile = function (event) {
@@ -257,12 +258,17 @@ function timelineHover(traveledTime) {
             }
         })
     var svg = d3.select("#process").append("svg").attr("width", processWidth);
+
     svg.datum(ganttData).call(chart);
     
     xScale = chart.exportXScale();
     yScale = chart.exportYScale();
     colorCycle = chart.exportColorCycle();
     d3.select('.operations').data([ganttData]).exit().remove();
+
+
+    //Disables the doubleclick zoom function on the graph.    
+    d3.select("svg").on("dblclick.zoom", null);
       
 }
 
