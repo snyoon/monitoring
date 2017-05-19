@@ -51,11 +51,19 @@ var graphHeight
 
 var openFile = function (event) {
     KPIs = [];
+
+    //Cleanup the chart.
     d3.select('.remove').remove()
     d3.select('#chart').selectAll('svg').remove();
+    //Makes the bars hidden.
+    document.getElementById("views").classList.remove("visibleBar");
+    document.getElementById("views").classList.add("hiddenBar");
+
     var input = event.target;
     var reader = new FileReader();
     reader.onload = function () {
+        console.log('waterfuck');
+        seen = (true);
         var text = reader.result;
         var node = document.getElementById('output');
         testOut = reader.result;
@@ -90,6 +98,10 @@ var openFile = function (event) {
         sortedTimes.sort(function (a, b) {
             return a.starting_time < b.starting_time ? -1 : a.starting_time > b.starting_time ? 1 : 0;
         })
+
+        //Makes the View tabs visible
+        document.getElementById("views").classList.remove("hiddenBar");
+        document.getElementById("views").classList.add("visibleBar");
     };
     reader.readAsText(input.files[0]);
 
@@ -268,6 +280,10 @@ function timelineHover(traveledTime) {
     yScale = chart.exportYScale();
     colorCycle = chart.exportColorCycle();
     d3.select('.operations').data([ganttData]).exit().remove();
+
+
+    //Disables the doubleclick zoom function on the graph.    
+    d3.select("svg").on("dblclick.zoom", null);
       
 }
 

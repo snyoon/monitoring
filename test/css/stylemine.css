@@ -4,14 +4,6 @@ body {
     { font-family: 'Helvetica Neue', Helvetica; font-weight: 300; padding: 20px;}
 }
 
-#chooseFileBar {
-    display: flex;
-    position: relative;
-    left: 3em;
-    width: 100%;
-
-}
-
 #left {
     display: flex;
     border-left: 1px solid gray;
@@ -285,10 +277,9 @@ th { text-align: left;
   display: none ;
   /*fill: gray;*/
 }
-
-.hiddenBar{
+/*controls the viewing of setuptab*/
+.myHiddenSetup {
     display: none;
-    visibility: hidden;
 }
 
 /*For Status Viewer*/
@@ -315,23 +306,6 @@ th { text-align: left;
 .bringBack{
     z-index: -11;
 }
-
-/*for resizing*/
-.svg-container {
-    display: inline-block;
-    position: relative;
-    width: 100%;
-    padding-bottom: 100%; /* aspect ratio */
-    vertical-align: top;
-    overflow: hidden;
-}
-.svg-content-responsive {
-    display: inline-block;
-    position: absolute;
-    top: 10px;
-    left: 0;
-}
-/*end of rezising stuff */
 
 /*Pattern*/
 
