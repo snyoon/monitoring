@@ -41,6 +41,7 @@ var tickFormat = {
 //For Reading Multiple Files
 var schedules = [];
 var scheduleName;
+var activeSchedule;
 var listofnames =[];
 
 var dataCount = 0; 
@@ -112,6 +113,8 @@ var openFile = function (event) {
                                         TKPIs,
                                         TmaxTime,
                                         TproductionStat);
+
+        activeSchedule = newSchedule;
         //adds the newly read file onto the list of schedules. 
         schedules.push(newSchedule);
 
@@ -134,7 +137,8 @@ var openFile = function (event) {
             //havent added charts 
             var tabContentDiv = document.getElementById("tabcontentsChart");
             var div = document.createElement("div");
-            div.setAttribute("id", schedules.length);
+            var divID = "chartdiv" + schedules.length;
+            div.setAttribute("id", divID);
             div.setAttribute("class", "tab-pane fade");
             tabContentDiv.appendChild(div);
 
@@ -159,13 +163,14 @@ var openFile = function (event) {
             //havent added charts 
             var tabContentDiv = document.getElementById("tabcontentsChart");
             var div = document.createElement("div");
-            div.setAttribute("id", schedules.length);
+            var divID = "chartdiv" + schedules.length;
+            div.setAttribute("id", divID);
             div.setAttribute("class", "tab-pane fade in active");
             tabContentDiv.appendChild(div);
         }
         
 
-        timelineHover(traveledTime);
+        timelineHover(traveledTime, divID);
         ProductionStatus();
         for (var i = 0; i < ganttData.length; i++) {
             var tempLabel = ganttData[i]['label'];
@@ -325,13 +330,14 @@ if( button !== 'showBottom' ) {
 }
 }
 
-function timelineHover(traveledTime) {
+function timelineHover(traveledTime, divID) {
     chart = d3.timeline().width(processWidth).stack().margin(margin)
     .traveledTime(traveledTime).showTimeAxisTick().hover(function (d, i, datum) {
             // d is the current rendering object
             // i is the index during d3 rendering
             // datum is the id object
             if (d.starting_time > traveledTime) return;
+            //this is the clicking on a single thing. 
         }).click(function (d, i, datum) {
             var selectedLotId = d.lotId;
             var eventId = d.eventId;
@@ -364,9 +370,9 @@ function timelineHover(traveledTime) {
                 
             }
         })
-        var svg = d3.select("#process").append("svg").attr("width", processWidth);
+        var svg = d3.select("#" + divID).append("svg").attr("width", processWidth);
 
-        svg.datum(ganttData).call(chart);
+        svg.datum(activeSchedule.ganttData).call(chart);
         
         xScale = chart.exportXScale();
         yScale = chart.exportYScale();
