@@ -251,7 +251,7 @@
                 var nodeFontSize = 12;
 
     // // Disable doubleclick
-     d3.select("svg").on("dblclick.zoom",null);
+    d3.select("svg").on("dblclick.zoom",null);
     function draw(){
 
 
@@ -435,12 +435,12 @@ operationsEnter.append(function (d, i) {
                       if(d.lotId !='RESERVED')  click(d, index, datum);
                     })
 //                    .attr('class', 'operationRect')
-.attr("clip-path", "url(#clip)")
-.attr("class", function (d, i) {
+                      .attr("clip-path", "url(#clip)")
+                      .attr("class", function (d, i) {
                         // if(d.lotId == 'RESERVED') return 'operationRect ' + d.productId +' ' + d.lotId + ' ' + 'diagonal-stripe-1'
                         return 'operationRect ' + d.productId +' ' + d.lotId;
                       })
-.attr("id", function (d, i) {
+                      .attr("id", function (d, i) {
                         // use deprecated id field
                         if (datum.id && !d.id) {
                           return 'timelineItem_' + datum.id;

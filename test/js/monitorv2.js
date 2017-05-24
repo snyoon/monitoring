@@ -1,4 +1,5 @@
     processWidth = document.body.clientWidth
+    //None of the original code was deleted. just commented out with OG tag. 
 var testOut;
 var fileTest;
 var inputData;
@@ -32,13 +33,16 @@ var tickFormat = {
   tickSize: 6,
   tickValues: null
 }
-
+//OG CODE
 // KPI Info
-var KPI = {};
-var KPIs = [];
+//var KPI = {};
+//var KPIs = [];
 
 //For Reading Multiple Files
-var schedules = []; 
+var schedules = [];
+var scheduleName;
+
+var dataCount = 0; 
 
 // For Ship Count
 var shipSvg;
@@ -54,13 +58,11 @@ var graphHeight
 
 
 var openFile = function (event) {
-    KPIs = [];
-
-    schedules = [];
-
+   
     //Deletes the Charts if there were antyhing there..
-    d3.select('.remove').remove()
-    d3.select('#chart').selectAll('svg').remove();
+    // OG CODE REMOVED 
+    //d3.select('.remove').remove()
+    //d3.select('#chart').selectAll('svg').remove();
     //Makes the bars hidden.
     document.getElementById("views").classList.remove("visibleBar");
     document.getElementById("views").classList.add("hiddenBar");
@@ -68,30 +70,103 @@ var openFile = function (event) {
     var input = event.target;
     var reader = new FileReader();
 
-    
+    // this is going to read initial Json and seperate them into smaller objects 
+    // which i will feed into the original parser.
+
     reader.onload = function () {
-        
+        dataCount++;
         var text = reader.result;
         var node = document.getElementById('output');
         testOut = reader.result;
         inputData = JSON.parse(testOut)
         var index = 0;
-        ganttData = inputData['Gantt']
-        productInfo = inputData['Product']
-        decisionInfo = inputData['Decision']
-        denominator = inputData['DENOMINATOR']
-        KPI = inputData['KPI']
-        for(var key in KPI){
+        //Creates the scheduleObj for the read schedule
+        var TscheduleName = document.getElementById("myFiles").files[0].name;
+        var TganttData = inputData['Gantt'];
+        var TproductInfo = inputData['Product'];
+        var TdecisionInfo = inputData['Decision'];
+        var Tdenominator = inputData['DENOMINATOR'];
+        var TKPI = inputData['KPI'];
+        var TKPIs = [];
+        for(var key in TKPI){
             var tempObject = {};
             tempObject['key'] = key
-            tempObject['value'] = KPI[key]
-            KPIs.push(tempObject)
+            tempObject['value'] = TKPI[key]
+            TKPIs.push(tempObject)
         }
-        maxTime = inputData['KPIMaxTime']
+        var TmaxTime = inputData['KPIMaxTime']
+        var TproductionStat = {};
         for(var i = 0; i < inputData['ProductionStatus'].length; i++){
             var tempProduction = inputData['ProductionStatus'][i];
-            productionStatus[tempProduction.id] = tempProduction.values;
+            TproductionStat[tempProduction.id] = tempProduction.values;
         }
+        
+        console.log(dataCount);
+
+        var newSchedule = new scheduleObj(TscheduleName, 
+                                        TganttData, 
+                                        TproductInfo, 
+                                        TdecisionInfo, 
+                                        Tdenominator, 
+                                        TKPIs,
+                                        TmaxTime,
+                                        TproductionStat);
+
+
+
+        //adds the newly read file onto the list of schedules. 
+        schedules.push(newSchedule);
+
+        //adding a tab and tab-content for the chart to the DOC
+        if(schedules.length >1){
+            //this is making non active tabs 
+            var graphTabs = document.getElementById("listOfCharts");
+            var li = document.createElement("li");
+            li.setAttribute("class", "nav");
+            var tabA = document.createElement("a");
+            var tabhref = "#" + schedules.length;
+            tabA.setAttribute("data-toggle", "tab");
+            tabA.setAttribute("href", tabhref);
+            tabA.appendChild(document.createTextNode(TscheduleName));
+
+            li.appendChild(tabA);
+            graphTabs.appendChild(li)
+            
+            //creates the tabcontent divs for the loaded files.
+            //havent added charts 
+            var tabContentDiv = document.getElementById("tabcontentsChart");
+            var div = document.createElement("div");
+            div.setAttribute("id", schedules.length);
+            div.setAttribute("class", "tab-pane fade");
+            tabContentDiv.appendChild(div);
+
+        }else{
+            var graphTabs = document.getElementById("listOfCharts");
+            var li = document.createElement("li");
+            //makes this the active tab
+            li.setAttribute("class", "nav active");
+
+            var tabA = document.createElement("a");
+            //id of the tab is the file name
+            tabA.setAttribute("data-toggle", "tab");
+            var tabhref = "#" +schedules.length;
+            console.log(tabhref);
+            tabA.setAttribute("href", tabhref);
+            tabA.appendChild(document.createTextNode(TscheduleName));
+
+            li.appendChild(tabA);
+            graphTabs.appendChild(li);
+
+            //creates the tabcontent divs for the loaded files.
+            //havent added charts 
+            var tabContentDiv = document.getElementById("tabcontentsChart");
+            var div = document.createElement("div");
+            div.setAttribute("id", schedules.length);
+            div.setAttribute("class", "tab-pane fade in active");
+            tabContentDiv.appendChild(div);
+        }
+        
+
         timelineHover(traveledTime);
         ProductionStatus();
         for (var i = 0; i < ganttData.length; i++) {
@@ -105,10 +180,6 @@ var openFile = function (event) {
         sortedTimes.sort(function (a, b) {
             return a.starting_time < b.starting_time ? -1 : a.starting_time > b.starting_time ? 1 : 0;
         })
-
-        //Makes the View tabs visible
-        document.getElementById("views").classList.remove("hiddenBar");
-        document.getElementById("views").classList.add("visibleBar");
     };
 
     // For when you cancel file selection
@@ -118,7 +189,15 @@ var openFile = function (event) {
         window.alert("No File Selected");
     }
     
-    
+    if(dataCount > 0){
+        //Makes the View tabs visible
+        document.getElementById("views").classList.remove("hiddenBar");
+        document.getElementById("views").classList.add("visibleBar");
+    }else{
+        //Makes the bars hidden.
+        document.getElementById("views").classList.remove("visibleBar");
+        document.getElementById("views").classList.add("hiddenBar");
+    }
 };
 
 var openCompareFile = function (event) {
@@ -1047,4 +1126,21 @@ function drawVerticalLine(inputSvg, scaleX, scaleY, max){
    .style('class','dateDivider')
    .style("stroke-width", 1)
    .style("stroke", "gray")
+}
+
+
+//-------------------------------------- Schedule Object -----------------------------------------
+
+// Creates new scheduleObj with the given properties. 
+function scheduleObj(name, ganttData, productInfo, decisionInfo, denominator, KPI, maxTime,
+                        productionStatus) {
+    this.name = name;
+    this.ganttData = ganttData;
+    this.productInfo = productInfo;
+    this.decisionInfo = decisionInfo;
+    this.denominator = denominator;
+    this.KPI = KPI;
+    this.maxTime = maxTime;
+    this.productionStatus = productionStatus;
+
 }

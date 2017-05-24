@@ -295,6 +295,9 @@ th { text-align: left;
     visibility: visible;
 }
 
+/*For the Container Tabs*/
+.chart
+
 /*For Status Viewer*/
 .statusTitle{
     text-anchor: middle;

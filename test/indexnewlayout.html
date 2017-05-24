@@ -23,16 +23,23 @@ if (session.getAttribute("u_id")==null) {
     <link rel="stylesheet" type="text/css" href="css/bootstrap.css" /> </head>
     
 <body class='cbp-spmenu-push'>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+    <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
     <div id='left'>
         <div id="chooseFileBar">
-            <input type='file' accept='text/plain' onchange='openFile(event)'>
+            <input id="myFiles" type='file' accept='text/plain' onchange='openFile(event)'>
+            <!-- TODO: Make a clear all button -->
+
         </div>
 
-        <!-- This is going to hold al the graphs -->
+        <!-- This is going to hold all the graphs -->
         <!-- TODO -->
-        <div id="schedules" class="hiddenBar">
-            
+        <!-- https://www.w3schools.com/bootstrap/bootstrap_tabs_pills.asp -->
+        <div id= "graphTabs" class ="container">
+            <ul id="listOfCharts" class="nav nav-tabs"> </ul>
+            <div id="tabcontentsChart" class="tab-content"></div>
         </div>
+
         <div id='views' class="hiddenBar">
             <!--  <div class="btn-group" role="group" aria-label="...">-->
             <!--<input type='file' accept='text/plain' onchange='openFile(event)'> OG -->
@@ -96,8 +103,10 @@ if (session.getAttribute("u_id")==null) {
 <!--        <script src='js/d3.v4.min.js'></script>-->
     <script src="js/classie.js"></script>
     <script src="js/modernizr.custom.js"></script>
-    <script src="http://code.jquery.com/jquery-latest.min.js"></script>
-    <script src='js/monitor.js'></script>
+    <!-- <script src="http://code.jquery.com/jquery-latest.min.js"></script> -->
+    <!-- Removed the old monitor and added in the multi chart  -->
+     <script src='js/monitorv2.js'></script> 
+    <!-- <script src='js/monitorwiptest.js'></script> -->
 </body>
 
 </html>
