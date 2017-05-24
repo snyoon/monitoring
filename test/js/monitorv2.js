@@ -41,6 +41,7 @@ var tickFormat = {
 //For Reading Multiple Files
 var schedules = [];
 var scheduleName;
+var listofnames =[];
 
 var dataCount = 0; 
 
@@ -70,10 +71,11 @@ var openFile = function (event) {
     var input = event.target;
     var reader = new FileReader();
 
-    // this is going to read initial Json and seperate them into smaller objects 
-    // which i will feed into the original parser.
-
     reader.onload = function () {
+       if(listofnames.indexOf(document.getElementById("myFiles").files[0].name) != -1) {
+        window.alert("This file is already in use.");
+        return;
+        }
         dataCount++;
         var text = reader.result;
         var node = document.getElementById('output');
@@ -82,6 +84,7 @@ var openFile = function (event) {
         var index = 0;
         //Creates the scheduleObj for the read schedule
         var TscheduleName = document.getElementById("myFiles").files[0].name;
+        listofnames.push(TscheduleName);
         var TganttData = inputData['Gantt'];
         var TproductInfo = inputData['Product'];
         var TdecisionInfo = inputData['Decision'];
@@ -101,8 +104,6 @@ var openFile = function (event) {
             TproductionStat[tempProduction.id] = tempProduction.values;
         }
         
-        console.log(dataCount);
-
         var newSchedule = new scheduleObj(TscheduleName, 
                                         TganttData, 
                                         TproductInfo, 
@@ -111,9 +112,6 @@ var openFile = function (event) {
                                         TKPIs,
                                         TmaxTime,
                                         TproductionStat);
-
-
-
         //adds the newly read file onto the list of schedules. 
         schedules.push(newSchedule);
 
@@ -181,6 +179,7 @@ var openFile = function (event) {
             return a.starting_time < b.starting_time ? -1 : a.starting_time > b.starting_time ? 1 : 0;
         })
     };
+
 
     // For when you cancel file selection
     try{
