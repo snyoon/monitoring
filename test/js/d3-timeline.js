@@ -85,7 +85,7 @@
       };
       
       
-      height = window.innerHeight - document.getElementById("chooseFileBar").offsetHeight;
+      height = window.innerHeight - document.getElementById("chooseFileBar").offsetHeight - document.getElementById("listOfCharts").offsetHeight;
 
       var panExtent;
       var appendLabelAxis = function(g, yAxis) {

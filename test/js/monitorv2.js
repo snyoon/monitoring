@@ -143,6 +143,52 @@ var openFile = function (event) {
             div.setAttribute("class", "tab-pane fade");
             tabContentDiv.appendChild(div);
 
+            //make the place to put the individual charts in
+            var chartNav = document.createElement("ul");
+            chartNav.setAttribute("id", "chartTypes");
+            chartNav.setAttribute("class", "nav nav-tabs");
+            div.appendChild(chartNav);
+
+            //makes the tabs for scheudle and statistics view
+            var chartNavProc = document.createElement("li");
+            chartNavProc.setAttribute("class", "nav active");
+            var chartNavProcA = document.createElement("a");
+            chartNavProcA.setAttribute("data-toggle", "tab");
+            var href11 = "proc" +divID;
+            chartNavProcA.setAttribute("href", "#" + href11);
+            chartNavProcA.appendChild(document.createTextNode("Schedule View"));
+            chartNavProc.appendChild(chartNavProcA);
+            chartNav.appendChild(chartNavProc);
+
+            var chartNavStat = document.createElement("li");
+            chartNavStat.setAttribute("class", "nav");
+            var chartNavStatA = document.createElement("a");
+            chartNavStatA.setAttribute("data-toggle", "tab");
+            var href22 = "stat" +divID;
+            chartNavStatA.setAttribute("href", "#" + href22);
+            chartNavStatA.appendChild(document.createTextNode("Statistics View"));
+            chartNavStat.appendChild(chartNavStatA);
+            chartNav.appendChild(chartNavStat);
+            //making the different chart content html
+            var chartTypesContent = document.createElement("div");
+            chartTypesContent.setAttribute("id", "chartTypesContent");
+            chartTypesContent.setAttribute("class", "tab-content");
+
+            chartNav.appendChild(chartTypesContent);
+
+            var scheduleChartDive = document.createElement("div");
+            scheduleChartDive.setAttribute("id", href11);
+            scheduleChartDive.setAttribute("class","tab-pane fade in active");
+
+            var statChartDive = document.createElement("div");
+            statChartDive.setAttribute("id", href22);
+            statChartDive.setAttribute("class","tab-pane fade");
+
+            chartTypesContent.appendChild(scheduleChartDive);
+            chartTypesContent.appendChild(statChartDive);
+
+
+
         }else{
             var graphTabs = document.getElementById("listOfCharts");
             var li = document.createElement("li");
@@ -154,7 +200,6 @@ var openFile = function (event) {
             tabA.setAttribute("data-toggle", "tab");
             var divID = "chartdiv" + schedules.length;
             var tabhref = "#" +divID;
-            console.log(tabhref);
             tabA.setAttribute("href", tabhref);
             tabA.appendChild(document.createTextNode(TscheduleName));
 
@@ -169,11 +214,56 @@ var openFile = function (event) {
             div.setAttribute("id", divID);
             div.setAttribute("class", "tab-pane fade in active");
             tabContentDiv.appendChild(div);
+
+            //make the place to put the individual charts in
+            var chartNav = document.createElement("ul");
+            chartNav.setAttribute("id", "chartTypes");
+            chartNav.setAttribute("class", "nav nav-tabs");
+            div.appendChild(chartNav);
+
+            //makes the tabs for scheudle and statistics view
+            var chartNavProc = document.createElement("li");
+            chartNavProc.setAttribute("class", "nav active");
+            var chartNavProcA = document.createElement("a");
+            chartNavProcA.setAttribute("data-toggle", "tab");
+            var href11 = "proc" +divID;
+            chartNavProcA.setAttribute("href", "#" + href11);
+            chartNavProcA.appendChild(document.createTextNode("Schedule View"));
+            chartNavProc.appendChild(chartNavProcA);
+            chartNav.appendChild(chartNavProc);
+
+            var chartNavStat = document.createElement("li");
+            chartNavStat.setAttribute("class", "nav");
+            var chartNavStatA = document.createElement("a");
+            chartNavStatA.setAttribute("data-toggle", "tab");
+            var href22 = "stat" +divID;
+            chartNavStatA.setAttribute("href", "#" + href22);
+            chartNavStatA.appendChild(document.createTextNode("Statistics View"));
+            chartNavStat.appendChild(chartNavStatA);
+            chartNav.appendChild(chartNavStat);
+            //making the different chart content html
+            var chartTypesContent = document.createElement("div");
+            chartTypesContent.setAttribute("id", "chartTypesContent");
+            chartTypesContent.setAttribute("class", "tab-content");
+
+            chartNav.appendChild(chartTypesContent);
+
+            var scheduleChartDive = document.createElement("div");
+            scheduleChartDive.setAttribute("id", href11);
+            scheduleChartDive.setAttribute("class","tab-pane fade in active");
+
+            var statChartDive = document.createElement("div");
+            statChartDive.setAttribute("id", href22);
+            statChartDive.setAttribute("class","tab-pane fade");
+
+            chartTypesContent.appendChild(scheduleChartDive);
+            chartTypesContent.appendChild(statChartDive);
+
         }
         
 
-        timelineHover(traveledTime, divID);
-        ProductionStatus();
+        timelineHover(traveledTime, href11);
+        ProductionStatus(TKPIs);
         for (var i = 0; i < ganttData.length; i++) {
             var tempLabel = ganttData[i]['label'];
             var tempTimes = ganttData[i]['times']
@@ -737,12 +827,12 @@ d3.select('#resourceView').on('click', function(){
 
 
 //------------------------------- Production Status Graphs ----------------------------------
-function ProductionStatus(){
+function ProductionStatus(TKPIs){
     var canvasWidth = processWidth/3.3;
     graphWidth = canvasWidth - graphMargin.left - graphMargin.right;
     graphHeight = 400 - graphMargin.top - graphMargin.bottom;
     
-    
+    console.log(d3.select("status_1"));
     
      // KPI
      var svg1 = d3.select("#status_1").append('svg').attr('id', 'KPIText').attr('width', canvasWidth).attr('height', 400)
@@ -756,7 +846,7 @@ function ProductionStatus(){
      .text("KPI");
      
      var kpis = svg1.selectAll('.KPIs')
-     .data(KPIs)
+     .data(TKPIs)
      
      kpis.enter()
      .append('g')
