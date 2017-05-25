@@ -15,17 +15,38 @@ if (session.getAttribute("u_id")==null) {
 %> -->
 
 <!DOCTYPE html>
-
+<!-- OG: original code commented out -->
+<!-- JY: new -->
 <head>
     <meta charset='utf-8'>
     <link rel="stylesheet" type="text/css" href="css/style.css" />
     <link rel="stylesheet" type="text/css" href="css/bootstrap.css" /> </head>
     
 <body class='cbp-spmenu-push'>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+    <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
     <div id='left'>
-        <div id='views'>
+        <div id="chooseFileBar" class="container">
+            <input id="myFiles" type='file' accept='text/plain' onchange='openFile(event)'>
+            <!-- TODO: Make a clear all button -->
+
+        </div>
+
+        <!-- This is going to hold all the graphs -->
+        <div id= "graphTabs">
+            <ul id="listOfCharts" class="nav nav-tabs"> </ul>
+            <div id="tabcontentsChart" class="tab-content">
+            <!-- this is the structure just to help code  -->
+                <!-- <div>
+                 <ul id="chartTypes" class="nav-tabs"></ul> DONT UNOCOMMENT
+                 <div id= chartTypesContent class=tab-coneten> <>
+                </div> -->
+            </div>
+        </div>
+
+        <div id='views' class="hiddenBar">
             <!--  <div class="btn-group" role="group" aria-label="...">-->
-            <input type='file' accept='text/plain' onchange='openFile(event)'>
+            <!--<input type='file' accept='text/plain' onchange='openFile(event)'> OG -->
             <button type="button" class="btn btn-default" id='resourceView'>Resource View</button>
             <button type="button" class="btn btn-default" id='statusView'>Status View</button>
             <button type="button" class="btn btn-default" id='showRight'>Decision</button>
@@ -86,8 +107,10 @@ if (session.getAttribute("u_id")==null) {
 <!--        <script src='js/d3.v4.min.js'></script>-->
     <script src="js/classie.js"></script>
     <script src="js/modernizr.custom.js"></script>
-    <script src="http://code.jquery.com/jquery-latest.min.js"></script>
-    <script src='js/monitor.js'></script>
+    <!-- <script src="http://code.jquery.com/jquery-latest.min.js"></script> -->
+    <!-- Removed the old monitor and added in the multi chart  -->
+     <script src='js/monitor.js'></script> 
+    <!-- <script src='js/monitorwiptest.js'></script> -->
 </body>
 
 </html>

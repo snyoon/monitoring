@@ -85,7 +85,8 @@
       };
       
       
-      height = $(window).height();  
+      height = window.innerHeight - document.getElementById("chooseFileBar").offsetHeight - document.getElementById("listOfCharts").offsetHeight;
+
       var panExtent;
       var appendLabelAxis = function(g, yAxis) {
 
@@ -250,8 +251,6 @@
                 gParent.call(xyzoom);   
                 var nodeFontSize = 12;
 
-    // // Disable doubleclick
-     d3.select("svg").on("dblclick.zoom",null);
     function draw(){
 
 
@@ -263,7 +262,7 @@
       //jy fixing window. 
       // MAYBE I BIND THIS TO THE CHART THAT I PUT IT IN ??????????????
       var outwidth = window.outerWidth,
-      outheight = window.outerHeight;
+      outheight = window.innerHeight;
 
       var ee = d3.event,
       tx = Math.min(0, Math.max(ee.translate[0], outwidth - outwidth * ee.scale)),
@@ -319,7 +318,7 @@
             // set height based off of item height
             height = gSize.height + gSize.top - gParentSize.top;
             // set bounding rectangle height
-            d3.select(gParent[0][0]).attr("height", height);
+            d3.select(gParent[0][0]).attr("height",height);
           } else {
             throw "height of the timeline is not set";
           }
@@ -435,12 +434,12 @@ operationsEnter.append(function (d, i) {
                       if(d.lotId !='RESERVED')  click(d, index, datum);
                     })
 //                    .attr('class', 'operationRect')
-.attr("clip-path", "url(#clip)")
-.attr("class", function (d, i) {
+                      .attr("clip-path", "url(#clip)")
+                      .attr("class", function (d, i) {
                         // if(d.lotId == 'RESERVED') return 'operationRect ' + d.productId +' ' + d.lotId + ' ' + 'diagonal-stripe-1'
                         return 'operationRect ' + d.productId +' ' + d.lotId;
                       })
-.attr("id", function (d, i) {
+                      .attr("id", function (d, i) {
                         // use deprecated id field
                         if (datum.id && !d.id) {
                           return 'timelineItem_' + datum.id;

@@ -7,12 +7,13 @@ body {
 #chooseFileBar {
     display: flex;
     position: relative;
-    margin-top: 1em; 
+    margin-top: 1px; 
     left: 3em;
     width: 100%;
-
 }
 
+#graphTabs{
+}
 #left {
     display: flex;
     border-left: 1px solid gray;
@@ -294,6 +295,9 @@ th { text-align: left;
 .visibleBar{
     visibility: visible;
 }
+
+/*For the Container Tabs*/
+.chart
 
 /*For Status Viewer*/
 .statusTitle{
