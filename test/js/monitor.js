@@ -1,4 +1,5 @@
     processWidth = document.body.clientWidth
+    //None of the original code was deleted. just commented out with OG tag. 
 var testOut;
 var fileTest;
 var inputData;
@@ -32,13 +33,18 @@ var tickFormat = {
   tickSize: 6,
   tickValues: null
 }
-
+//OG CODE
 // KPI Info
-var KPI = {};
-var KPIs = [];
+//var KPI = {};
+//var KPIs = [];
 
 //For Reading Multiple Files
-var schedules = []; 
+var schedules = [];
+var scheduleName;
+var activeSchedule;
+var listofnames =[];
+
+var dataCount = 0; 
 
 // For Ship Count
 var shipSvg;
@@ -54,13 +60,11 @@ var graphHeight
 
 
 var openFile = function (event) {
-    KPIs = [];
-
-    schedules = [];
-
+   
     //Deletes the Charts if there were antyhing there..
-    d3.select('.remove').remove()
-    d3.select('#chart').selectAll('svg').remove();
+    // OG CODE REMOVED 
+    //d3.select('.remove').remove()
+    //d3.select('#chart').selectAll('svg').remove();
     //Makes the bars hidden.
     document.getElementById("views").classList.remove("visibleBar");
     document.getElementById("views").classList.add("hiddenBar");
@@ -68,35 +72,203 @@ var openFile = function (event) {
     var input = event.target;
     var reader = new FileReader();
 
-    
     reader.onload = function () {
-        
+       if(listofnames.indexOf(document.getElementById("myFiles").files[0].name) != -1) {
+        window.alert("This file is already in use.");
+        return;
+        }
+        dataCount++;
         var text = reader.result;
         var node = document.getElementById('output');
         testOut = reader.result;
         inputData = JSON.parse(testOut)
         var index = 0;
-        ganttData = inputData['Gantt']
-        productInfo = inputData['Product']
-        decisionInfo = inputData['Decision']
-        denominator = inputData['DENOMINATOR']
-        KPI = inputData['KPI']
-        for(var key in KPI){
+        //Creates the scheduleObj for the read schedule
+        var TscheduleName = document.getElementById("myFiles").files[0].name;
+        listofnames.push(TscheduleName);
+        var TganttData = inputData['Gantt'];
+        var TproductInfo = inputData['Product'];
+        productInfo = TproductInfo;
+        var TdecisionInfo = inputData['Decision'];
+        decisionInfo = TdecisionInfo;
+        var Tdenominator = inputData['DENOMINATOR'];
+        var TKPI = inputData['KPI'];
+        var TKPIs = [];
+        for(var key in TKPI){
             var tempObject = {};
             tempObject['key'] = key
-            tempObject['value'] = KPI[key]
-            KPIs.push(tempObject)
+            tempObject['value'] = TKPI[key]
+            TKPIs.push(tempObject)
         }
-        maxTime = inputData['KPIMaxTime']
+        var TmaxTime = inputData['KPIMaxTime']
+        var TproductionStat = {};
         for(var i = 0; i < inputData['ProductionStatus'].length; i++){
             var tempProduction = inputData['ProductionStatus'][i];
-            productionStatus[tempProduction.id] = tempProduction.values;
+            TproductionStat[tempProduction.id] = tempProduction.values;
         }
-        timelineHover(traveledTime);
-        ProductionStatus();
-        for (var i = 0; i < ganttData.length; i++) {
-            var tempLabel = ganttData[i]['label'];
-            var tempTimes = ganttData[i]['times']
+        
+        var newSchedule = new scheduleObj(TscheduleName, 
+                                        TganttData, 
+                                        TproductInfo, 
+                                        TdecisionInfo, 
+                                        Tdenominator, 
+                                        TKPIs,
+                                        TmaxTime,
+                                        TproductionStat);
+
+        activeSchedule = newSchedule;
+        //adds the newly read file onto the list of schedules. 
+        schedules.push(newSchedule);
+
+        //adding a tab and tab-content for the chart to the DOC
+        if(schedules.length >1){
+            //this is making non active tabs 
+            var graphTabs = document.getElementById("listOfCharts");
+            var li = document.createElement("li");
+            li.setAttribute("class", "nav");
+            var tabA = document.createElement("a");
+            var divID = "chartdiv" + schedules.length;
+            var tabhref = "#" + divID;
+            tabA.setAttribute("data-toggle", "tab");
+            tabA.setAttribute("href", tabhref);
+            tabA.appendChild(document.createTextNode(TscheduleName));
+
+            li.appendChild(tabA);
+            graphTabs.appendChild(li)
+            
+            //creates the tabcontent divs for the loaded files.
+            //havent added charts 
+            var tabContentDiv = document.getElementById("tabcontentsChart");
+            var div = document.createElement("div");
+            //var divID = "chartdiv" + schedules.length;
+            div.setAttribute("id", divID);
+            div.setAttribute("class", "tab-pane fade");
+            tabContentDiv.appendChild(div);
+
+            //make the place to put the individual charts in
+            var chartNav = document.createElement("ul");
+            chartNav.setAttribute("id", "chartTypes");
+            chartNav.setAttribute("class", "nav nav-tabs");
+            div.appendChild(chartNav);
+
+            //makes the tabs for scheudle and statistics view
+            var chartNavProc = document.createElement("li");
+            chartNavProc.setAttribute("class", "nav active");
+            var chartNavProcA = document.createElement("a");
+            chartNavProcA.setAttribute("data-toggle", "tab");
+            var href11 = "proc" +divID;
+            chartNavProcA.setAttribute("href", "#" + href11);
+            chartNavProcA.appendChild(document.createTextNode("Schedule View"));
+            chartNavProc.appendChild(chartNavProcA);
+            chartNav.appendChild(chartNavProc);
+
+            var chartNavStat = document.createElement("li");
+            chartNavStat.setAttribute("class", "nav");
+            var chartNavStatA = document.createElement("a");
+            chartNavStatA.setAttribute("data-toggle", "tab");
+            var href22 = "stat" +divID;
+            chartNavStatA.setAttribute("href", "#" + href22);
+            chartNavStatA.appendChild(document.createTextNode("Statistics View"));
+            chartNavStat.appendChild(chartNavStatA);
+            chartNav.appendChild(chartNavStat);
+            //making the different chart content html
+            var chartTypesContent = document.createElement("div");
+            chartTypesContent.setAttribute("id", "chartTypesContent");
+            chartTypesContent.setAttribute("class", "tab-content");
+
+            chartNav.appendChild(chartTypesContent);
+
+            var scheduleChartDive = document.createElement("div");
+            scheduleChartDive.setAttribute("id", href11);
+            scheduleChartDive.setAttribute("class","tab-pane fade in active");
+
+            var statChartDive = document.createElement("div");
+            statChartDive.setAttribute("id", href22);
+            statChartDive.setAttribute("class","tab-pane fade");
+
+            chartTypesContent.appendChild(scheduleChartDive);
+            chartTypesContent.appendChild(statChartDive);
+
+
+
+        }else{
+            var graphTabs = document.getElementById("listOfCharts");
+            var li = document.createElement("li");
+            //makes this the active tab
+            li.setAttribute("class", "nav active");
+
+            var tabA = document.createElement("a");
+            //id of the tab is the file name
+            tabA.setAttribute("data-toggle", "tab");
+            var divID = "chartdiv" + schedules.length;
+            var tabhref = "#" +divID;
+            tabA.setAttribute("href", tabhref);
+            tabA.appendChild(document.createTextNode(TscheduleName));
+
+            li.appendChild(tabA);
+            graphTabs.appendChild(li);
+
+            //creates the tabcontent divs for the loaded files.
+            //havent added charts 
+            var tabContentDiv = document.getElementById("tabcontentsChart");
+            var div = document.createElement("div");
+            //var divID = "chartdiv" + schedules.length;
+            div.setAttribute("id", divID);
+            div.setAttribute("class", "tab-pane fade in active");
+            tabContentDiv.appendChild(div);
+
+            //make the place to put the individual charts in
+            var chartNav = document.createElement("ul");
+            chartNav.setAttribute("id", "chartTypes");
+            chartNav.setAttribute("class", "nav nav-tabs");
+            div.appendChild(chartNav);
+
+            //makes the tabs for scheudle and statistics view
+            var chartNavProc = document.createElement("li");
+            chartNavProc.setAttribute("class", "nav active");
+            var chartNavProcA = document.createElement("a");
+            chartNavProcA.setAttribute("data-toggle", "tab");
+            var href11 = "proc" +divID;
+            chartNavProcA.setAttribute("href", "#" + href11);
+            chartNavProcA.appendChild(document.createTextNode("Schedule View"));
+            chartNavProc.appendChild(chartNavProcA);
+            chartNav.appendChild(chartNavProc);
+
+            var chartNavStat = document.createElement("li");
+            chartNavStat.setAttribute("class", "nav");
+            var chartNavStatA = document.createElement("a");
+            chartNavStatA.setAttribute("data-toggle", "tab");
+            var href22 = "stat" +divID;
+            chartNavStatA.setAttribute("href", "#" + href22);
+            chartNavStatA.appendChild(document.createTextNode("Statistics View"));
+            chartNavStat.appendChild(chartNavStatA);
+            chartNav.appendChild(chartNavStat);
+            //making the different chart content html
+            var chartTypesContent = document.createElement("div");
+            chartTypesContent.setAttribute("id", "chartTypesContent");
+            chartTypesContent.setAttribute("class", "tab-content");
+
+            chartNav.appendChild(chartTypesContent);
+
+            var scheduleChartDive = document.createElement("div");
+            scheduleChartDive.setAttribute("id", href11);
+            scheduleChartDive.setAttribute("class","tab-pane fade in active");
+
+            var statChartDive = document.createElement("div");
+            statChartDive.setAttribute("id", href22);
+            statChartDive.setAttribute("class","tab-pane fade");
+
+            chartTypesContent.appendChild(scheduleChartDive);
+            chartTypesContent.appendChild(statChartDive);
+
+        }
+        
+
+        timelineHover(traveledTime, href11);
+        ProductionStatus(TKPIs, TproductionStat, href22, TKPI);
+        for (var i = 0; i < TganttData.length; i++) {
+            var tempLabel = TganttData[i]['label'];
+            var tempTimes = TganttData[i]['times']
             for (var j = 0; j < tempTimes.length; j++) {
                 sortedTimes.push(tempTimes[j])
             }
@@ -105,11 +277,8 @@ var openFile = function (event) {
         sortedTimes.sort(function (a, b) {
             return a.starting_time < b.starting_time ? -1 : a.starting_time > b.starting_time ? 1 : 0;
         })
-
-        //Makes the View tabs visible
-        document.getElementById("views").classList.remove("hiddenBar");
-        document.getElementById("views").classList.add("visibleBar");
     };
+
 
     // For when you cancel file selection
     try{
@@ -118,7 +287,15 @@ var openFile = function (event) {
         window.alert("No File Selected");
     }
     
-    
+    if(dataCount > 0){
+        //Makes the View tabs visible
+        document.getElementById("views").classList.remove("hiddenBar");
+        document.getElementById("views").classList.add("visibleBar");
+    }else{
+        //Makes the bars hidden.
+        document.getElementById("views").classList.remove("visibleBar");
+        document.getElementById("views").classList.add("hiddenBar");
+    }
 };
 
 var openCompareFile = function (event) {
@@ -128,7 +305,6 @@ var openCompareFile = function (event) {
         var text = reader.result;
 
         var node = document.getElementById('output');
-        //console.log("hello" + node);
         var compareTestOut = reader.result;
         var compareInputData = JSON.parse(compareTestOut)
         var index = 0;
@@ -183,7 +359,6 @@ var openCompareFile = function (event) {
 
     };
     reader.readAsText(input.files[0]);
-    console.log("WHY WONT THIS SHOW UP JESUS CHRIST")
 }
 
 
@@ -247,13 +422,14 @@ if( button !== 'showBottom' ) {
 }
 }
 
-function timelineHover(traveledTime) {
+function timelineHover(traveledTime, divID) {
     chart = d3.timeline().width(processWidth).stack().margin(margin)
     .traveledTime(traveledTime).showTimeAxisTick().hover(function (d, i, datum) {
             // d is the current rendering object
             // i is the index during d3 rendering
             // datum is the id object
             if (d.starting_time > traveledTime) return;
+            //this is the clicking on a single thing. 
         }).click(function (d, i, datum) {
             var selectedLotId = d.lotId;
             var eventId = d.eventId;
@@ -286,9 +462,9 @@ function timelineHover(traveledTime) {
                 
             }
         })
-        var svg = d3.select("#process").append("svg").attr("width", processWidth);
+        var svg = d3.select("#" + divID).append("svg").attr("width", processWidth);
 
-        svg.datum(ganttData).call(chart);
+        svg.datum(activeSchedule.ganttData).call(chart);
         
         xScale = chart.exportXScale();
         yScale = chart.exportYScale();
@@ -315,6 +491,39 @@ function displayAttribute(d, datum){
     if(lotId.indexOf('_')>0) lotId = lotId.substring(0, lotId.indexOf('_'))
         var decisionKey = d.degree + '_' + lotId;
     var decisionsArray = decisionInfo[decisionKey];
+    console.log(decisionsArray);
+    var newWindow = window.open("", null, "height=500,width=600,status=yes,toolbar=no,menubar=no,location=no");
+
+    var popupBody = newWindow.document.getElementsByTagName("body");
+    newWindow.document.write("<table id=dtable></table>")
+    var tbl = newWindow.document.getElementById("dtable");
+    tbl.style.width = "100%";
+    tbl.setAttribute("boorder", "1");
+
+    for (var i = 0; i <= decisionsArray.length - 1; i++) {
+        var row = tbl.insertRow(i);
+        var dobj =decisionsArray[i];
+
+        var decisionCell = row.insertCell(0);
+        decisionCell.innerHTML = dobj.decision;
+        if(i == decisionsArray.length - 1){
+
+        }
+        var operationCell = row.insertCell(1);
+        operationCell.innerHTML = dobj.operationId;
+        var productCell = row.insertCell(2);
+        productCell.innerHTML = dobj.productType;
+        var avCell = row.insertCell(3);
+        avCell.innerHTML = dobj.actionvector
+
+        // for(var ii = 0; ii <= dobj.actionvector.length - 1; ii++) {
+        //     var cell = row.insertCell(3 + ii);
+        //     var av = dobj.actionvector;
+        //     cell.innerHTML = av[ii];
+        // }
+        
+    }
+
     var startingTime = new Date(d.starting_time);
     var endingTime = new Date(d.ending_time);    
     var decisionTime = 0;
@@ -361,9 +570,7 @@ var columns = [
             var lotId = d.lotId;
             if(lotId.indexOf('_')>0) lotId = lotId.substring(0, lotId.indexOf('_'))
                 var decisionKey = d.degree + '_' + lotId
-            console.log(decisionKey)
             var decisionsArray = decisionInfo[decisionKey]
-            console.log(decisionsArray)
             if(decisionsArray != undefined){
                 var DASelection = 5;
                 var WBSelection = 5;
@@ -651,15 +858,14 @@ d3.select('#resourceView').on('click', function(){
 
 
 //------------------------------- Production Status Graphs ----------------------------------
-function ProductionStatus(){
+function ProductionStatus(TKPIs, TproductionStat, href22, TKPI){
     var canvasWidth = processWidth/3.3;
     graphWidth = canvasWidth - graphMargin.left - graphMargin.right;
     graphHeight = 400 - graphMargin.top - graphMargin.bottom;
     
-    
-    
+
      // KPI
-     var svg1 = d3.select("#status_1").append('svg').attr('id', 'KPIText').attr('width', canvasWidth).attr('height', 400)
+     var svg1 = d3.select("#"+href22).append('svg').attr('id', 'KPIText').attr('width', canvasWidth).attr('height', 400)
      .append('g').attr("transform", "translate(" + graphMargin.left + "," + (graphMargin.top)+ ")");
      
      var fontSize = 18; 
@@ -670,7 +876,7 @@ function ProductionStatus(){
      .text("KPI");
      
      var kpis = svg1.selectAll('.KPIs')
-     .data(KPIs)
+     .data(TKPIs)
      
      kpis.enter()
      .append('g')
@@ -694,11 +900,11 @@ function ProductionStatus(){
      
 
     // WIP Level
-    svg1 = d3.select("#status_1").append('svg').attr('width', canvasWidth).attr('height', 400)
+    svg1 = d3.select("#" + href22).append('svg').attr('width', canvasWidth).attr('height', 400)
     .append('g').attr("transform", "translate(" + graphMargin.left + "," + graphMargin.top+ ")");
     
     var xScale = d3.time.scale()
-    .domain([d3.min(productionStatus['WIPLevel'], function(d){return d.time}), d3.max(productionStatus['WIPLevel'], function(d){return d.time})])
+    .domain([d3.min(TproductionStat['WIPLevel'], function(d){return d.time}), d3.max(TproductionStat['WIPLevel'], function(d){return d.time})])
         .range([0, graphWidth]); // FIX
         
         var xAxis = d3.svg.axis()
@@ -709,7 +915,7 @@ function ProductionStatus(){
         .tickSize(tickFormat.tickSize);
         
         var yScale = d3.scale.linear()
-        .domain([0, KPI['Stocker_size']+1])
+        .domain([0, TKPI['Stocker_size']+1])
         .range([graphHeight, 0]);
         
         var yAxis = d3.svg.axis()
@@ -725,14 +931,14 @@ function ProductionStatus(){
 
 var horizontalLine = svg1
 .append('line')
-.attr("x1", xScale(d3.min(productionStatus['WIPLevel'], function(d){return d.time})))
-.attr("y1", yScale(KPI['Stocker_size']))
-.attr("x2", xScale(d3.max(productionStatus['WIPLevel'], function(d){return d.time})))
-.attr("y2", yScale(KPI['Stocker_size']))
+.attr("x1", xScale(d3.min(TproductionStat['WIPLevel'], function(d){return d.time})))
+.attr("y1", yScale(TKPI['Stocker_size']))
+.attr("x2", xScale(d3.max(TproductionStat['WIPLevel'], function(d){return d.time})))
+.attr("y2", yScale(TKPI['Stocker_size']))
 .style("stroke-width", 1)
 .style("stroke", "red")
 
-drawVerticalLine(svg1, xScale, yScale, KPI['Stocker_size'])
+drawVerticalLine(svg1, xScale, yScale, TKPI['Stocker_size'])
 
 svg1.append("text")
 .attr('class', 'statusTitle')
@@ -742,7 +948,7 @@ svg1.append("text")
 
 svg1.append('path')
 .attr('class', 'statusLine')
-.attr("d", line(productionStatus['WIPLevel']))
+.attr("d", line(TproductionStat['WIPLevel']))
 
 svg1.append("g")
 .attr("class", "x axis")
@@ -754,11 +960,11 @@ svg1.append("g")
 .call(yAxis);
 
      // Input Count
-     svg1 = d3.select("#status_1").append('svg').attr('width', canvasWidth).attr('height', 400)
+     svg1 = d3.select("#" + href22).append('svg').attr('width', canvasWidth).attr('height', 400)
      .append('g').attr("transform", "translate(" + graphMargin.left + "," + graphMargin.top+ ")");
      
      var xScale = d3.time.scale()
-     .domain([d3.min(productionStatus['InputCount'], function(d){return d.time}), d3.max(productionStatus['InputCount'], function(d){return d.time})])
+     .domain([d3.min(TproductionStat['InputCount'], function(d){return d.time}), d3.max(TproductionStat['InputCount'], function(d){return d.time})])
         .range([0, graphWidth]); // FIX
         
         var xAxis = d3.svg.axis()
@@ -768,7 +974,7 @@ svg1.append("g")
         .tickSize(tickFormat.tickSize);
         
         var yScale = d3.scale.linear()
-        .domain([0, d3.max(productionStatus['InputCount'], function(d){return d.number})])
+        .domain([0, d3.max(TproductionStat['InputCount'], function(d){return d.number})])
         .range([graphHeight, 0]);
         
         var yAxis = d3.svg.axis()
@@ -784,11 +990,11 @@ svg1.append("g")
         
         svg1.append('path')
         .attr('class', 'statusLine')
-        .attr("d", line(productionStatus['InputCount']))
+        .attr("d", line(TproductionStat['InputCount']))
 
         svg1.append('path')
         .attr('class', 'statusLine2')
-        .attr("d", line(productionStatus['InTargetCount']))
+        .attr("d", line(TproductionStat['InTargetCount']))
         
         svg1.append("g")
         .attr("class", "x axis")
@@ -829,13 +1035,14 @@ svg1.append("g")
       .style("text-anchor", "front")
       .text(function(d) { return d;})
       
-      drawVerticalLine(svg1, xScale, yScale, d3.max(productionStatus['InputCount'], function(d){return d.number}))
+      drawVerticalLine(svg1, xScale, yScale, d3.max(TproductionStat['InputCount'], function(d){return d.number}))
     // Ship Count
-    shipSvg = d3.select("#status_2").append('svg').attr('width', canvasWidth).attr('height', 400)
+    //THIS ONE USED TO BE STATUS_2
+    shipSvg = d3.select("#"+ href22).append('svg').attr('width', canvasWidth).attr('height', 400)
     .append('g').attr("transform", "translate(" + graphMargin.left + "," + graphMargin.top+ ")");
     
     shipXScale = d3.time.scale()
-    .domain([d3.min(productionStatus['ShipCount'], function(d){return (d.time)}), d3.max(productionStatus['ShipCount'], function(d){return (d.time)})])
+    .domain([d3.min(TproductionStat['ShipCount'], function(d){return (d.time)}), d3.max(TproductionStat['ShipCount'], function(d){return (d.time)})])
         .range([0, graphWidth]); // FIX
         
         shipXAxis = d3.svg.axis()
@@ -846,7 +1053,7 @@ svg1.append("g")
         
         
         shipYScale = d3.scale.linear()
-        .domain([0, d3.max(productionStatus['ShipCount'], function(d){return d.number})])
+        .domain([0, d3.max(TproductionStat['ShipCount'], function(d){return d.number})])
         .range([graphHeight, 0]);
         
         shipYAxis = d3.svg.axis()
@@ -867,7 +1074,7 @@ svg1.append("g")
         shipSvg.append('path')
         .attr('id', 'defaultShipLine')
         .attr('class', 'statusLine')
-        .attr("d", shipLine(productionStatus['ShipCount']))
+        .attr("d", shipLine(TproductionStat['ShipCount']))
         
         shipSvg.append("g")
         .attr("class", "x axis")
@@ -885,7 +1092,7 @@ svg1.append("g")
    .attr("x1", shipXScale(86399*1000-32400000))
    .attr("y1", shipYScale(0))
    .attr("x2", shipXScale(86399*1000-32400000))
-   .attr("y2", shipYScale(d3.max(productionStatus['ShipCount'], function(d){return d.number})))
+   .attr("y2", shipYScale(d3.max(TproductionStat['ShipCount'], function(d){return d.number})))
    .attr('class','dateDividerShip')
    .style("stroke-width", 1)
    .style("stroke", "gray")
@@ -894,18 +1101,17 @@ svg1.append("g")
    .attr("x1", shipXScale(86399*2*1000-32400000))
    .attr("y1", shipYScale(0))
    .attr("x2", shipXScale(86399*2*1000-32400000))
-   .attr("y2", shipYScale(d3.max(productionStatus['ShipCount'], function(d){return d.number})))
+   .attr("y2", shipYScale(d3.max(TproductionStat['ShipCount'], function(d){return d.number})))
    .attr('class','dateDividerShip')
    .style("stroke-width", 1)
    .style("stroke", "gray")
-
-    // Util Graph
-    svg1 = d3.select("#status_2").append('svg').attr('width', canvasWidth).attr('height', 400)
+    // Util Graph 
+    svg1 = d3.select("#" + href22).append('svg').attr('width', canvasWidth).attr('height', 400)
     .append('g').attr("transform", "translate(" + graphMargin.left + "," + (graphMargin.top)+ ")");
     
     
     var xScale = d3.time.scale()
-    .domain([d3.min(productionStatus['WB_Util'], function(d){return d.time}), d3.max(productionStatus['WB_Util'], function(d){return d.time})])
+    .domain([d3.min(TproductionStat['WB_Util'], function(d){return d.time}), d3.max(TproductionStat['WB_Util'], function(d){return d.time})])
         .range([0, graphWidth]); // FIX
         
         var xAxis = d3.svg.axis()
@@ -915,7 +1121,7 @@ svg1.append("g")
         .tickSize(tickFormat.tickSize);
         
         var yScale = d3.scale.linear()
-        .domain([0, d3.max(productionStatus['WB_Util'], function(d){return d.number+0.02})])
+        .domain([0, d3.max(TproductionStat['WB_Util'], function(d){return d.number+0.02})])
         .range([graphHeight, 0]);
         
         var yAxis = d3.svg.axis()
@@ -931,11 +1137,11 @@ svg1.append("g")
         
         svg1.append('path')
         .attr('class', 'statusLine2')
-        .attr("d", line(productionStatus['DA_Util']))
+        .attr("d", line(TproductionStat['DA_Util']))
 
         svg1.append('path')
         .attr('class', 'statusLine')
-        .attr("d", line(productionStatus['WB_Util']))
+        .attr("d", line(TproductionStat['WB_Util']))
 
         svg1.append("g")
         .attr("class", "x axis")
@@ -1047,4 +1253,21 @@ function drawVerticalLine(inputSvg, scaleX, scaleY, max){
    .style('class','dateDivider')
    .style("stroke-width", 1)
    .style("stroke", "gray")
+}
+
+
+//-------------------------------------- Schedule Object -----------------------------------------
+
+// Creates new scheduleObj with the given properties. 
+function scheduleObj(name, ganttData, productInfo, decisionInfo, denominator, KPI, maxTime,
+                        productionStatus) {
+    this.name = name;
+    this.ganttData = ganttData;
+    this.productInfo = productInfo;
+    this.decisionInfo = decisionInfo;
+    this.denominator = denominator;
+    this.KPI = KPI;
+    this.maxTime = maxTime;
+    this.productionStatus = productionStatus;
+
 }
