@@ -125,7 +125,8 @@ var openFile = function (event) {
             var li = document.createElement("li");
             li.setAttribute("class", "nav");
             var tabA = document.createElement("a");
-            var tabhref = "#" + schedules.length;
+            var divID = "chartdiv" + schedules.length;
+            var tabhref = "#" + divID;
             tabA.setAttribute("data-toggle", "tab");
             tabA.setAttribute("href", tabhref);
             tabA.appendChild(document.createTextNode(TscheduleName));
@@ -137,7 +138,7 @@ var openFile = function (event) {
             //havent added charts 
             var tabContentDiv = document.getElementById("tabcontentsChart");
             var div = document.createElement("div");
-            var divID = "chartdiv" + schedules.length;
+            //var divID = "chartdiv" + schedules.length;
             div.setAttribute("id", divID);
             div.setAttribute("class", "tab-pane fade");
             tabContentDiv.appendChild(div);
@@ -151,7 +152,8 @@ var openFile = function (event) {
             var tabA = document.createElement("a");
             //id of the tab is the file name
             tabA.setAttribute("data-toggle", "tab");
-            var tabhref = "#" +schedules.length;
+            var divID = "chartdiv" + schedules.length;
+            var tabhref = "#" +divID;
             console.log(tabhref);
             tabA.setAttribute("href", tabhref);
             tabA.appendChild(document.createTextNode(TscheduleName));
@@ -163,7 +165,7 @@ var openFile = function (event) {
             //havent added charts 
             var tabContentDiv = document.getElementById("tabcontentsChart");
             var div = document.createElement("div");
-            var divID = "chartdiv" + schedules.length;
+            //var divID = "chartdiv" + schedules.length;
             div.setAttribute("id", divID);
             div.setAttribute("class", "tab-pane fade in active");
             tabContentDiv.appendChild(div);

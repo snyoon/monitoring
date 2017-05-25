@@ -85,7 +85,8 @@
       };
       
       
-      height = $(window).height();  
+      height = window.innerHeight - document.getElementById("chooseFileBar").offsetHeight;
+
       var panExtent;
       var appendLabelAxis = function(g, yAxis) {
 
@@ -250,8 +251,6 @@
                 gParent.call(xyzoom);   
                 var nodeFontSize = 12;
 
-    // // Disable doubleclick
-    d3.select("svg").on("dblclick.zoom",null);
     function draw(){
 
 
@@ -263,7 +262,7 @@
       //jy fixing window. 
       // MAYBE I BIND THIS TO THE CHART THAT I PUT IT IN ??????????????
       var outwidth = window.outerWidth,
-      outheight = window.outerHeight;
+      outheight = window.innerHeight;
 
       var ee = d3.event,
       tx = Math.min(0, Math.max(ee.translate[0], outwidth - outwidth * ee.scale)),
@@ -319,7 +318,7 @@
             // set height based off of item height
             height = gSize.height + gSize.top - gParentSize.top;
             // set bounding rectangle height
-            d3.select(gParent[0][0]).attr("height", height);
+            d3.select(gParent[0][0]).attr("height",height);
           } else {
             throw "height of the timeline is not set";
           }

@@ -26,7 +26,7 @@ if (session.getAttribute("u_id")==null) {
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
     <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
     <div id='left'>
-        <div id="chooseFileBar">
+        <div id="chooseFileBar" class="container">
             <input id="myFiles" type='file' accept='text/plain' onchange='openFile(event)'>
             <!-- TODO: Make a clear all button -->
 
@@ -35,7 +35,7 @@ if (session.getAttribute("u_id")==null) {
         <!-- This is going to hold all the graphs -->
         <!-- TODO -->
         <!-- https://www.w3schools.com/bootstrap/bootstrap_tabs_pills.asp -->
-        <div id= "graphTabs" class ="container">
+        <div id= "graphTabs">
             <ul id="listOfCharts" class="nav nav-tabs"> </ul>
             <div id="tabcontentsChart" class="tab-content"></div>
         </div>
