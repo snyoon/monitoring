@@ -479,6 +479,7 @@ function timelineHover(traveledTime, divID) {
 
 
 // ------------------------------------- Attribute View ------------------------------------------------
+// ---------------------------------- OnClick have Popup -----------------------------------------------
 function addZero(i) {
     if (i < 10) {
         i = "0" + i;
@@ -492,45 +493,74 @@ function displayAttribute(d, datum){
         var decisionKey = d.degree + '_' + lotId;
     var decisionsArray = decisionInfo[decisionKey];
     console.log(decisionsArray);
+    // create a new popup window
     var newWindow = window.open("", null, "height=500,width=600,status=yes,toolbar=no,menubar=no,location=no");
-
+    var popuphead = newWindow.document.getElementsByTagName("head")[0];
+    newWindow.document.write("<html><head><title>"+ lotId +"</title><link rel=stylesheet type=text/css href=css/bootstrap.css /> </head><style>*{text-align: center;}table { border-collapse: collapse;}table, td, th {   border: 1px solid black;}</style></head><body>");
+    //popuphead.document.write("<style>table { border-collapse: collapse;}table, td, th {   border: 1px solid black;}</style>");
     var popupBody = newWindow.document.getElementsByTagName("body");
-    newWindow.document.write("<table id=dtable></table>")
+    //newWindow.document.write("<table id=dtable></table><div id=atDiv></div>")
+    newWindow.document.write("<ul id= nwViews class='nav nav-tabs'><li class='nav active'><a href=#d>Decision</a></li><li class='nav'><a href='#at'>Attributes</a></li><div id= nwContent class='tab-content'><div id='d' class='tab-pane fade active in'><table id='dtable'></table></div><div id='at' class='tab-pane fade'><div id='attViewss'></div></div></div></ul>")
     var tbl = newWindow.document.getElementById("dtable");
     tbl.style.width = "100%";
-    tbl.setAttribute("boorder", "1");
 
-    for (var i = 0; i <= decisionsArray.length - 1; i++) {
-        var row = tbl.insertRow(i);
-        var dobj =decisionsArray[i];
 
-        var decisionCell = row.insertCell(0);
-        decisionCell.innerHTML = dobj.decision;
-        if(i == decisionsArray.length - 1){
+    //If Decision stuff is there it will display 
+    if(typeof decisionsArray!== "undefined"){
 
+        var avLabelRow = tbl.insertRow(0);
+        var decisionID = avLabelRow.insertCell(0);
+        decisionID.innerHTML = "Decision Id";
+        var opID = avLabelRow.insertCell(1);
+        opID.innerHTML = "Operation ID";
+        var proType = avLabelRow.insertCell(2);
+        proType.innerHTML = "Product Type";
+        var avchartlabel = avLabelRow.insertCell(3);
+
+        // MANUALLY CHANGE THE NUMBER OF VECTORS BEING USED BELOW
+        var actionvectorsize = decisionsArray[0].actionvector.split(",").length;
+        console.log(actionvectorsize);
+        avchartlabel.setAttribute("colspan", actionvectorsize);
+        avchartlabel.innerHTML ="action vector";
+        var rewardLabel = avLabelRow.insertCell(4);
+        rewardLabel.innerHTML = "reward";
+        //------------------------ To display action vector things -----------------------------
+        for (var i = 0; i <= decisionsArray.length-1; i++) {
+
+            var row = tbl.insertRow(i + 1);
+            var dobj =decisionsArray[i];
+            var decisionCell = row.insertCell(0);
+            decisionCell.innerHTML = dobj.decision;
+            if(i  == decisionsArray.length - 1){
+            //UPDATE THIS PLEASE
+            decisionCell.innerHTML = "proto??"
         }
         var operationCell = row.insertCell(1);
         operationCell.innerHTML = dobj.operationId;
         var productCell = row.insertCell(2);
         productCell.innerHTML = dobj.productType;
         var avCell = row.insertCell(3);
-        avCell.innerHTML = dobj.actionvector
-
-        // for(var ii = 0; ii <= dobj.actionvector.length - 1; ii++) {
-        //     var cell = row.insertCell(3 + ii);
-        //     var av = dobj.actionvector;
-        //     cell.innerHTML = av[ii];
-        // }
+        var av = dobj.actionvector.replace("[", "").replace("]","");
+        var avArray =av.split(",");
+        
+        for(var ii = 0; ii <= avArray.length - 1; ii++) {
+            var cell = row.insertCell(3 + ii);
+            cell.innerHTML = avArray[ii];
+        }
+        var rewardCell =row.insertCell(avArray.length + 3);
+        rewardCell.innerHTML = dobj.reward;
         
     }
+}
+    console.log(newWindow.document.getElementById("attViewss"));
+    var attviewDiv = newWindow.document.getElementById("attViewss");
 
     var startingTime = new Date(d.starting_time);
     var endingTime = new Date(d.ending_time);    
     var decisionTime = 0;
     if(decisionsArray != null)decisionTime = decisionsArray[0].decisionTime;
     decisionTime = new Date(decisionTime);
-    $('#lotViewer')
-    .html('<strong style="font-family:Sans-serif;">' +'Lot Id: '+ d.lotId + '<br>' + '</strong>' 
+    attviewDiv.document.write(('<strong style="font-family:Sans-serif;">' +'Lot Id: '+ d.lotId + '<br>' + '</strong>' 
        +'<strong style="font-family:Sans-serif;">' +'Starting Time: '+ startingTime.getDate() + '일 ' + addZero(startingTime.getHours()) + ':' + addZero(startingTime.getMinutes())
        + '<br>' + '</strong>'
        +'<strong style="font-family:Sans-serif;">' +'Ending Time: '+ endingTime.getDate() + '일 ' + addZero(endingTime.getHours()) + ':' + addZero(endingTime.getMinutes()) 
@@ -540,7 +570,7 @@ function displayAttribute(d, datum){
        +'<strong style="font-family:Sans-serif;">' +'Operation: '+ d.degree + '<br>' + '</strong>'
        +'<strong style="font-family:Sans-serif;">' +'Quantity: '+ d.quantity + '<br>' + '</strong>'
              // +'<strong style="font-family:Sans-serif;">' +'Flow: '+ d.flow + '<br>' + '</strong>'
-             );
+             ));
     $('#productViewer')
     .html('<strong style="font-family:Sans-serif;">' +'Product Id: '+ d.productId + '<br>' + '</strong>' 
        +'<strong style="font-family:Sans-serif;">' +'Product Group: '+ productInfo[d.productId]['productGroup'] + '<br>' + '</strong>'
@@ -571,7 +601,7 @@ var columns = [
             if(lotId.indexOf('_')>0) lotId = lotId.substring(0, lotId.indexOf('_'))
                 var decisionKey = d.degree + '_' + lotId
             var decisionsArray = decisionInfo[decisionKey]
-            if(decisionsArray != undefined){
+            if(decisionsArray != undefined) {
                 var DASelection = 5;
                 var WBSelection = 5;
                 var WBSplit = 5;
