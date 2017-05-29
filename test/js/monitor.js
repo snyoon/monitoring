@@ -1,22 +1,22 @@
     processWidth = document.body.clientWidth
     //None of the original code was deleted. just commented out with OG tag. 
-var testOut;
-var fileTest;
-var inputData;
-var ganttData;
-var chart;
-var sortedTimes = [];
+    var testOut;
+    var fileTest;
+    var inputData;
+    var ganttData;
+    var chart;
+    var sortedTimes = [];
 
-var clickedElement = '';
-var boolSelected = false;
-var candidatedElement = 'can';
-var canBoolSelected = false;
+    //var clickedElement = '';
+    //var boolSelected = false;
+    var candidatedElement = 'can';
+    var canBoolSelected = false;
 
-var productInfo = {};
-var decisionInfo = {};
-var denominator = {};
+    var productInfo = {};
+    var decisionInfo = {};
+    var denominator = {};
 
-var buttonOn = false;
+    var buttonOn = false;
 // ProductionStatus Info
 var maxTime;
 var productionStatus = {}
@@ -60,7 +60,7 @@ var graphHeight
 
 
 var openFile = function (event) {
-   
+
     //Deletes the Charts if there were antyhing there..
     // OG CODE REMOVED 
     //d3.select('.remove').remove()
@@ -73,16 +73,16 @@ var openFile = function (event) {
     var reader = new FileReader();
 
     reader.onload = function () {
-       if(listofnames.indexOf(document.getElementById("myFiles").files[0].name) != -1) {
+     if(listofnames.indexOf(document.getElementById("myFiles").files[0].name) != -1) {
         window.alert("This file is already in use.");
         return;
-        }
-        dataCount++;
-        var text = reader.result;
-        var node = document.getElementById('output');
-        testOut = reader.result;
-        inputData = JSON.parse(testOut)
-        var index = 0;
+    }
+    dataCount++;
+    var text = reader.result;
+    var node = document.getElementById('output');
+    testOut = reader.result;
+    inputData = JSON.parse(testOut)
+    var index = 0;
         //Creates the scheduleObj for the read schedule
         var TscheduleName = document.getElementById("myFiles").files[0].name;
         listofnames.push(TscheduleName);
@@ -92,6 +92,7 @@ var openFile = function (event) {
         var TdecisionInfo = inputData['Decision'];
         decisionInfo = TdecisionInfo;
         var Tdenominator = inputData['DENOMINATOR'];
+        denominator = Tdenominator;
         var TKPI = inputData['KPI'];
         var TKPIs = [];
         for(var key in TKPI){
@@ -108,13 +109,13 @@ var openFile = function (event) {
         }
         
         var newSchedule = new scheduleObj(TscheduleName, 
-                                        TganttData, 
-                                        TproductInfo, 
-                                        TdecisionInfo, 
-                                        Tdenominator, 
-                                        TKPIs,
-                                        TmaxTime,
-                                        TproductionStat);
+            TganttData, 
+            TproductInfo, 
+            TdecisionInfo, 
+            Tdenominator, 
+            TKPIs,
+            TmaxTime,
+            TproductionStat);
 
         activeSchedule = newSchedule;
         //adds the newly read file onto the list of schedules. 
@@ -157,6 +158,7 @@ var openFile = function (event) {
             var chartNavProcA = document.createElement("a");
             chartNavProcA.setAttribute("data-toggle", "tab");
             var href11 = "proc" +divID;
+            newSchedule.divID = href11;
             chartNavProcA.setAttribute("href", "#" + href11);
             chartNavProcA.appendChild(document.createTextNode("Schedule View"));
             chartNavProc.appendChild(chartNavProcA);
@@ -201,6 +203,7 @@ var openFile = function (event) {
             //id of the tab is the file name
             tabA.setAttribute("data-toggle", "tab");
             var divID = "chartdiv" + schedules.length;
+            newSchedule.divID = divID;
             var tabhref = "#" +divID;
             tabA.setAttribute("href", tabhref);
             tabA.appendChild(document.createTextNode(TscheduleName));
@@ -229,6 +232,7 @@ var openFile = function (event) {
             var chartNavProcA = document.createElement("a");
             chartNavProcA.setAttribute("data-toggle", "tab");
             var href11 = "proc" +divID;
+            newSchedule.divID = href11;
             chartNavProcA.setAttribute("href", "#" + href11);
             chartNavProcA.appendChild(document.createTextNode("Schedule View"));
             chartNavProc.appendChild(chartNavProcA);
@@ -423,6 +427,8 @@ if( button !== 'showBottom' ) {
 }
 
 function timelineHover(traveledTime, divID) {
+    var boolSelected = false;
+    var clickedElement = "";
     chart = d3.timeline().width(processWidth).stack().margin(margin)
     .traveledTime(traveledTime).showTimeAxisTick().hover(function (d, i, datum) {
             // d is the current rendering object
@@ -434,13 +440,13 @@ function timelineHover(traveledTime, divID) {
             var selectedLotId = d.lotId;
             var eventId = d.eventId;
             if(d.lotId.indexOf(clickedElement) > -1 && boolSelected == true){
-               var rects = d3.selectAll('.operationRect')
-               rects.style("fill", function (d, i) {
-                  if(d.lotId  == 'RESERVED') return 'url(#diagonal-stripe-1)'  
-                      else if(d.lotId =='HeteroSetup') return '000000'
-                          else if (d.lotId =='HomoSetup') return '545454'  
-                              else return colorCycle[d.productGroup];
-                      })   
+             var rects = d3.select("#"+divID).selectAll('.operationRect')
+             rects.style("fill", function (d, i) {
+              if(d.lotId  == 'RESERVED') return 'url(#diagonal-stripe-1)'  
+                  else if(d.lotId =='HeteroSetup') return '000000'
+                      else if (d.lotId =='HomoSetup') return '545454'  
+                          else return colorCycle[d.productGroup];
+                  })   
                  // d3.selectAll('#attribute').classed('cbp-spmenu-open', false)
                  boolSelected = false;
                  clickedElement = '';
@@ -451,15 +457,13 @@ function timelineHover(traveledTime, divID) {
              else{
                 d3.selectAll('#'+selectedLotId)
                 displayAttribute(d, datum)
-                selectLots(selectedLotId, eventId)
+                selectLots(selectedLotId, eventId,divID)
                 if (d.lotId.indexOf('_' ) >0){
                     clickedElement = d.lotId.substring(0, d.lotId.indexOf('_'))
                 }
                 else clickedElement = d.lotId
                     boolSelected = true;
                 buttonOn = false;
-                displayDecisions(d);
-                
             }
         })
         var svg = d3.select("#" + divID).append("svg").attr("width", processWidth);
@@ -473,7 +477,7 @@ function timelineHover(traveledTime, divID) {
 
 
     //Disables the doubleclick zoom function on the graph.    
-    d3.select("svg").on("dblclick.zoom", null);
+    d3.selectAll("svg").on("dblclick.zoom", null);
     
 }
 
@@ -488,6 +492,7 @@ function addZero(i) {
 }
 
 function displayAttribute(d, datum){
+
     var lotId = d.lotId;
     if(lotId.indexOf('_')>0) lotId = lotId.substring(0, lotId.indexOf('_'))
         var decisionKey = d.degree + '_' + lotId;
@@ -496,18 +501,31 @@ function displayAttribute(d, datum){
     // create a new popup window
     var newWindow = window.open("", null, "height=500,width=600,status=yes,toolbar=no,menubar=no,location=no");
     var popuphead = newWindow.document.getElementsByTagName("head")[0];
-    newWindow.document.write("<html><head><title>"+ lotId +"</title><link rel=stylesheet type=text/css href=css/bootstrap.css /> </head><style>*{text-align: center;}table { border-collapse: collapse;}table, td, th {   border: 1px solid black;}</style></head><body>");
-    //popuphead.document.write("<style>table { border-collapse: collapse;}table, td, th {   border: 1px solid black;}</style>");
+    newWindow.document.write("<html><head><title>"+ lotId +"</title><link rel=stylesheet type=text/css href=css/bootstrap.css /> </head><style>*{text-align: center;}table { border-collapse: collapse;}table, td, th {   border: 1px solid black;} .atributedisplay{column-count:2; column-gap: 40px; column-rule-style: solid;column-rule-width: 1px; margin-bottom: 2em} #Decision{visibility:'hidden'}</style></head><body></body>");
     var popupBody = newWindow.document.getElementsByTagName("body");
-    //newWindow.document.write("<table id=dtable></table><div id=atDiv></div>")
-    newWindow.document.write("<ul id= nwViews class='nav nav-tabs'><li class='nav active'><a href=#d>Decision</a></li><li class='nav'><a href='#at'>Attributes</a></li><div id= nwContent class='tab-content'><div id='d' class='tab-pane fade active in'><table id='dtable'></table></div><div id='at' class='tab-pane fade'><div id='attViewss'></div></div></div></ul>")
+    //newWindow.document.write("<ul id= nwViews class='nav nav-tabs'><li class='nav active'><a data-toggle='tab' href=#d>Decision</a></li><li class='nav'><a data-toggle='tab' href='#at'>Attributes</a></li></ul><div id= nwContent class='tab-content'><div id='d' class='tab-pane fade active in'><table id='dtable'></table></div><div id='at' class='tab-pane fade'><div id='attViewss'></div></div></div>")
+    newWindow.document.write("<div id='attViewss' class='atributedisplay'></div><div id='Decision'><strong>Decisions</strong><table id='dtable'></table></div>");
     var tbl = newWindow.document.getElementById("dtable");
-    tbl.style.width = "100%";
+    tbl.setAttribute("width", "100%");
 
 
     //If Decision stuff is there it will display 
     if(typeof decisionsArray!== "undefined"){
+        console.log(decisionsArray);
+        // lineHeight = chart.getHeight();
+        // gantt = d3.select('#process').select('svg')
+        // gantt.append("line")
+        // .attr('id', 'decisionLine')    
+        // .attr("x1", xScale(decisionsArray[0].decisionTime))  //<<== change your code here
+        // .attr("y1", margin.top*2)
+        // .attr("x2", xScale(decisionsArray[0].decisionTime))  //<<== and here
+        // .attr("y2", lineHeight - margin.bottom)
+        // .style("stroke-width", 2)
+        // .style("stroke", "red")
+        // .style("fill", "none");
 
+
+        newWindow.document.getElementById("Decision").style.visibility ="visible";
         var avLabelRow = tbl.insertRow(0);
         var decisionID = avLabelRow.insertCell(0);
         decisionID.innerHTML = "Decision Id";
@@ -516,10 +534,8 @@ function displayAttribute(d, datum){
         var proType = avLabelRow.insertCell(2);
         proType.innerHTML = "Product Type";
         var avchartlabel = avLabelRow.insertCell(3);
-
-        // MANUALLY CHANGE THE NUMBER OF VECTORS BEING USED BELOW
         var actionvectorsize = decisionsArray[0].actionvector.split(",").length;
-        console.log(actionvectorsize);
+
         avchartlabel.setAttribute("colspan", actionvectorsize);
         avchartlabel.innerHTML ="action vector";
         var rewardLabel = avLabelRow.insertCell(4);
@@ -532,27 +548,25 @@ function displayAttribute(d, datum){
             var decisionCell = row.insertCell(0);
             decisionCell.innerHTML = dobj.decision;
             if(i  == decisionsArray.length - 1){
-            //UPDATE THIS PLEASE
-            decisionCell.innerHTML = "proto??"
+                //UPDATE THIS PLEASE
+                decisionCell.innerHTML = "proto??"
+            }
+            var operationCell = row.insertCell(1);
+            operationCell.innerHTML = dobj.operationId;
+            var productCell = row.insertCell(2);
+            productCell.innerHTML = dobj.productType;
+            var avCell = row.insertCell(3);
+            var av = dobj.actionvector.replace("[", "").replace("]","");
+            var avArray =av.split(",");
+
+            for(var ii = 0; ii <= avArray.length - 1; ii++) {
+                var cell = row.insertCell(3 + ii);
+                cell.innerHTML = avArray[ii];
+            }
+            var rewardCell =row.insertCell(avArray.length + 3);
+            rewardCell.innerHTML = dobj.reward;
         }
-        var operationCell = row.insertCell(1);
-        operationCell.innerHTML = dobj.operationId;
-        var productCell = row.insertCell(2);
-        productCell.innerHTML = dobj.productType;
-        var avCell = row.insertCell(3);
-        var av = dobj.actionvector.replace("[", "").replace("]","");
-        var avArray =av.split(",");
-        
-        for(var ii = 0; ii <= avArray.length - 1; ii++) {
-            var cell = row.insertCell(3 + ii);
-            cell.innerHTML = avArray[ii];
-        }
-        var rewardCell =row.insertCell(avArray.length + 3);
-        rewardCell.innerHTML = dobj.reward;
-        
     }
-}
-    console.log(newWindow.document.getElementById("attViewss"));
     var attviewDiv = newWindow.document.getElementById("attViewss");
 
     var startingTime = new Date(d.starting_time);
@@ -560,271 +574,283 @@ function displayAttribute(d, datum){
     var decisionTime = 0;
     if(decisionsArray != null)decisionTime = decisionsArray[0].decisionTime;
     decisionTime = new Date(decisionTime);
-    attviewDiv.document.write(('<strong style="font-family:Sans-serif;">' +'Lot Id: '+ d.lotId + '<br>' + '</strong>' 
-       +'<strong style="font-family:Sans-serif;">' +'Starting Time: '+ startingTime.getDate() + '일 ' + addZero(startingTime.getHours()) + ':' + addZero(startingTime.getMinutes())
-       + '<br>' + '</strong>'
-       +'<strong style="font-family:Sans-serif;">' +'Ending Time: '+ endingTime.getDate() + '일 ' + addZero(endingTime.getHours()) + ':' + addZero(endingTime.getMinutes()) 
-       + '<br>' + '</strong>'
-       +'<strong style="font-family:Sans-serif;">' +'Decision Time: '+ decisionTime.getDate() + '일 ' + addZero(decisionTime.getHours()) + ':' + addZero(decisionTime.getMinutes()) 
-       + '<br>' + '</strong>'
-       +'<strong style="font-family:Sans-serif;">' +'Operation: '+ d.degree + '<br>' + '</strong>'
-       +'<strong style="font-family:Sans-serif;">' +'Quantity: '+ d.quantity + '<br>' + '</strong>'
-             // +'<strong style="font-family:Sans-serif;">' +'Flow: '+ d.flow + '<br>' + '</strong>'
-             ));
-    $('#productViewer')
-    .html('<strong style="font-family:Sans-serif;">' +'Product Id: '+ d.productId + '<br>' + '</strong>' 
-       +'<strong style="font-family:Sans-serif;">' +'Product Group: '+ productInfo[d.productId]['productGroup'] + '<br>' + '</strong>'
-       +'<strong style="font-family:Sans-serif;">' +'Flow Id: '+ productInfo[d.productId]['flowId'] + '<br>' + '</strong>'
-       +'<strong style="font-family:Sans-serif;">' +'Operation Seq.: '+ productInfo[d.productId]['operationSequence'] + '<br>' + '</strong>'
-       );    
-    $('#resourceViewer')
-    .html('<strong style="font-family:Sans-serif;">' +'Resource: '+ datum.label + '<br>' + '</strong>'
-       +'<strong style="font-family:Sans-serif;">' +'Resource Model: '+ datum.resourceModel + '<br>' + '</strong>'
-       );    
+
+    var fblocktext = document.createElement("strong");
+    fblocktext.innerHTML = 'Lot Id: '+ d.lotId + '<br>'
+        +'Starting Time: '+ startingTime.getDate() + '일 ' + addZero(startingTime.getHours()) + ':' + addZero(startingTime.getMinutes()) + '<br>'
+        +'Ending Time: '+ endingTime.getDate() + '일 ' + addZero(endingTime.getHours()) + ':' + addZero(endingTime.getMinutes()) 
+        + '<br>'
+        +'Decision Time: '+ decisionTime.getDate() + '일 ' + addZero(decisionTime.getHours()) + ':' + addZero(decisionTime.getMinutes()) 
+        + '<br>'
+        +'Operation: '+ d.degree + '<br>'
+        +'Quantity: '+ d.quantity + '<br>'
+        +'Product Id: '+ d.productId + '<br>' 
+        +'Product Group: '+ productInfo[d.productId]['productGroup'] + '<br>'
+        +'Flow Id: '+ productInfo[d.productId]['flowId'] + '<br>' 
+        +'Operation Seq.: '+ productInfo[d.productId]['operationSequence'] + '<br>'
+        +'Resource: '+ datum.label + '<br>'
+        +'Resource Model: '+ datum.resourceModel + '<br>';
+    attviewDiv.appendChild(fblocktext);
+    var currentStatus =  decisionsArray[0];
+    var currentssss = newWindow.document.getElementById("Decision");
+    var cStatusText =  document.createElement("strong");
+    cStatusText.innerHTML = 'DA WIP Level: '+ currentStatus['dawipLevel'] + ' / ' + denominator['Stocker_size']+ '<br>'
+        +'WB WIP Level: '+ currentStatus['wbwipLevel'] + ' / ' + denominator['Stocker_size']
+       + '<br>' 
+       +'Working DA: '+ currentStatus['workingDA'] + ' / ' + denominator['DA_resource']
+       + '<br>'
+       +'Working WB: '+ currentStatus['workingWB'] + ' / ' + denominator['WB_resource']
+       + '<br>'
+       +'투입량: '+ currentStatus['inputCount'] + ' / ' + denominator['MAX_inputcount']
+       + '<br>'
+       +'생산량: '+ currentStatus['outputCount'] + ' / ' + denominator['MAX_outputcount']
+       + '<br>';
+
+    currentssss.appendChild(cStatusText);
 }
 
 // ------------------------------------- Decision View ------------------------------------------------
-var columns = [
-{ head: 'Decision', cl: 'tableTitle', html: ƒ('decision') },
-{ head: 'OperationId', cl: 'num', html: ƒ('operationId') },
-{ head: 'ProductType', cl: 'center', html: ƒ('productType') },
-        // { head: 'LotQuantiy', cl: 'center', html: ƒ('lotSize') },
-        { head: 'actionVector', cl: 'center', html: ƒ('actionvector') },
-        { head: 'Score', cl: 'num', html: ƒ('reward', d3.format('.5f')) }
-        ];
+// var columns = [
+// { head: 'Decision', cl: 'tableTitle', html: ƒ('decision') },
+// { head: 'OperationId', cl: 'num', html: ƒ('operationId') },
+// { head: 'ProductType', cl: 'center', html: ƒ('productType') },
+//         // { head: 'LotQuantiy', cl: 'center', html: ƒ('lotSize') },
+//         { head: 'actionVector', cl: 'center', html: ƒ('actionvector') },
+//         { head: 'Score', cl: 'num', html: ƒ('reward', d3.format('.5f')) }
+//         ];
 
 
-        function displayDecisions(d, datum){
-            d3.selectAll('table').remove();
-            d3.selectAll('#decisionLine').remove();
-            var lotId = d.lotId;
-            if(lotId.indexOf('_')>0) lotId = lotId.substring(0, lotId.indexOf('_'))
-                var decisionKey = d.degree + '_' + lotId
-            var decisionsArray = decisionInfo[decisionKey]
-            if(decisionsArray != undefined) {
-                var DASelection = 5;
-                var WBSelection = 5;
-                var WBSplit = 5;
+//         function displayDecisions(d, datum){
+//             d3.selectAll('table').remove();
+//             d3.selectAll('#decisionLine').remove();
+//             var lotId = d.lotId;
+//             if(lotId.indexOf('_')>0) lotId = lotId.substring(0, lotId.indexOf('_'))
+//                 var decisionKey = d.degree + '_' + lotId
+//             var decisionsArray = decisionInfo[decisionKey]
+//             if(decisionsArray != undefined) {
+//                 var DASelection = 5;
+//                 var WBSelection = 5;
+//                 var WBSplit = 5;
 
-                var DASelDecisions = [];
-                var DASelDecisionsDict = {};
+//                 var DASelDecisions = [];
+//                 var DASelDecisionsDict = {};
 
-                var WBSelDecisions = [];
-                var boorder = [
-                {'decision' : '---------', 'operationId' : '---------', 'productType' : '---------', 'lotSize': '-----------', 'score': ''}
-                ];
-                var WBSplitDecisions = [];
+//                 var WBSelDecisions = [];
+//                 var boorder = [
+//                 {'decision' : '---------', 'operationId' : '---------', 'productType' : '---------', 'lotSize': '-----------', 'score': ''}
+//                 ];
+//                 var WBSplitDecisions = [];
 
-                if(d.degree.indexOf('WB')>-1){
-                    for(var i = 0; i < decisionsArray.length; i++){
-                        var tempDecision = decisionsArray[i];
-                        if(tempDecision.decisionType == 'WB_SELECTION'){
-                            if(WBSelDecisions.length == WBSelection) continue;
-                            WBSelDecisions.push(tempDecision)
-                        }
-                        else if(tempDecision.decisionType == 'SPLIT'){
-                            if(WBSplitDecisions.length == WBSplit) continue;
-                            WBSplitDecisions.push(tempDecision)
-                        }
-                    }
-                }
-                else{
-    //        DASelection = Math.min(DASelection, decisionsArray.length)
-    DASelection = decisionsArray.length
-    for(var i = 0; i < DASelection; i++){
-        DASelDecisions.push(decisionsArray[i])
-    }
-}
-var table = d3.select('#decisionViewer')
-.append('table');
+//                 if(d.degree.indexOf('WB')>-1){
+//                     for(var i = 0; i < decisionsArray.length; i++){
+//                         var tempDecision = decisionsArray[i];
+//                         if(tempDecision.decisionType == 'WB_SELECTION'){
+//                             if(WBSelDecisions.length == WBSelection) continue;
+//                             WBSelDecisions.push(tempDecision)
+//                         }
+//                         else if(tempDecision.decisionType == 'SPLIT'){
+//                             if(WBSplitDecisions.length == WBSplit) continue;
+//                             WBSplitDecisions.push(tempDecision)
+//                         }
+//                     }
+//                 }
+//                 else{
+//     //        DASelection = Math.min(DASelection, decisionsArray.length)
+//     DASelection = decisionsArray.length
+//     for(var i = 0; i < DASelection; i++){
+//         DASelDecisions.push(decisionsArray[i])
+//     }
+// }
+// var table = d3.select('#decisionViewer')
+// .append('table');
 
 
-if(d.degree.indexOf('WB')>-1){
-         // create table header
-         table.append('thead').append('tr')
-         .selectAll('th')
-         .data(columns).enter()
-         .append('th')
-         .attr('class', ƒ('cl'))
-         .text(ƒ('head'));
+// if(d.degree.indexOf('WB')>-1){
+//          // create table header
+//          table.append('thead').append('tr')
+//          .selectAll('th')
+//          .data(columns).enter()
+//          .append('th')
+//          .attr('class', ƒ('cl'))
+//          .text(ƒ('head'));
 
-         table.append('tbody')
-         .selectAll('tr')
-         .data(WBSelDecisions).enter()
-         .append('tr')
-         .selectAll('td')
-         .data(function(row, i) {
-            return columns.map(function(c) {
-                    // compute cell values for this specific row
-                    var cell = {};
-                    d3.keys(c).forEach(function(k) {
-                        cell[k] = typeof c[k] == 'function' ? c[k](row,i) : c[k];
-                    });
-                    return cell;
-                });
-        }).enter()
-         .append('td')
-         .html(ƒ('html'))
-         .attr('class', ƒ('cl'));
+//          table.append('tbody')
+//          .selectAll('tr')
+//          .data(WBSelDecisions).enter()
+//          .append('tr')
+//          .selectAll('td')
+//          .data(function(row, i) {
+//             return columns.map(function(c) {
+//                     // compute cell values for this specific row
+//                     var cell = {};
+//                     d3.keys(c).forEach(function(k) {
+//                         cell[k] = typeof c[k] == 'function' ? c[k](row,i) : c[k];
+//                     });
+//                     return cell;
+//                 });
+//         }).enter()
+//          .append('td')
+//          .html(ƒ('html'))
+//          .attr('class', ƒ('cl'));
 
-         table.append('tbody')
-         .selectAll('tr')
-         .data(boorder).enter()
-         .append('tr')
-         .selectAll('td')
-         .data(function(row, i) {
-            return columns.map(function(c) {
-                    // compute cell values for this specific row
-                    var cell = {};
-                    d3.keys(c).forEach(function(k) {
-                        cell[k] = typeof c[k] == 'function' ? c[k](row,i) : c[k];
-                    });
-                    return cell;
-                });
-        }).enter()
-         .append('td')
-         .html(ƒ('html'))
-         .attr('class', ƒ('cl'));    
+//          table.append('tbody')
+//          .selectAll('tr')
+//          .data(boorder).enter()
+//          .append('tr')
+//          .selectAll('td')
+//          .data(function(row, i) {
+//             return columns.map(function(c) {
+//                     // compute cell values for this specific row
+//                     var cell = {};
+//                     d3.keys(c).forEach(function(k) {
+//                         cell[k] = typeof c[k] == 'function' ? c[k](row,i) : c[k];
+//                     });
+//                     return cell;
+//                 });
+//         }).enter()
+//          .append('td')
+//          .html(ƒ('html'))
+//          .attr('class', ƒ('cl'));    
 
-        // create table body
-        table.append('tbody')
-        .selectAll('tr')
-        .data(WBSplitDecisions).enter()
-        .append('tr')
-        .selectAll('td')
-        .data(function(row, i) {
-            return columns.map(function(c) {
-                    // compute cell values for this specific row
-                    var cell = {};
-                    d3.keys(c).forEach(function(k) {
-                        cell[k] = typeof c[k] == 'function' ? c[k](row,i) : c[k];
-                    });
-                    return cell;
-                });
-        }).enter()
-        .append('td')
-        .html(ƒ('html'))
-        .attr('class', ƒ('cl'));
-    }
-    else{
-        table.append('thead').append('tr')
-        .selectAll('th')
-        .data(columns).enter()
-        .append('th')
-        .attr('class', ƒ('cl'))
-        .text(ƒ('head'));
+//         // create table body
+//         table.append('tbody')
+//         .selectAll('tr')
+//         .data(WBSplitDecisions).enter()
+//         .append('tr')
+//         .selectAll('td')
+//         .data(function(row, i) {
+//             return columns.map(function(c) {
+//                     // compute cell values for this specific row
+//                     var cell = {};
+//                     d3.keys(c).forEach(function(k) {
+//                         cell[k] = typeof c[k] == 'function' ? c[k](row,i) : c[k];
+//                     });
+//                     return cell;
+//                 });
+//         }).enter()
+//         .append('td')
+//         .html(ƒ('html'))
+//         .attr('class', ƒ('cl'));
+//     }
+//     else{
+//         table.append('thead').append('tr')
+//         .selectAll('th')
+//         .data(columns).enter()
+//         .append('th')
+//         .attr('class', ƒ('cl'))
+//         .text(ƒ('head'));
 
-        table.append('tbody')
-        .selectAll('tr')
-        .data(DASelDecisions).enter()
-        .append('tr')
-        .selectAll('td')
-        .data(function(row, i) {
-            return columns.map(function(c) {
-                    // compute cell values for this specific row
-                    var cell = {};
-                    d3.keys(c).forEach(function(k) {
-                        cell[k] = typeof c[k] == 'function' ? c[k](row,i) : c[k];
-                    });
-                    return cell;
-                });
-        }).enter()
-        .append('td')
-        .on("mouseover", function(d) {
-            d3.select(this).style("cursor", "pointer")
-        })
-        .on("mouseout", function(d) {
-            d3.select(this).style("cursor", "default")
-        })
-        .on("click", function (d, i) {
-            if(boolSelected == true){
-                var decisionLotId = d.html.substring(d.html.indexOf('-')+1, d.html.length)
-                var rects = d3.selectAll('.operationRect')
-                    // 같은 랏을 두 번 선택했을 때는 다시 원래대로 돌아가게 함
-                    if(decisionLotId.indexOf(candidatedElement) > -1){
-                        rects.style('fill', function (d,i){
-                            if(d.lotId.indexOf(clickedElement)>-1){
-                                if(d.lotId.indexOf('WIP')>-1){
-                                    if(clickedElement.indexOf('WIP')>-1) return colorCycle[d.productGroup];
-                                    else return 'white';
-                                }
-                                else return colorCycle[d.productGroup];
-                            }
-                            else return 'white'
-                        })
-                        candidatedElement = 'can'
-                    }
-                    else{
-                        // 최초 선택의 경우 
-                        rects.style("fill", function (d, i){
-                            // 선택된 lot을 색칠하기 위함
-                            if(d.lotId.indexOf(decisionLotId)>-1){
-                                // 지금 색칠해야 하는 lot이 WIP이라면 lot 이름을 공유하기 때문에
-                                // 만약, 선택된 lot이 WIP이 아니었으면 lot 이름을 공유하는 WIP들은 색칠하지 않는다
-                                // 만약, 선택된 lot이 WIP이면 원래대로 색칠을 해준다                            
-                                if(d.lotId.indexOf('WIP')>-1){
-                                    if(decisionLotId.indexOf('WIP')>-1) return colorCycle[d.productGroup];
-                                    else return 'white';
-                                }
-                                else return colorCycle[d.productGroup];
-                            } 
-                            else{
-                                if(d.lotId.indexOf(clickedElement) > -1) {
-                                    if(d.lotId.indexOf('WIP')>-1){
-                                        if(clickedElement.indexOf('WIP')>-1) return colorCycle[d.productGroup];
-                                        else return 'white';
-                                    }
-                                    else return colorCycle[d.productGroup];
-                                }
-                                else return 'white';
-                            } 
-                        }) 
-                        candidatedElement = decisionLotId;       
-                    }
-                }
-            })
-        .html(ƒ('html'))
-        .attr('class', ƒ('cl'))
-    }
+//         table.append('tbody')
+//         .selectAll('tr')
+//         .data(DASelDecisions).enter()
+//         .append('tr')
+//         .selectAll('td')
+//         .data(function(row, i) {
+//             return columns.map(function(c) {
+//                     // compute cell values for this specific row
+//                     var cell = {};
+//                     d3.keys(c).forEach(function(k) {
+//                         cell[k] = typeof c[k] == 'function' ? c[k](row,i) : c[k];
+//                     });
+//                     return cell;
+//                 });
+//         }).enter()
+//         .append('td')
+//         .on("mouseover", function(d) {
+//             d3.select(this).style("cursor", "pointer")
+//         })
+//         .on("mouseout", function(d) {
+//             d3.select(this).style("cursor", "default")
+//         })
+//         .on("click", function (d, i) {
+//             if(boolSelected == true){
+//                 var decisionLotId = d.html.substring(d.html.indexOf('-')+1, d.html.length)
+//                 var rects = d3.selectAll('.operationRect')
+//                     // 같은 랏을 두 번 선택했을 때는 다시 원래대로 돌아가게 함
+//                     if(decisionLotId.indexOf(candidatedElement) > -1){
+//                         rects.style('fill', function (d,i){
+//                             if(d.lotId.indexOf(clickedElement)>-1){
+//                                 if(d.lotId.indexOf('WIP')>-1){
+//                                     if(clickedElement.indexOf('WIP')>-1) return colorCycle[d.productGroup];
+//                                     else return 'white';
+//                                 }
+//                                 else return colorCycle[d.productGroup];
+//                             }
+//                             else return 'white'
+//                         })
+//                         candidatedElement = 'can'
+//                     }
+//                     else{
+//                         // 최초 선택의 경우 
+//                         rects.style("fill", function (d, i){
+//                             // 선택된 lot을 색칠하기 위함
+//                             if(d.lotId.indexOf(decisionLotId)>-1){
+//                                 // 지금 색칠해야 하는 lot이 WIP이라면 lot 이름을 공유하기 때문에
+//                                 // 만약, 선택된 lot이 WIP이 아니었으면 lot 이름을 공유하는 WIP들은 색칠하지 않는다
+//                                 // 만약, 선택된 lot이 WIP이면 원래대로 색칠을 해준다                            
+//                                 if(d.lotId.indexOf('WIP')>-1){
+//                                     if(decisionLotId.indexOf('WIP')>-1) return colorCycle[d.productGroup];
+//                                     else return 'white';
+//                                 }
+//                                 else return colorCycle[d.productGroup];
+//                             } 
+//                             else{
+//                                 if(d.lotId.indexOf(clickedElement) > -1) {
+//                                     if(d.lotId.indexOf('WIP')>-1){
+//                                         if(clickedElement.indexOf('WIP')>-1) return colorCycle[d.productGroup];
+//                                         else return 'white';
+//                                     }
+//                                     else return colorCycle[d.productGroup];
+//                                 }
+//                                 else return 'white';
+//                             } 
+//                         }) 
+//                         candidatedElement = decisionLotId;       
+//                     }
+//                 }
+//             })
+//         .html(ƒ('html'))
+//         .attr('class', ƒ('cl'))
+//     }
     
-    var currentStatus =  decisionsArray[0];
-    $('#currentStatus')
-    .html('<strong style="font-family:Sans-serif;font-size:20px;">' +'DA WIP Level: '+ currentStatus['dawipLevel'] + ' / ' + denominator['Stocker_size']
-       + '<br>' + '</strong>'
-       +'<strong style="font-family:Sans-serif;font-size:20px;">' +'WB WIP Level: '+ currentStatus['wbwipLevel'] + ' / ' + denominator['Stocker_size']
-       + '<br>' + '</strong>' 
-       +'<strong style="font-family:Sans-serif;font-size:20px;">' +'Working DA: '+ currentStatus['workingDA'] + ' / ' + denominator['DA_resource']
-       + '<br>' + '</strong>'
-       +'<strong style="font-family:Sans-serif;font-size:20px;">' +'Working WB: '+ currentStatus['workingWB'] + ' / ' + denominator['WB_resource']
-       + '<br>' + '</strong>'
-       +'<strong style="font-family:Sans-serif;font-size:20px;">' +'투입량: '+ currentStatus['inputCount'] + ' / ' + denominator['MAX_inputcount']
-       + '<br>' + '</strong>'
-       +'<strong style="font-family:Sans-serif;font-size:20px;">' +'생산량: '+ currentStatus['outputCount'] + ' / ' + denominator['MAX_outputcount']
-       + '<br>' + '</strong>'
-       );
-    lineHeight = chart.getHeight();
-    gantt = d3.select('#process').select('svg')
-    gantt.append("line")
-    .attr('id', 'decisionLine')    
-        .attr("x1", xScale(decisionsArray[0].decisionTime))  //<<== change your code here
-        .attr("y1", margin.top*2)
-        .attr("x2", xScale(decisionsArray[0].decisionTime))  //<<== and here
-        .attr("y2", lineHeight - margin.bottom)
-        .style("stroke-width", 2)
-        .style("stroke", "red")
-        .style("fill", "none");
-    }
-    else{
-        $('#currentStatus')
-        .html(' ');
-    }
+//     var currentStatus =  decisionsArray[0];
+//     $('#currentStatus')
+//     .html('<strong style="font-family:Sans-serif;font-size:20px;">' +'DA WIP Level: '+ currentStatus['dawipLevel'] + ' / ' + denominator['Stocker_size']
+//        + '<br>' + '</strong>'
+//        +'<strong style="font-family:Sans-serif;font-size:20px;">' +'WB WIP Level: '+ currentStatus['wbwipLevel'] + ' / ' + denominator['Stocker_size']
+//        + '<br>' + '</strong>' 
+//        +'<strong style="font-family:Sans-serif;font-size:20px;">' +'Working DA: '+ currentStatus['workingDA'] + ' / ' + denominator['DA_resource']
+//        + '<br>' + '</strong>'
+//        +'<strong style="font-family:Sans-serif;font-size:20px;">' +'Working WB: '+ currentStatus['workingWB'] + ' / ' + denominator['WB_resource']
+//        + '<br>' + '</strong>'
+//        +'<strong style="font-family:Sans-serif;font-size:20px;">' +'투입량: '+ currentStatus['inputCount'] + ' / ' + denominator['MAX_inputcount']
+//        + '<br>' + '</strong>'
+//        +'<strong style="font-family:Sans-serif;font-size:20px;">' +'생산량: '+ currentStatus['outputCount'] + ' / ' + denominator['MAX_outputcount']
+//        + '<br>' + '</strong>'
+//        );
+//     lineHeight = chart.getHeight();
+//     gantt = d3.select('#process').select('svg')
+//     gantt.append("line")
+//     .attr('id', 'decisionLine')    
+//         .attr("x1", xScale(decisionsArray[0].decisionTime))  //<<== change your code here
+//         .attr("y1", margin.top*2)
+//         .attr("x2", xScale(decisionsArray[0].decisionTime))  //<<== and here
+//         .attr("y2", lineHeight - margin.bottom)
+//         .style("stroke-width", 2)
+//         .style("stroke", "red")
+//         .style("fill", "none");
+//     }
+//     else{
+//         $('#currentStatus')
+//         .html(' ');
+//     }
     
     
-}
+// }
 
 
-function selectLots(lotId, eventId){
-    var rects = d3.selectAll('.operationRect')
+function selectLots(lotId, eventId, idofchart){
+    var rects = d3.select("#"+idofchart).selectAll('.operationRect')
     var motherLotId = lotId;
     if (lotId.indexOf('_' ) >0){
         motherLotId = lotId.substring(0, lotId.indexOf('_'))
@@ -1254,35 +1280,35 @@ svg1.append("g")
 	// svg1.append("g")
 	// 	.attr("class", "y axis")
 	// 	.call(yAxis);
-    
- 
+
+
 }
 
 //-------------------------------------- KPI Status -----------------------------------------
 function displayKPI(lotId){
-  
-    
+
+
 }
 
 function drawVerticalLine(inputSvg, scaleX, scaleY, max){
-   var verticalLine = inputSvg
-   .append('line')
-   .attr("x1", scaleX((86399)*1000-32400000))
-   .attr("y1", scaleY(0))
-   .attr("x2", scaleX((86399)*1000-32400000))
-   .attr("y2", scaleY(max))
-   .style('class','dateDivider')
-   .style("stroke-width", 1)
-   .style("stroke", "gray")
-   var verticalLine2 = inputSvg
-   .append('line')
-   .attr("x1", scaleX(86399*2*1000-32400000))
-   .attr("y1", scaleY(0))
-   .attr("x2", scaleX(86399*2*1000-32400000))
-   .attr("y2", scaleY(max))
-   .style('class','dateDivider')
-   .style("stroke-width", 1)
-   .style("stroke", "gray")
+ var verticalLine = inputSvg
+ .append('line')
+ .attr("x1", scaleX((86399)*1000-32400000))
+ .attr("y1", scaleY(0))
+ .attr("x2", scaleX((86399)*1000-32400000))
+ .attr("y2", scaleY(max))
+ .style('class','dateDivider')
+ .style("stroke-width", 1)
+ .style("stroke", "gray")
+ var verticalLine2 = inputSvg
+ .append('line')
+ .attr("x1", scaleX(86399*2*1000-32400000))
+ .attr("y1", scaleY(0))
+ .attr("x2", scaleX(86399*2*1000-32400000))
+ .attr("y2", scaleY(max))
+ .style('class','dateDivider')
+ .style("stroke-width", 1)
+ .style("stroke", "gray")
 }
 
 
@@ -1290,7 +1316,7 @@ function drawVerticalLine(inputSvg, scaleX, scaleY, max){
 
 // Creates new scheduleObj with the given properties. 
 function scheduleObj(name, ganttData, productInfo, decisionInfo, denominator, KPI, maxTime,
-                        productionStatus) {
+    productionStatus) {
     this.name = name;
     this.ganttData = ganttData;
     this.productInfo = productInfo;
@@ -1299,5 +1325,12 @@ function scheduleObj(name, ganttData, productInfo, decisionInfo, denominator, KP
     this.KPI = KPI;
     this.maxTime = maxTime;
     this.productionStatus = productionStatus;
+    this.divID ="";
 
 }
+
+
+//-------------------------------- Changing active tab when tabbing------------------------------
+// $('a[data-toggle="tab"]').on('shown.bs.tab', function(e){
+//     activeSchedule = 
+// })
