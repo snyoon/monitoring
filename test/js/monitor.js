@@ -326,9 +326,7 @@ function displayDecisions(d, datum){
     var lotId = d.lotId;
     if(lotId.indexOf('_')>0) lotId = lotId.substring(0, lotId.indexOf('_'))
     var decisionKey = d.degree + '_' + lotId
-    console.log(decisionKey)
     var decisionsArray = decisionInfo[decisionKey]
-    console.log(decisionsArray)
     if(decisionsArray != undefined){
         var DASelection = 5;
         var WBSelection = 5;
@@ -528,6 +526,8 @@ function displayDecisions(d, datum){
              +'<strong style="font-family:Sans-serif;font-size:20px;">' +'투입량: '+ currentStatus['inputCount'] + ' / ' + denominator['MAX_inputcount']
              + '<br>' + '</strong>'
              +'<strong style="font-family:Sans-serif;font-size:20px;">' +'생산량: '+ currentStatus['outputCount'] + ' / ' + denominator['MAX_outputcount']
+             + '<br>' + '</strong>'
+             +'<strong style="font-family:Sans-serif;font-size:20px;">' +'투입 가능량: '+ currentStatus['currentCSTQuantity'] 
              + '<br>' + '</strong>'
              );
          lineHeight = chart.getHeight();
