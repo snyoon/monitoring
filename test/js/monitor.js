@@ -12,9 +12,12 @@
     var candidatedElement = 'can';
     var canBoolSelected = false;
 
-    var productInfo = {};
-    var decisionInfo = {};
-    var denominator = {};
+var actionAttribute=[];
+
+var allProductInfo={};
+var alldecisionInfo={};
+var allDenominator ={};
+
 
     var buttonOn = false;
 // ProductionStatus Info
@@ -86,13 +89,17 @@ var openFile = function (event) {
         //Creates the scheduleObj for the read schedule
         var TscheduleName = document.getElementById("myFiles").files[0].name;
         listofnames.push(TscheduleName);
+        actionAttribute = inputData['actionAttribute'];
         var TganttData = inputData['Gantt'];
         var TproductInfo = inputData['Product'];
-        productInfo = TproductInfo;
+        //productInfo = TproductInfo;
+        allProductInfo[TscheduleName] = TproductInfo;
         var TdecisionInfo = inputData['Decision'];
-        decisionInfo = TdecisionInfo;
+        //decisionInfo = TdecisionInfo;
+        alldecisionInfo[TscheduleName] = TdecisionInfo;
         var Tdenominator = inputData['DENOMINATOR'];
-        denominator = Tdenominator;
+        //denominator = Tdenominator;
+        allDenominator[TscheduleName] = Tdenominator;
         var TKPI = inputData['KPI'];
         var TKPIs = [];
         for(var key in TKPI){
@@ -268,7 +275,7 @@ var openFile = function (event) {
         }
         
 
-        timelineHover(traveledTime, href11);
+        timelineHover(traveledTime, href11, TscheduleName);
         ProductionStatus(TKPIs, TproductionStat, href22, TKPI);
         for (var i = 0; i < TganttData.length; i++) {
             var tempLabel = TganttData[i]['label'];
@@ -426,7 +433,7 @@ if( button !== 'showBottom' ) {
 }
 }
 
-function timelineHover(traveledTime, divID) {
+function timelineHover(traveledTime, divID, scheduleName) {
     var boolSelected = false;
     var clickedElement = "";
     chart = d3.timeline().width(processWidth).stack().margin(margin)
@@ -437,6 +444,7 @@ function timelineHover(traveledTime, divID) {
             if (d.starting_time > traveledTime) return;
             //this is the clicking on a single thing. 
         }).click(function (d, i, datum) {
+            console.log("single clicked")
             var selectedLotId = d.lotId;
             var eventId = d.eventId;
             if(d.lotId.indexOf(clickedElement) > -1 && boolSelected == true){
@@ -456,7 +464,7 @@ function timelineHover(traveledTime, divID) {
              }
              else{
                 d3.selectAll('#'+selectedLotId)
-                displayAttribute(d, datum)
+                displayAttribute(d, datum,divID, scheduleName)
                 selectLots(selectedLotId, eventId,divID)
                 if (d.lotId.indexOf('_' ) >0){
                     clickedElement = d.lotId.substring(0, d.lotId.indexOf('_'))
@@ -465,7 +473,39 @@ function timelineHover(traveledTime, divID) {
                     boolSelected = true;
                 buttonOn = false;
             }
+        }).dblclick(function (d, i, datum) {
+            console.log("double clicked ")
+            var selectedLotId = d.lotId;
+            var eventId = d.eventId;
+            displayAttribute(d, datum,divID, scheduleName);
+            // if(d.lotId.indexOf(clickedElement) > -1 && boolSelected == true){
+            //  var rects = d3.select("#"+divID).selectAll('.operationRect')
+            //  rects.style("fill", function (d, i) {
+            //   if(d.lotId  == 'RESERVED') return 'url(#diagonal-stripe-1)'  
+            //       else if(d.lotId =='HeteroSetup') return '000000'
+            //           else if (d.lotId =='HomoSetup') return '545454'  
+            //               else return colorCycle[d.productGroup];
+            //       })   
+            //      // d3.selectAll('#attribute').classed('cbp-spmenu-open', false)
+            //      boolSelected = false;
+            //      clickedElement = '';
+            //  }
+            //  else if(d.lotId != clickedElement && boolSelected == true){
+
+            //  }
+            //  else{
+            //     d3.selectAll('#'+selectedLotId)
+            //     displayAttribute(d, datum,divID, scheduleName)
+            //     selectLots(selectedLotId, eventId,divID)
+            //     if (d.lotId.indexOf('_' ) >0){
+            //         clickedElement = d.lotId.substring(0, d.lotId.indexOf('_'))
+            //     }
+            //     else clickedElement = d.lotId
+            //         boolSelected = true;
+            //     buttonOn = false;
+            // }
         })
+
         var svg = d3.select("#" + divID).append("svg").attr("width", processWidth);
 
         svg.datum(activeSchedule.ganttData).call(chart);
@@ -474,7 +514,6 @@ function timelineHover(traveledTime, divID) {
         yScale = chart.exportYScale();
         colorCycle = chart.exportColorCycle();
         d3.select('.operations').data([ganttData]).exit().remove();
-
 
     //Disables the doubleclick zoom function on the graph.    
     d3.selectAll("svg").on("dblclick.zoom", null);
@@ -491,17 +530,19 @@ function addZero(i) {
     return i;
 }
 
-function displayAttribute(d, datum){
-
+function displayAttribute(d, datum, divID, scheduleName){
+    var decisionInfo = alldecisionInfo[scheduleName];
+    var productInfo = allProductInfo[scheduleName];
+    var denominator = allDenominator[scheduleName];
+    
     var lotId = d.lotId;
     if(lotId.indexOf('_')>0) lotId = lotId.substring(0, lotId.indexOf('_'))
         var decisionKey = d.degree + '_' + lotId;
     var decisionsArray = decisionInfo[decisionKey];
-    console.log(decisionsArray);
     // create a new popup window
-    var newWindow = window.open("", null, "height=500,width=600,status=yes,toolbar=no,menubar=no,location=no");
+    var newWindow = window.open("", null, "top = 2000000,height=400,width=1107,status=yes,toolbar=no,menubar=no,location=no");
     var popuphead = newWindow.document.getElementsByTagName("head")[0];
-    newWindow.document.write("<html><head><title>"+ lotId +"</title><link rel=stylesheet type=text/css href=css/bootstrap.css /> </head><style>*{text-align: center;}table { border-collapse: collapse;}table, td, th {   border: 1px solid black;} .atributedisplay{column-count:2; column-gap: 40px; column-rule-style: solid;column-rule-width: 1px; margin-bottom: 2em} #Decision{visibility:'hidden'}</style></head><body></body>");
+    newWindow.document.write("<html><head><title>"+ lotId +"</title><link rel=stylesheet type=text/css href=css/bootstrap.css /> </head><style>*{text-align: center; font-size:12px;}table { border-collapse: collapse;}table, td, th {   border: 1px solid black;} .atributedisplay{column-count:3; column-gap: 40px; column-rule-style: solid;column-rule-width: 1px; margin-bottom: 2em; width:100%} #Decision{visibility:'hidden'}</style></head><body></body>");
     var popupBody = newWindow.document.getElementsByTagName("body");
     //newWindow.document.write("<ul id= nwViews class='nav nav-tabs'><li class='nav active'><a data-toggle='tab' href=#d>Decision</a></li><li class='nav'><a data-toggle='tab' href='#at'>Attributes</a></li></ul><div id= nwContent class='tab-content'><div id='d' class='tab-pane fade active in'><table id='dtable'></table></div><div id='at' class='tab-pane fade'><div id='attViewss'></div></div></div>")
     newWindow.document.write("<div id='attViewss' class='atributedisplay'></div><div id='Decision'><strong>Decisions</strong><table id='dtable'></table></div>");
@@ -511,7 +552,7 @@ function displayAttribute(d, datum){
 
     //If Decision stuff is there it will display 
     if(typeof decisionsArray!== "undefined"){
-        console.log(decisionsArray);
+        
         // lineHeight = chart.getHeight();
         // gantt = d3.select('#process').select('svg')
         // gantt.append("line")
@@ -533,17 +574,29 @@ function displayAttribute(d, datum){
         opID.innerHTML = "Operation ID";
         var proType = avLabelRow.insertCell(2);
         proType.innerHTML = "Product Type";
-        var avchartlabel = avLabelRow.insertCell(3);
+        var currentLocation = avLabelRow.insertCell(3);
+        currentLocation.innerHTML = "Current Location";
+        var  fID = avLabelRow.insertCell(4);
+        fID.innerHTML = "Flow ID"
+        var avchartlabel = avLabelRow.insertCell(5);
         var actionvectorsize = decisionsArray[0].actionvector.split(",").length;
-
         avchartlabel.setAttribute("colspan", actionvectorsize);
-        avchartlabel.innerHTML ="action vector";
-        var rewardLabel = avLabelRow.insertCell(4);
-        rewardLabel.innerHTML = "reward";
+        var labelss = "Action Vector <div style= 'font-size:75%; column-count: " + actionvectorsize + "'>";
+        for (var i = 0; i <= actionvectorsize -1; i++) {
+            labelss+= " <br>" +actionAttribute[i] + "<br>";
+        }
+        labelss += "</div>"
+        avchartlabel.innerHTML =labelss;
+        var rewardLabel = avLabelRow.insertCell(6);
+        rewardLabel.innerHTML = "Reward";
+
+        var lablelsOfVectors = tbl.insertRow(1);
+        
+
         //------------------------ To display action vector things -----------------------------
         for (var i = 0; i <= decisionsArray.length-1; i++) {
 
-            var row = tbl.insertRow(i + 1);
+            var row = tbl.insertRow(i + 2);
             var dobj =decisionsArray[i];
             var decisionCell = row.insertCell(0);
             decisionCell.innerHTML = dobj.decision;
@@ -555,16 +608,21 @@ function displayAttribute(d, datum){
             operationCell.innerHTML = dobj.operationId;
             var productCell = row.insertCell(2);
             productCell.innerHTML = dobj.productType;
-            var avCell = row.insertCell(3);
+            var currentLocationCell = row.insertCell(3);
+            currentLocationCell.innerHTML = dobj.currentLocation;
+            var flowIdCell = row.insertCell(4);
+            flowIdCell.innerHTML = dobj.flowId;
+            var avCell = row.insertCell(5);
             var av = dobj.actionvector.replace("[", "").replace("]","");
             var avArray =av.split(",");
 
             for(var ii = 0; ii <= avArray.length - 1; ii++) {
-                var cell = row.insertCell(3 + ii);
+                var cell = row.insertCell(5 + ii);
                 cell.innerHTML = avArray[ii];
             }
-            var rewardCell =row.insertCell(avArray.length + 3);
-            rewardCell.innerHTML = dobj.reward;
+            var rewardCell =row.insertCell(avArray.length + 5);
+            //rewardCell.innerHTML = Math.round(dobj.reward * 100)/100;
+            rewardCell.innerHTML = dobj.reward.toFixed(3);
         }
     }
     var attviewDiv = newWindow.document.getElementById("attViewss");
@@ -574,7 +632,10 @@ function displayAttribute(d, datum){
     var decisionTime = 0;
     if(decisionsArray != null)decisionTime = decisionsArray[0].decisionTime;
     decisionTime = new Date(decisionTime);
-
+   
+    var currentStatus =  decisionsArray[0];
+    var currentssss = newWindow.document.getElementById("Decision");
+    var cStatusText =  document.createElement("strong");
     var fblocktext = document.createElement("strong");
     fblocktext.innerHTML = 'Lot Id: '+ d.lotId + '<br>'
         +'Starting Time: '+ startingTime.getDate() + '일 ' + addZero(startingTime.getHours()) + ':' + addZero(startingTime.getMinutes()) + '<br>'
@@ -583,18 +644,14 @@ function displayAttribute(d, datum){
         +'Decision Time: '+ decisionTime.getDate() + '일 ' + addZero(decisionTime.getHours()) + ':' + addZero(decisionTime.getMinutes()) 
         + '<br>'
         +'Operation: '+ d.degree + '<br>'
-        +'Quantity: '+ d.quantity + '<br>'
+        +'Quantity: '+ d.quantity + '<br> <br>'
         +'Product Id: '+ d.productId + '<br>' 
         +'Product Group: '+ productInfo[d.productId]['productGroup'] + '<br>'
         +'Flow Id: '+ productInfo[d.productId]['flowId'] + '<br>' 
         +'Operation Seq.: '+ productInfo[d.productId]['operationSequence'] + '<br>'
         +'Resource: '+ datum.label + '<br>'
-        +'Resource Model: '+ datum.resourceModel + '<br>';
-    attviewDiv.appendChild(fblocktext);
-    var currentStatus =  decisionsArray[0];
-    var currentssss = newWindow.document.getElementById("Decision");
-    var cStatusText =  document.createElement("strong");
-    cStatusText.innerHTML = 'DA WIP Level: '+ currentStatus['dawipLevel'] + ' / ' + denominator['Stocker_size']+ '<br>'
+        +'Resource Model: '+ datum.resourceModel + '<br> <br>'
+        + 'DA WIP Level: '+ currentStatus['dawipLevel'] + ' / ' + denominator['Stocker_size']+ '<br>'
         +'WB WIP Level: '+ currentStatus['wbwipLevel'] + ' / ' + denominator['Stocker_size']
        + '<br>' 
        +'Working DA: '+ currentStatus['workingDA'] + ' / ' + denominator['DA_resource']
@@ -604,9 +661,10 @@ function displayAttribute(d, datum){
        +'투입량: '+ currentStatus['inputCount'] + ' / ' + denominator['MAX_inputcount']
        + '<br>'
        +'생산량: '+ currentStatus['outputCount'] + ' / ' + denominator['MAX_outputcount']
-       + '<br>';
-
-    currentssss.appendChild(cStatusText);
+       + '<br>'
+       +'투입 가능량: '+ currentStatus['currentCSTQuantity'] 
+        + '<br>';
+ attviewDiv.appendChild(fblocktext);
 }
 
 // ------------------------------------- Decision View ------------------------------------------------

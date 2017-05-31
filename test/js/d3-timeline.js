@@ -7,6 +7,7 @@
     mouseover = function () {},
     mouseout = function () {},
     click = function () {},
+    dblclick = function(){},
     scroll = function () {},
     labelFunction = function(label) { return label; },
     navigateLeft = function () {},
@@ -297,7 +298,7 @@
       .style('vertical-align', 'middle')
       .style('font-weight', 'bold')
       .style('font-size', function(d){
-        return 0.2*(yScale(labelMap[d.label]+1) - yScale(labelMap[d.label])) + 'px'})
+        return 0.25*(yScale(labelMap[d.label]+1) - yScale(labelMap[d.label])) + 'px'})
       .style('fill', 'white')
       .text(function (d) {
         if(d.lotId != 'OVERFLOW' && d.lotId != 'RESERVED' && d.lotId.indexOf('Setup') < 0 ){
@@ -432,6 +433,8 @@ operationsEnter.append(function (d, i) {
                       mouseout(d, i, datum);
                     }).on("click", function (d, i) {
                       if(d.lotId !='RESERVED')  click(d, index, datum);
+                    }).on("dblclick", function (d, i) {
+                      if(d.lotId !='RESERVED')  dblclick(d, index, datum);
                     })
 //                    .attr('class', 'operationRect')
                       .attr("clip-path", "url(#clip)")
@@ -604,6 +607,12 @@ operationsEnter.append(function (d, i) {
       return timeline;
     };
 
+    timeline.dblclick = function (dblclickFunc) {
+      if (!arguments.length) return dblclick;
+      dblclick = dblclickFunc;
+      return timeline;
+    };
+
     timeline.scroll = function (scrollFunc) {
       if (!arguments.length) return scroll;
       scroll = scrollFunc;
@@ -763,4 +772,6 @@ operationsEnter.append(function (d, i) {
 
     return timeline;
   };
+  
+
 })();
