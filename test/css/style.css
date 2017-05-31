@@ -10,9 +10,11 @@ body {
     margin-top: 1px; 
     left: 3em;
     width: 100%;
+    float: left;
 }
 
 #graphTabs{
+    float:right;
 }
 #left {
     display: flex;
