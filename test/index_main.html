@@ -50,37 +50,13 @@ if (session.getAttribute("u_id")==null) {
             </div>
         </div>
 
-        <div id='views' class="hiddenBar">
-            <!--  <div class="btn-group" role="group" aria-label="...">-->
-            <!--<input type='file' accept='text/plain' onchange='openFile(event)'> OG -->
-            <button type="button" class="btn btn-default" id='resourceView'>Resource View</button>
-            <button type="button" class="btn btn-default" id='statusView'>Status View</button>
-            <button type="button" class="btn btn-default" id='showRight'>Decision</button>
-            <button type="button" class="btn btn-default" id='showBottom'>Attribute</button>
-            <!--            </div>-->
-        </div>
-        <div id='chart'>
-            <div id='process'></div>
-            <div id='status' class='myHidden'>
-                <div id='status_1'></div>
-                <div id='margin' style="height: 50px"></div>
-                <div id='status_2'></div>
-                <input type='file' accept='text/plain' onchange='openCompareFile(event)'>
-            </div>
-        </div>
+        
         <div id="hoverRes">
             <div class="coloredDiv"></div>
             <div id="name"></div>
             <div id="scrolled_date"></div>
         </div>
-        <nav class="cbp-spmenu cbp-spmenu-horizontal cbp-spmenu-bottom" id='attribute' class='bottomViewer'>
-            <div class='titleBottom'>Attributes</div>
-            <div id='attributeViewer'>
-                <div id='lotViewer' class='bottomViewer'></div>
-                <div id='productViewer' class='bottomViewer'></div>
-                <div id='resourceViewer' class='bottomViewer'></div>
-            </div>
-        </nav>
+        
     </div>
     <div id='patterns'>
             <svg height="10" width="10" xmlns="http://www.w3.org/2000/svg" version="1.1"> 
@@ -92,20 +68,7 @@ if (session.getAttribute("u_id")==null) {
                 </defs> 
             </svg>
     </div>
-    <nav class='cbp-spmenu cbp-spmenu-vertical cbp-spmenu-right' id='right'>
-        <div id='decision' class='rightContent'>
-            <div class='title'> Decisions </div>
-            <div id='decisionViewer'> </div>
-            
-        </div>
-        <div id='rightOthers' class='rightContent'>
-            <div id='Cstatus' class='rightOthersContent'>
-                <div class='title'>Current Status</div>
-                <div id='currentStatus'></div>
-            </div>
-        </div>
-
-    </nav>
+    
     <script src='js/d3.v3.min.js'></script>
     <script src='js/flexibility.js'></script>
     <script src='js/d3-timeline.js'></script>
