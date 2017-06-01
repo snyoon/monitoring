@@ -88,8 +88,10 @@ var timeScale = d3.time.scale()
         .range([0,w-150]);
 
 var categories = new Array();
-
+var catsUnfiltered = new Array();
 for (var i = 0; i < taskArray.length; i++){
+    catsUnfiltered.push(taskArray.length)
+
     categories.push(taskArray[i].type);
 }
 
@@ -334,6 +336,8 @@ function vertLabels(theGap, theTopPad, theSidePad, theBarHeight, theColorScale){
 function checkUnique(arr) {
     var hash = {}, result = [];
     for ( var i = 0, l = arr.length; i < l; ++i ) {
+      //snyoon
+      console.log("checkUnique: " + i);
         if ( !hash.hasOwnProperty(arr[i]) ) { //it works with objects! in FF, at least
             hash[ arr[i] ] = true;
             result.push(arr[i]);

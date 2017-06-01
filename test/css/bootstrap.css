@@ -6754,4 +6754,10 @@ button.close {
     display: none !important;
   }
 }
+
+/*non original*/
+.nav>li>a {
+    padding-top: 5px;
+    padding-bottom: 5px;
+}
 /*# sourceMappingURL=bootstrap.css.map */

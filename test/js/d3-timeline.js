@@ -4,25 +4,26 @@
     var DISPLAY_TYPES = ["circle", "rect"];
 
     var hover = function () {},
-        mouseover = function () {},
-        mouseout = function () {},
-        click = function () {},
-        scroll = function () {},
-        labelFunction = function(label) { return label; },
-        navigateLeft = function () {},
-        navigateRight = function () {},
-        orient = "bottom",
-        width = null,
-        height = 900,
-        rowSeparatorsColor = null,
-        backgroundColor = null,
+    mouseover = function () {},
+    mouseout = function () {},
+    click = function () {},
+    dblclick = function(){},
+    scroll = function () {},
+    labelFunction = function(label) { return label; },
+    navigateLeft = function () {},
+    navigateRight = function () {},
+    orient = "bottom",
+    width = null,
+    height = 900,
+    rowSeparatorsColor = null,
+    backgroundColor = null,
         // http://d3-wiki.readthedocs.io/zh_CN/master/Time-Formatting/
         tickFormat = { format: d3.time.format("%H"),
-          tickTime: d3.time.hour,
-          tickInterval: 2,
-          tickSize: 6,
-          tickValues: null
-        },
+        tickTime: d3.time.hour,
+        tickInterval: 2,
+        tickSize: 6,
+        tickValues: null
+      },
         // FIX
         // colorCycle = d3.scale.category20(),
 
@@ -63,10 +64,10 @@
         c10 = d3.scale.category10();
         colorDomain = ["C12", "DDW", "MCP"]
         c10.domain(colorDomain)
-    var colorCycle = {
-        "C12" : c10("C12"), 
-        "DDW" : c10("DDW"),
-        "MCP" : c10("MCP")
+        var colorCycle = {
+          "C12" : c10("C12"), 
+          "DDW" : c10("DDW"),
+          "MCP" : c10("MCP")
         // 'SDP_01': '#2A75A6',
         // 'SDP_02': '#AEC6EB',
         // 'SDP_03': '#FD7E12',
@@ -82,75 +83,80 @@
         // '3MCP_02': '#D87CC6',
         // '4MCP_01': '#F9B8D3',
         // '4MCP_02': '#7E7E7E'
-    };
+      };
       
       
-    height = $(window).height();  
-    var panExtent;
-    var appendLabelAxis = function(g, yAxis) {
+      height = window.innerHeight - document.getElementById("chooseFileBar").offsetHeight - document.getElementById("listOfCharts").offsetHeight;
 
-      if(showAxisHeaderBackground){ appendAxisHeaderBackground(g, 0, 0); }
+      var panExtent;
+      var appendLabelAxis = function(g, yAxis) {
 
-      if(showAxisNav){ appendTimeAxisNav(g) };
-      labelAxis = g.append("g")
+        if(showAxisHeaderBackground){ appendAxisHeaderBackground(g, 0, 0); }
+
+        if(showAxisNav){ appendTimeAxisNav(g) };
+        labelAxis = g.append("g")
         .attr("class", "Yaxis")
         .attr("transform", "translate(" + (margin.left )+ "," + (margin.top) + ")")
         .call(yAxis);
-    };
+      };
       
-    var appendTimeAxis = function(g, xAxis, yPosition) {
+      var appendTimeAxis = function(g, xAxis, yPosition) {
 
-      if(showAxisHeaderBackground){ appendAxisHeaderBackground(g, 0, 0); }
+        if(showAxisHeaderBackground){ appendAxisHeaderBackground(g, 0, 0); }
 
-      if(showAxisNav){ appendTimeAxisNav(g) };
+        if(showAxisNav){ appendTimeAxisNav(g) };
 
-      timeAxis = g.append("g")
+        timeAxis = g.append("g")
         .attr("class", "axis")
         .attr("transform", "translate(" + 0 + "," + (height - margin.bottom) + ")")
         //.attr("transform", "translate(" + 0 + "," + (20) + ")")
         .call(xAxis);
-    };
+      };
 
-    var appendTimeAxisTop = function(g, xAxis, yPosition) {
+      var appendTimeAxisTop = function(g, xAxis, yPosition) {
 
-      if(showAxisHeaderBackground){ appendAxisHeaderBackground(g, 0, 0); }
+        if(showAxisHeaderBackground){ appendAxisHeaderBackground(g, 0, 0); }
 
-      if(showAxisNav){ appendTimeAxisNav(g) };
+        if(showAxisNav){ appendTimeAxisNav(g) };
 
-      timeAxis = g.append("g")
+        timeAxis = g.append("g")
         .attr("class", "topAxis")
         // .attr("transform", "translate(" + 0 + "," + (height - margin.bottom) + ")")
         .attr("transform", "translate(" + 0 + "," + (20) + ")")
         .call(xAxis);
-    };
-   
-  
-    function timeline (gParent) {
-      var g = gParent.append("g");
-      var gParentSize = gParent[0][0].getBoundingClientRect();
-      var gParentItem = d3.select(gParent[0][0]);
-      
-      g.append("defs").append("clipPath")
-          .attr("id", "clip")
-          .append("rect")
-          .attr("width", width - margin.left - margin.right)
-          .attr("height", height - margin.top - margin.bottom - margin.top)
-          .attr("transform", "translate(" + margin.left + "," + (margin.top*2) + ")");
+      };
+
+
+      function timeline (gParent) {
+        var g = gParent.append("g");
+        var gParentSize = gParent[0][0].getBoundingClientRect();
+        var gParentItem = d3.select(gParent[0][0]);
+
+        // replacing id=clip with id = randnumber
+
+        var ranIDnumber = Math.floor(Math.random() *1000000 );
+        g.append("defs").append("clipPath")
+        .attr("id", ranIDnumber)
+        //.attr("id", "clip")
+        .append("rect")
+        .attr("width", width - margin.left - margin.right)
+        .attr("height", height - margin.top - margin.bottom - margin.top)
+        .attr("transform", "translate(" + margin.left + "," + (margin.top*2) + ")");
         
-      var yAxisMapping = {},
+        var yAxisMapping = {},
         maxStack = 1,
         minTime = 0,
         maxTime = 0;
 
-       setWidth();
-      
+        setWidth();
+
       // check how many stacks we're gonna need
       // do this here so that we can draw the axis before the graph
       if (stacked || ending === 0 || beginning === 0) {
         g.each(function (d, i) {
           d.forEach(function (datum, index) {          
             // create y mapping for stacked graph
-              labelArr.push(datum.label)
+            labelArr.push(datum.label)
             if (stacked && Object.keys(yAxisMapping).indexOf(index) == -1) {
               yAxisMapping[index] = maxStack;
               maxStack++;
@@ -161,10 +167,10 @@
               if(beginning === 0)
                 if (time.starting_time  < minTime || (minTime === 0 && timeIsRelative === false))
                   minTime = time.starting_time;
-              if(ending === 0)
-                if (time.ending_time > maxTime)
-                  maxTime = time.ending_time;
-            });
+                if(ending === 0)
+                  if (time.ending_time > maxTime)
+                    maxTime = time.ending_time;
+                });
           });
         });
 
@@ -184,36 +190,36 @@
         //         panExtent.x[1]< ending ?panExtent.x[1]:ending])
         .domain([beginning, ending])
         .range([margin.left, width - margin.right]); // FIX
-      
-      var xAxis = d3.svg.axis()
+
+        var xAxis = d3.svg.axis()
         .scale(xScale)
         .orient(orient)
         .tickFormat(tickFormat.format)
         .tickSize(tickFormat.tickSize);
 
-      var topXAxis = d3.svg.axis()
+        var topXAxis = d3.svg.axis()
         .scale(xScale)
         .orient('top')
         .tickFormat(tickFormat.format)
         .tickSize(tickFormat.tickSize);
-       
+
       // yScale = d3.scale.linear()
       //    .domain([0, labelArr.length])
       //    .range([(itemHeight + itemMargin), (height-margin.bottom) ]); 
       yScale = d3.scale.linear()
-         .domain([panExtent.y[0]>(-labelArr.length / 2)?panExtent.y[0]:(-labelArr.length / 2),
-                  panExtent.y[1]<labelArr.length ?panExtent.y[1]:labelArr.length ])
-         .range([(itemHeight + itemMargin), (height-margin.bottom) ]);
-        
+      .domain([panExtent.y[0]>(-labelArr.length / 2)?panExtent.y[0]:(-labelArr.length / 2),
+        panExtent.y[1]<labelArr.length ?panExtent.y[1]:labelArr.length ])
+      .range([(itemHeight + itemMargin), (height-margin.bottom) ]);
+
       var yAxis = d3.svg.axis()
-        .scale(yScale)
-        .orient('left')
-        .ticks(labelArr.length)
-        .tickFormat(function(d){
-            return labelArr[d]
-        })
-        .tickSize(2);    
-    
+      .scale(yScale)
+      .orient('left')
+      .ticks(labelArr.length)
+      .tickFormat(function(d){
+        return labelArr[d]
+      })
+      .tickSize(2);    
+
 
       if (tickFormat.tickValues != null) {
         xAxis.tickValues(tickFormat.tickValues);
@@ -222,35 +228,53 @@
         xAxis.ticks(tickFormat.numTicks || tickFormat.tickTime, tickFormat.tickInterval);
         topXAxis.ticks(tickFormat.numTicks || tickFormat.tickTime, tickFormat.tickInterval);
       }
-        
+
       // draw the chart
       drawChart(g);
-        
+
       var belowLastItem = (margin.top + (itemHeight + itemMargin) * maxStack);
       var aboveFirstItem = margin.top;
       var timeAxisYPosition = showAxisTop ? aboveFirstItem : belowLastItem;
       
         // FIX
 
-      if (showTimeAxis) {appendTimeAxis(g, xAxis, timeAxisYPosition);}
-       appendLabelAxis(g, yAxis);  
-       appendTimeAxisTop(g, topXAxis,timeAxisYPosition)
+        if (showTimeAxis) {appendTimeAxis(g, xAxis, timeAxisYPosition);}
+        appendLabelAxis(g, yAxis);  
+        appendTimeAxisTop(g, topXAxis,timeAxisYPosition)
         
-      var gSize = g[0][0].getBoundingClientRect();
-      setHeight();
-      var xyzoom = d3.behavior.zoom()
-                .x(xScale)
-                .y(yScale)
+        var gSize = g[0][0].getBoundingClientRect();
+        setHeight();
+        var xyzoom = d3.behavior.zoom()
+        .x(xScale)
+        .y(yScale)
+                //controlls how far you scroll out - jy
+                .scaleExtent([1,5])
+                //got rid of annoying double click zoom lul. 
+                // .on("dblclick.zoom", null)
                 .on("zoom", draw);
- 
-      gParent.call(xyzoom);   
-    var nodeFontSize = 12;
+
+                gParent.call(xyzoom);   
+                var nodeFontSize = 12;
 
     function draw(){
+
+
     // var tx = d3.event.translate[0] > 0 ? 0 : d3.event.translate[0]
-    var tx = d3.event.translate[0] > 0 ? 0 : d3.event.translate[0],
-        ty = Math.min(0, d3.event.translate[1]);
+    //Gonna make the window fixed 
+    //var tx = d3.event.translate[0] > 0 ? 0 : d3.event.translate[0],
+      //  ty = Math.min(0, d3.event.translate[1]);
+
+      //jy fixing window. 
+      // MAYBE I BIND THIS TO THE CHART THAT I PUT IT IN ??????????????
+      var outwidth = window.outerWidth,
+      outheight = window.innerHeight;
+
+      var ee = d3.event,
+      tx = Math.min(0, Math.max(ee.translate[0], outwidth - outwidth * ee.scale)),
+      ty = Math.min(0, Math.max(ee.translate[1], outheight - outheight * ee.scale));
       xyzoom.translate([tx, ty]);
+
+
 
       gParent.select('.axis').call(xAxis);
       gParent.select('.topAxis').call(topXAxis);
@@ -260,46 +284,46 @@
       var texts = gParent.selectAll('.operationText')
       
       rects
-          .attr("x", function (d) {
-              return xScale(d.starting_time )})
-          .attr("y", function(d){
-              return yScale(labelMap[d.label]) })
-          .attr("width", function (d, i) {
-              return xScale(d.ending_time ) - xScale(d.starting_time);})
-          .attr("height", function(d){
-              return (yScale(labelMap[d.label]+1) - yScale(labelMap[d.label]) -itemMargin*3)});
+      .attr("x", function (d) {
+        return xScale(d.starting_time )})
+      .attr("y", function(d){
+        return yScale(labelMap[d.label]) })
+      .attr("width", function (d, i) {
+        return xScale(d.ending_time ) - xScale(d.starting_time);})
+      .attr("height", function(d){
+        return (yScale(labelMap[d.label]+1) - yScale(labelMap[d.label]) -itemMargin*3)});
       
       texts  
-          .attr("x", function(d){
-              return xScale((d.starting_time + d.ending_time)/2) })
-          .attr("y", function(d){
-              return yScale(labelMap[d.label]) + 0.5*(yScale(labelMap[d.label]+1)-yScale(labelMap[d.label])) })
-          .style('text-anchor', 'middle')
-          .style('vertical-align', 'middle')
-          .style('font-weight', 'bold')
-          .style('font-size', function(d){
-              return 0.2*(yScale(labelMap[d.label]+1) - yScale(labelMap[d.label])) + 'px'})
-          .style('fill', 'white')
-          .text(function (d) {
-            if(d.lotId != 'OVERFLOW' && d.lotId != 'RESERVED' && d.lotId.indexOf('Setup') < 0 ){
-              if(d.lotId.indexOf('WIP')>-1) return 'WIP'
-              else{
-                var displayedLotId = d.lotId.substring(3, d.lotId.length)
-                return displayedLotId
-              }
-            } 
-          });
-        
+      .attr("x", function(d){
+        return xScale((d.starting_time + d.ending_time)/2) })
+      .attr("y", function(d){
+        return yScale(labelMap[d.label]) + 0.5*(yScale(labelMap[d.label]+1)-yScale(labelMap[d.label])) })
+      .style('text-anchor', 'middle')
+      .style('vertical-align', 'middle')
+      .style('font-weight', 'bold')
+      .style('font-size', function(d){
+        return 0.25*(yScale(labelMap[d.label]+1) - yScale(labelMap[d.label])) + 'px'})
+      .style('fill', 'white')
+      .text(function (d) {
+        if(d.lotId != 'OVERFLOW' && d.lotId != 'RESERVED' && d.lotId.indexOf('Setup') < 0 ){
+          if(d.lotId.indexOf('WIP')>-1) return 'WIP'
+            else{
+              var displayedLotId = d.lotId.substring(3, d.lotId.length)
+              return displayedLotId
+            }
+          } 
+        });
+
     }  
     
 
-      function setHeight() {
-        if (!height && !gParentItem.attr("height")) {
-          if (itemHeight) {
+    function setHeight() {
+      if (!height && !gParentItem.attr("height")) {
+        if (itemHeight) {
             // set height based off of item height
             height = gSize.height + gSize.top - gParentSize.top;
             // set bounding rectangle height
-            d3.select(gParent[0][0]).attr("height", height);
+            d3.select(gParent[0][0]).attr("height",height);
           } else {
             throw "height of the timeline is not set";
           }
@@ -334,53 +358,53 @@
 
       function appendLine(lineScale, lineFormat) {
         gParent.append("svg:line")
-          .attr("x1", lineScale)
-          .attr("y1", lineFormat.marginTop)
-          .attr("x2", lineScale)
-          .attr("y2", height - lineFormat.marginBottom)
+        .attr("x1", lineScale)
+        .attr("y1", lineFormat.marginTop)
+        .attr("x2", lineScale)
+        .attr("y2", height - lineFormat.marginBottom)
           .style("stroke", lineFormat.color)//"rgb(6,120,155)")
           .style("stroke-width", lineFormat.width);
-      }
+        }
         
-     function drawChart(g) {
-       
-        g.attr('class', 'operations')
-        g.each(function (d, i) {
+        function drawChart(g) {
+
+          g.attr('class', 'operations')
+          g.each(function (d, i) {
             chartData = d;
-                d.forEach(function (datum, index) {
-                    var data = datum.times;
-                    var hasLabel = (typeof (datum.label) != "undefined");
+            d.forEach(function (datum, index) {
+              var data = datum.times;
+              var hasLabel = (typeof (datum.label) != "undefined");
                     // issue warning about using id per data set. Ids should be individual to data elements
                     if (typeof (datum.id) != "undefined") {
-                        console.warn("d3Timeline Warning: Ids per dataset is deprecated in favor of a 'class' key. Ids are now per data element.");
+                      console.warn("d3Timeline Warning: Ids per dataset is deprecated in favor of a 'class' key. Ids are now per data element.");
                     }
                     if (backgroundColor) {
-                        appendBackgroundBar(yAxisMapping, index, g, data, datum);
+                      appendBackgroundBar(yAxisMapping, index, g, data, datum);
                     }
                     // FIX
                     var operations = g.selectAll(".operations")
-                                       .data(data);
+                    .data(data);
                     var operationsEnter = operations.enter().append('g');
 //                    var operationsEnter = operations.enter().append('g');
-                    operationsEnter.append(function (d, i) {
-                        d.label = datum.label;
-                        labelMap[d.label] = index;
-                         return document.createElementNS(d3.ns.prefix.svg, "display" in d ? d.display : display);
-                    })
-                    .attr("x", function(d){
-                        return xScale(d.starting_time)
-                       })
-                      .attr("y", function(d){
-                        return yScale(index)  
-                      })
-                      .attr("width", function (d, i) {
-                        return xScale(d.ending_time) - xScale(d.starting_time) ;
-                    })
-                     .attr("height", function(d){
-                        return (yScale(index+1) - yScale(index) -itemMargin*3)
-                    })
-                     .style("fill", function (d, i) {
-                        var dColorPropName;
+operationsEnter.append(function (d, i) {
+  d.label = datum.label;
+  labelMap[d.label] = index;
+  return document.createElementNS(d3.ns.prefix.svg, "display" in d ? d.display : display);
+})
+.attr("x", function(d){
+  return xScale(d.starting_time)
+})
+.attr("y", function(d){
+  return yScale(index)  
+})
+.attr("width", function (d, i) {
+  return xScale(d.ending_time) - xScale(d.starting_time) ;
+})
+.attr("height", function(d){
+  return (yScale(index+1) - yScale(index) -itemMargin*3)
+})
+.style("fill", function (d, i) {
+  var dColorPropName;
                         // if (d.color) return d.color;
                         // if (colorPropertyName) {
                         //     dColorPropName = d[colorPropertyName];
@@ -396,9 +420,9 @@
                         // console.log(d);
                         // if(d.lotId !='RESERVED') return colorCycle[d.productId];
                         if(d.lotId  == 'RESERVED') return  'url(#diagonal-stripe-1)' 
-                        else if(d.lotId =='HeteroSetup') return '000000'
-                        else if (d.lotId =='HomoSetup') return '545454'
-                        else return c10(d.productGroup)
+                          else if(d.lotId =='HeteroSetup') return '000000'
+                            else if (d.lotId =='HomoSetup') return '545454'
+                              else return c10(d.productGroup)
                         // else  return 'url(#diagonal-stripe-1) #fff'
                     })
                     /*.style('opacity', function(d, i){
@@ -406,53 +430,55 @@
                         return 0.3
                       }
                     })*/.on("mousemove", function (d, i) {
-                        hover(d, index, datum);
+                      hover(d, index, datum);
                     }).on("mouseover", function (d, i) {
-                        mouseover(d, i, datum);
+                      mouseover(d, i, datum);
                     }).on("mouseout", function (d, i) {
-                        mouseout(d, i, datum);
+                      mouseout(d, i, datum);
                     }).on("click", function (d, i) {
-                        if(d.lotId !='RESERVED')  click(d, index, datum);
+                      if(d.lotId !='RESERVED')  click(d, index, datum);
+                    }).on("dblclick", function (d, i) {
+                      if(d.lotId !='RESERVED')  dblclick(d, index, datum);
                     })
 //                    .attr('class', 'operationRect')
-                    .attr("clip-path", "url(#clip)")
-                    .attr("class", function (d, i) {
+                      .attr("clip-path", "url(#"+ranIDnumber+")")
+                      .attr("class", function (d, i) {
                         // if(d.lotId == 'RESERVED') return 'operationRect ' + d.productId +' ' + d.lotId + ' ' + 'diagonal-stripe-1'
                         return 'operationRect ' + d.productId +' ' + d.lotId;
-                    })
-                    .attr("id", function (d, i) {
+                      })
+                      .attr("id", function (d, i) {
                         // use deprecated id field
                         if (datum.id && !d.id) {
-                            return 'timelineItem_' + datum.id;
+                          return 'timelineItem_' + datum.id;
                         }
                         // return d.id ? d.id : d.lotId;
                         return 'event_' + d.eventId;
                         // return d.id ? d.id : "timelineItem_"+index+"_"+i;
-                    });
+                      });
                     // FIX
                     operationsEnter
-                        .append("text")
+                    .append("text")
                         //.attr('class','operationText')
                         .attr('class',function(d, i){
                          return 'operationText ' + d.lotId;
-                        })
-                        .attr("clip-path", "url(#clip)")
+                       })
+                        .attr("clip-path", "url(#"+ranIDnumber+")")
                         .attr("x", function(d){
                           return xScale((d.starting_time + d.ending_time)/2)
                         })
                         .attr("y", function(d){
-                        return yScale(index) + 0.7*(yScale(index+1) - yScale(index))
+                          return yScale(index) + 0.7*(yScale(index+1) - yScale(index))
                         })
-                    
+
                         .style('text-anchor', 'middle')
                         .style('vertical-align', 'middle')
                         .style('font-weight', 'bold')
                         .style('fill', 'white')
                         .style('font-size', function(d){
-                            return 0.2*((yScale(index+1) - yScale(index))) + 'px'})
+                          return 0.25*((yScale(index+1) - yScale(index))) + 'px'})
                         .text(function (d) {
-                            if(d.lotId != 'OVERFLOW' && d.lotId != 'RESERVED' && d.lotId.indexOf('Setup') < 0 ){
-                              if(d.lotId.indexOf('WIP')>-1) return 'WIP'
+                          if(d.lotId != 'OVERFLOW' && d.lotId != 'RESERVED' && d.lotId.indexOf('Setup') < 0 ){
+                            if(d.lotId.indexOf('WIP')>-1) return 'WIP'
                               else{
                                 var displayedLotId = d.lotId.substring(3, d.lotId.length)
                                 return displayedLotId
@@ -462,19 +488,19 @@
                             else if(d.lotId.indexOf('Setup') > -1) {
                               // return 'Setup'
                             }
-                        });
-                    operations.exit().remove();
+                          });
+                        operations.exit().remove();
                     // add the label
                     // FIX Label Represent
                     // if (hasLabel) { appendLabel(gParent, yAxisMapping, index, hasLabel, datum); }
-                  
-                });
-            });
-         
-         
-        }
-        
-        
+
+                  });
+});
+
+
+}
+
+
 // ---------- Vertical Line ------------
     // var vertical = d3.select("#process")
     //     .append("div")
@@ -497,8 +523,8 @@
     //         mousex = d3.mouse(this);
     //         mousex = mousex[0] + 5;
     //         vertical.style("left", mousex + "px")});
-      
-    }
+
+  }
 // ---------0----------------------
     // SETTINGS
     timeline.margin = function (p) {
@@ -582,6 +608,12 @@
     timeline.click = function (clickFunc) {
       if (!arguments.length) return click;
       click = clickFunc;
+      return timeline;
+    };
+
+    timeline.dblclick = function (dblclickFunc) {
+      if (!arguments.length) return dblclick;
+      dblclick = dblclickFunc;
       return timeline;
     };
 
@@ -716,32 +748,34 @@
       showAxisNav = !showAxisNav;
       return timeline;
     };
-   
+
     timeline.traveledTime = function(t){
       traveledTime = t;
       return timeline;
     };
     
     timeline.exportXScale = function(){
-        return xScale;
+      return xScale;
     }
     
     timeline.exportYScale = function(){
-        return yScale;
+      return yScale;
     }
     
     timeline.exportColorCycle = function(){
-        return colorCycle;
+      return colorCycle;
     }
 
     timeline.exportC10 = function(){
-        return c10;
+      return c10;
     }
 
     timeline.getHeight = function(){
-        return height;
+      return height;
     }
 
     return timeline;
   };
+  
+
 })();

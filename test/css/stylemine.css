@@ -3,58 +3,7 @@ body {
     flex-direction: row;
     { font-family: 'Helvetica Neue', Helvetica; font-weight: 300; padding: 20px;}
 }
-#bootstrap-overrides .nav>li>a {
-    padding-top: 5px;
-    padding-bottom: 5px;
-}
 
-#statDiv{
-    /*FOR THE STATS OF THE POPUP*/
-}
-
-#dialogbox{
-    text-align: center; 
-    font-size:12px;
-     #Decision{visibility:'hidden'}
-
-}
-
-table{
-    border-collapse: collapse;
-}
-table, td, th {   border: 1px solid black;}
-
-.atributedisplay{
-    column-count:3; 
-    column-gap: 40px; 
-    column-rule-style: solid;
-    column-rule-width: 1px; 
-    margin-bottom: 2em; 
-    width:100%
-}
-
-#attViewss{
-    column-count:3; 
-    column-gap: 40px; 
-    column-rule-style: solid;
-    column-rule-width: 1px; 
-    margin-bottom: 2em; 
-    width:100%
-}
-#Decision{visibility:'hidden'}
-
-#chooseFileBar {
-    display: flex;
-    position: relative;
-    margin-top: 1px; 
-    left: 3em;
-    width: 100%;
-    float: left;
-}
-
-#graphTabs{
-    float:right;
-}
 #left {
     display: flex;
     border-left: 1px solid gray;
@@ -312,7 +261,7 @@ table {
     width: 100%;
 }
 
-/*th { text-align: left; 
+th { text-align: left; 
      border-bottom: 1px solid black;
 }
     th, td {padding: 15px;}
@@ -321,24 +270,17 @@ table {
 
 .tableTitle{
     font-weight: bolder;
-}*/
+}
 
 /* Tab View */
 .myHidden {
   display: none ;
   /*fill: gray;*/
 }
-
-.hiddenBar{
-    visibility: hidden;
+/*controls the viewing of setuptab*/
+.myHiddenSetup {
+    display: none;
 }
-
-.visibleBar{
-    visibility: visible;
-}
-
-/*For the Container Tabs*/
-.chart
 
 /*For Status Viewer*/
 .statusTitle{
@@ -365,33 +307,9 @@ table {
     z-index: -11;
 }
 
-/*for resizing*/
-.svg-container {
-    display: inline-block;
-    position: relative;
-    width: 100%;
-    padding-bottom: 100%; /* aspect ratio */
-    vertical-align: top;
-    overflow: hidden;
-}
-.svg-content-responsive {
-    display: inline-block;
-    position: absolute;
-    top: 10px;
-    left: 0;
-}
-/*end of rezising stuff */
-
 /*Pattern*/
 
 .diagonal-stripe-1 {
   background-image: url("data:image/svg+xml;base64,PHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHdpZHRoPScxMCcgaGVpZ2h0PScxMCc+CiAgPHJlY3Qgd2lkdGg9JzEwJyBoZWlnaHQ9JzEwJyBmaWxsPSd3aGl0ZScvPgogIDxwYXRoIGQ9J00tMSwxIGwyLC0yCiAgICAgICAgICAgTTAsMTAgbDEwLC0xMAogICAgICAgICAgIE05LDExIGwyLC0yJyBzdHJva2U9J2JsYWNrJyBzdHJva2Utd2lkdGg9JzEnLz4KPC9zdmc+Cg==");
   background-repeat: repeat;
-}
-
-/*Table*/
-
-table{
-    border-collapse: collapse;
-    border: 1px solid black;
 }
