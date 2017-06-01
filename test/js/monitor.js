@@ -896,6 +896,7 @@ function displayAttribute(d, datum, divID, scheduleName){
 //         .html(ƒ('html'))
 //         .attr('class', ƒ('cl'))
 //     }
+
     
 //     var currentStatus =  decisionsArray[0];
 //     $('#currentStatus')
