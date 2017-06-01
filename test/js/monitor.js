@@ -644,7 +644,7 @@ function displayAttribute(d, datum, divID, scheduleName){
     var decisionTime = 0;
     if(decisionsArray != null)decisionTime = decisionsArray[0].decisionTime;
     decisionTime = new Date(decisionTime);
-    
+
     var fblocktext = document.createElement("strong");
     fblocktext.innerHTML = 'Lot Id: '+ d.lotId + '<br>'
         +'Starting Time: '+ startingTime.getDate() + '일 ' + addZero(startingTime.getHours()) + ':' + addZero(startingTime.getMinutes()) + '<br>'
@@ -678,7 +678,8 @@ function displayAttribute(d, datum, divID, scheduleName){
  $(function(){
     $( "#dialogbox" ).dialog({
                autoOpen: true,
-               minWidth: 1350,  
+               minWidth: 1350,
+               title: lotId,  
             });
  });
 
