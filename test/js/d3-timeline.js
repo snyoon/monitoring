@@ -132,8 +132,12 @@
         var gParentSize = gParent[0][0].getBoundingClientRect();
         var gParentItem = d3.select(gParent[0][0]);
 
+        // replacing id=clip with id = randnumber
+
+        var ranIDnumber = Math.floor(Math.random() *1000000 );
         g.append("defs").append("clipPath")
-        .attr("id", "clip")
+        .attr("id", ranIDnumber)
+        //.attr("id", "clip")
         .append("rect")
         .attr("width", width - margin.left - margin.right)
         .attr("height", height - margin.top - margin.bottom - margin.top)
@@ -437,7 +441,7 @@ operationsEnter.append(function (d, i) {
                       if(d.lotId !='RESERVED')  dblclick(d, index, datum);
                     })
 //                    .attr('class', 'operationRect')
-                      .attr("clip-path", "url(#clip)")
+                      .attr("clip-path", "url(#"+ranIDnumber+")")
                       .attr("class", function (d, i) {
                         // if(d.lotId == 'RESERVED') return 'operationRect ' + d.productId +' ' + d.lotId + ' ' + 'diagonal-stripe-1'
                         return 'operationRect ' + d.productId +' ' + d.lotId;
@@ -458,7 +462,7 @@ operationsEnter.append(function (d, i) {
                         .attr('class',function(d, i){
                          return 'operationText ' + d.lotId;
                        })
-                        .attr("clip-path", "url(#clip)")
+                        .attr("clip-path", "url(#"+ranIDnumber+")")
                         .attr("x", function(d){
                           return xScale((d.starting_time + d.ending_time)/2)
                         })

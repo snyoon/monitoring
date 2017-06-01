@@ -535,11 +535,13 @@ function displayAttribute(d, datum, divID, scheduleName){
     var decisionInfo = alldecisionInfo[scheduleName];
     var productInfo = allProductInfo[scheduleName];
     var denominator = allDenominator[scheduleName];
+
     
     var lotId = d.lotId;
     if(lotId.indexOf('_')>0) lotId = lotId.substring(0, lotId.indexOf('_'))
         var decisionKey = d.degree + '_' + lotId;
     var decisionsArray = decisionInfo[decisionKey];
+    var currentStatus = decisionsArray[0];
     // create a new popup window
     var newWindow = document.createElement("div");
     newWindow.setAttribute("id", "dialogbox");
@@ -557,16 +559,17 @@ function displayAttribute(d, datum, divID, scheduleName){
     newWindow.appendChild(statDiv);
     descionDiv.appendChild(tbl);
     newWindow.appendChild(descionDiv);
-
-    var ssss =  document.getElementById("left");
-	ssss.appendChild(newWindow);    
-
+    
+	var ssss =  document.getElementById("left");
+	ssss.appendChild(newWindow);
 
     //If Decision stuff is there it will display 
     if(typeof decisionsArray!== "undefined"){
-        
+       	
+
+       	//ported in doesnt work ._. doesnt work in old version eiteher lol.  
         // lineHeight = chart.getHeight();
-        // gantt = d3.select('#process').select('svg')
+        // gantt = d3.select('#'+ divID).select('svg')
         // gantt.append("line")
         // .attr('id', 'decisionLine')    
         // .attr("x1", xScale(decisionsArray[0].decisionTime))  //<<== change your code here
@@ -578,7 +581,7 @@ function displayAttribute(d, datum, divID, scheduleName){
         // .style("fill", "none");
 
 
-        document.getElementById("Decision").style.visibility ="visible";
+        descionDiv.style.visibility ="visible";
         var avLabelRow = tbl.insertRow(0);
         var decisionID = avLabelRow.insertCell(0);
         decisionID.innerHTML = "Decision Id";
@@ -679,7 +682,10 @@ function displayAttribute(d, datum, divID, scheduleName){
     $( "#dialogbox" ).dialog({
                autoOpen: true,
                minWidth: 1350,
-               title: lotId,  
+               title: lotId,
+               my: "bottom center",
+               at: "bottom center",
+
             });
  });
 
