@@ -530,31 +530,46 @@ function addZero(i) {
     return i;
 }
 
+
 function displayAttribute(d, datum, divID, scheduleName){
     var decisionInfo = alldecisionInfo[scheduleName];
     var productInfo = allProductInfo[scheduleName];
     var denominator = allDenominator[scheduleName];
+
     
     var lotId = d.lotId;
     if(lotId.indexOf('_')>0) lotId = lotId.substring(0, lotId.indexOf('_'))
         var decisionKey = d.degree + '_' + lotId;
     var decisionsArray = decisionInfo[decisionKey];
+    var currentStatus = decisionsArray[0];
     // create a new popup window
-    var newWindow = window.open("", null, "top = 2000000,height=400,width=1107,status=yes,toolbar=no,menubar=no,location=no");
-    var popuphead = newWindow.document.getElementsByTagName("head")[0];
-    newWindow.document.write("<html><head><title>"+ lotId +"</title><link rel=stylesheet type=text/css href=css/bootstrap.css /> </head><style>*{text-align: center; font-size:12px;}table { border-collapse: collapse;}table, td, th {   border: 1px solid black;} .atributedisplay{column-count:3; column-gap: 40px; column-rule-style: solid;column-rule-width: 1px; margin-bottom: 2em; width:100%} #Decision{visibility:'hidden'}</style></head><body></body>");
-    var popupBody = newWindow.document.getElementsByTagName("body");
-    //newWindow.document.write("<ul id= nwViews class='nav nav-tabs'><li class='nav active'><a data-toggle='tab' href=#d>Decision</a></li><li class='nav'><a data-toggle='tab' href='#at'>Attributes</a></li></ul><div id= nwContent class='tab-content'><div id='d' class='tab-pane fade active in'><table id='dtable'></table></div><div id='at' class='tab-pane fade'><div id='attViewss'></div></div></div>")
-    newWindow.document.write("<div id='attViewss' class='atributedisplay'></div><div id='Decision'><strong>Decisions</strong><table id='dtable'></table></div>");
-    var tbl = newWindow.document.getElementById("dtable");
-    tbl.setAttribute("width", "100%");
+    var newWindow = document.createElement("div");
+    newWindow.setAttribute("id", "dialogbox");
 
+    var statDiv =document.createElement("div");
+    statDiv.setAttribute("id", "attViewss");
+    statDiv.setAttribute("class", "atributedisplay")
+
+    var descionDiv = document.createElement("div");
+    descionDiv.setAttribute("id", "Decision");
+
+    var tbl = document.createElement("table");
+    tbl.setAttribute("id", "dtable");
+
+    newWindow.appendChild(statDiv);
+    descionDiv.appendChild(tbl);
+    newWindow.appendChild(descionDiv);
+    
+	var ssss =  document.getElementById("left");
+	ssss.appendChild(newWindow);
 
     //If Decision stuff is there it will display 
     if(typeof decisionsArray!== "undefined"){
-        
+       	
+
+       	//ported in doesnt work ._. doesnt work in old version eiteher lol.  
         // lineHeight = chart.getHeight();
-        // gantt = d3.select('#process').select('svg')
+        // gantt = d3.select('#'+ divID).select('svg')
         // gantt.append("line")
         // .attr('id', 'decisionLine')    
         // .attr("x1", xScale(decisionsArray[0].decisionTime))  //<<== change your code here
@@ -566,7 +581,7 @@ function displayAttribute(d, datum, divID, scheduleName){
         // .style("fill", "none");
 
 
-        newWindow.document.getElementById("Decision").style.visibility ="visible";
+        descionDiv.style.visibility ="visible";
         var avLabelRow = tbl.insertRow(0);
         var decisionID = avLabelRow.insertCell(0);
         decisionID.innerHTML = "Decision Id";
@@ -625,17 +640,14 @@ function displayAttribute(d, datum, divID, scheduleName){
             rewardCell.innerHTML = dobj.reward.toFixed(3);
         }
     }
-    var attviewDiv = newWindow.document.getElementById("attViewss");
+    var attviewDiv = document.getElementById("attViewss");
 
     var startingTime = new Date(d.starting_time);
     var endingTime = new Date(d.ending_time);    
     var decisionTime = 0;
     if(decisionsArray != null)decisionTime = decisionsArray[0].decisionTime;
     decisionTime = new Date(decisionTime);
-   
-    var currentStatus =  decisionsArray[0];
-    var currentssss = newWindow.document.getElementById("Decision");
-    var cStatusText =  document.createElement("strong");
+
     var fblocktext = document.createElement("strong");
     fblocktext.innerHTML = 'Lot Id: '+ d.lotId + '<br>'
         +'Starting Time: '+ startingTime.getDate() + '일 ' + addZero(startingTime.getHours()) + ':' + addZero(startingTime.getMinutes()) + '<br>'
@@ -665,7 +677,21 @@ function displayAttribute(d, datum, divID, scheduleName){
        +'투입 가능량: '+ currentStatus['currentCSTQuantity'] 
         + '<br>';
  attviewDiv.appendChild(fblocktext);
+
+ $(function(){
+    $( "#dialogbox" ).dialog({
+               autoOpen: true,
+               minWidth: 1350,
+               title: lotId,
+               my: "bottom center",
+               at: "bottom center",
+
+            });
+ });
+
 }
+
+//------------------------------------------------------------------------------------------------------------
 
 // ------------------------------------- Decision View ------------------------------------------------
 // var columns = [

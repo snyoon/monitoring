@@ -7,6 +7,42 @@ body {
     padding-top: 5px;
     padding-bottom: 5px;
 }
+
+#statDiv{
+    /*FOR THE STATS OF THE POPUP*/
+}
+
+#dialogbox{
+    text-align: center; 
+    font-size:12px;
+     #Decision{visibility:'hidden'}
+
+}
+
+table{
+    border-collapse: collapse;
+}
+table, td, th {   border: 1px solid black;}
+
+.atributedisplay{
+    column-count:3; 
+    column-gap: 40px; 
+    column-rule-style: solid;
+    column-rule-width: 1px; 
+    margin-bottom: 2em; 
+    width:100%
+}
+
+#attViewss{
+    column-count:3; 
+    column-gap: 40px; 
+    column-rule-style: solid;
+    column-rule-width: 1px; 
+    margin-bottom: 2em; 
+    width:100%
+}
+#Decision{visibility:'hidden'}
+
 #chooseFileBar {
     display: flex;
     position: relative;
@@ -276,7 +312,7 @@ table {
     width: 100%;
 }
 
-th { text-align: left; 
+/*th { text-align: left; 
      border-bottom: 1px solid black;
 }
     th, td {padding: 15px;}
@@ -285,7 +321,7 @@ th { text-align: left;
 
 .tableTitle{
     font-weight: bolder;
-}
+}*/
 
 /* Tab View */
 .myHidden {
