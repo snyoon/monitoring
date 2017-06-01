@@ -471,7 +471,7 @@ operationsEnter.append(function (d, i) {
                         .style('font-weight', 'bold')
                         .style('fill', 'white')
                         .style('font-size', function(d){
-                          return 0.2*((yScale(index+1) - yScale(index))) + 'px'})
+                          return 0.25*((yScale(index+1) - yScale(index))) + 'px'})
                         .text(function (d) {
                           if(d.lotId != 'OVERFLOW' && d.lotId != 'RESERVED' && d.lotId.indexOf('Setup') < 0 ){
                             if(d.lotId.indexOf('WIP')>-1) return 'WIP'

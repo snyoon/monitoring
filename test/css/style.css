@@ -3,7 +3,10 @@ body {
     flex-direction: row;
     { font-family: 'Helvetica Neue', Helvetica; font-weight: 300; padding: 20px;}
 }
-
+#bootstrap-overrides .nav>li>a {
+    padding-top: 5px;
+    padding-bottom: 5px;
+}
 #chooseFileBar {
     display: flex;
     position: relative;
