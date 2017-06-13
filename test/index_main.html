@@ -26,30 +26,40 @@ if (session.getAttribute("u_id")==null) {
          rel = "stylesheet">
     
     
-<body class='cbp-spmenu-push'>
+<body id="body" class='cbp-spmenu-push'>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
     <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
     <script src = "https://code.jquery.com/jquery-1.10.2.js"></script>
-      <script src = "https://code.jquery.com/ui/1.10.4/jquery-ui.js"></script>
+    <script src = "https://code.jquery.com/ui/1.10.4/jquery-ui.js"></script>
     <div id='left'>
-        <div id="chooseFileBar" class="container">
-            <input id="myFiles" type='file' accept='text/plain' onchange='openFile(event)'>
-            <!-- TODO: Make a clear all button -->
+            <ul id="timelineandstatistics" class="nav nav-tabs">
+                <li class="nav active">
+                <a data-toggle="tab" href="#graphTabs"> Time Lines</a>
+                </li>
+                <li class="nav">
+                <a data-toggle="tab" href="#comparepage"> Compare Page</a>
+                </li>
+                <input id="myFiles" type='file' accept='text/plain' onchange='openFile(event)'>
+            <div id="graphstats" class="tab-content">
+                <div id= "graphTabs" class="tab-pane fade active in">
+                    <ul id="listOfCharts" class="nav nav-tabs"> </ul>
+                    <div id="tabcontentsChart" class="tab-content">
+                    </div>
+                </div>
+                <div id="comparepage" class="tab-pane fade"></div>
+            </div>
+            </ul>
+            </div>
 
         </div>
 
         <!-- This is going to hold all the graphs -->
-        <div id= "graphTabs">
+    <!--     <div id= "graphTabs">
             <ul id="listOfCharts" class="nav nav-tabs"> </ul>
             <div id="tabcontentsChart" class="tab-content">
-            <!-- this is the structure just to help code  -->
-                <!-- <div>
-                 <ul id="chartTypes" class="nav-tabs"></ul> DONT UNOCOMMENT
-                 <div id= chartTypesContent class=tab-coneten> <>
-                </div> -->
             </div>
         </div>
-
+ -->
         
         <div id="hoverRes">
             <div class="coloredDiv"></div>

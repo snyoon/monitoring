@@ -106,26 +106,32 @@ var openFile = function (event) {
             tempObject['value'] = TKPI[key]
             TKPIs.push(tempObject)
         }
+        TKPIs.sort(function(a,b){
+        	if(a.key < b.key)
+        		return -1;
+        	if(a.key > b.key)	
+        		return 1
+        	return 0;
+        });
         var TmaxTime = inputData['KPIMaxTime']
         var TproductionStat = {};
         for(var i = 0; i < inputData['ProductionStatus'].length; i++){
             var tempProduction = inputData['ProductionStatus'][i];
             TproductionStat[tempProduction.id] = tempProduction.values;
         }
-        
         var newSchedule = new scheduleObj(TscheduleName, 
             TganttData, 
             TproductInfo, 
             TdecisionInfo, 
             Tdenominator, 
-            TKPIs,
+            TKPI,
             TmaxTime,
-            TproductionStat);
+            TproductionStat,
+            TKPIs);
 
         activeSchedule = newSchedule;
         //adds the newly read file onto the list of schedules. 
         schedules.push(newSchedule);
-
         //adding a tab and tab-content for the chart to the DOC
         if(schedules.length >1){
             //this is making non active tabs 
@@ -157,7 +163,7 @@ var openFile = function (event) {
             chartNav.setAttribute("class", "nav nav-tabs");
             div.appendChild(chartNav);
 
-            //makes the tabs for scheudle and statistics view
+            //makes the tabs for schedule and statistics view
             var chartNavProc = document.createElement("li");
             chartNavProc.setAttribute("class", "nav active");
             var chartNavProcA = document.createElement("a");
@@ -272,9 +278,9 @@ var openFile = function (event) {
 
         }
         
-
-        timelineHover(traveledTime, href11, TscheduleName);
+      	timelineHover(traveledTime, href11, TscheduleName);
         ProductionStatus(TKPIs, TproductionStat, href22, TKPI);
+        comparePage();
         for (var i = 0; i < TganttData.length; i++) {
             var tempLabel = TganttData[i]['label'];
             var tempTimes = TganttData[i]['times']
@@ -426,6 +432,7 @@ if( button !== 'showBottom' ) {
 function timelineHover(traveledTime, divID, scheduleName) {
     var boolSelected = false;
     var clickedElement = "";
+    
     chart = d3.timeline().width(processWidth).stack().margin(margin)
     .traveledTime(traveledTime).showTimeAxisTick().hover(function (d, i, datum) {
             // d is the current rendering object
@@ -434,7 +441,7 @@ function timelineHover(traveledTime, divID, scheduleName) {
             if (d.starting_time > traveledTime) return;
             //this is the clicking on a single thing. 
         }).click(function (d, i, datum) {
-            console.log("single clicked")
+
             var selectedLotId = d.lotId;
             var eventId = d.eventId;
             if(d.lotId.indexOf(clickedElement) > -1 && boolSelected == true){
@@ -463,37 +470,6 @@ function timelineHover(traveledTime, divID, scheduleName) {
                     boolSelected = true;
                 buttonOn = false;
             }
-        }).dblclick(function (d, i, datum) {
-            console.log("double clicked ")
-            var selectedLotId = d.lotId;
-            var eventId = d.eventId;
-            displayAttribute(d, datum,divID, scheduleName);
-            // if(d.lotId.indexOf(clickedElement) > -1 && boolSelected == true){
-            //  var rects = d3.select("#"+divID).selectAll('.operationRect')
-            //  rects.style("fill", function (d, i) {
-            //   if(d.lotId  == 'RESERVED') return 'url(#diagonal-stripe-1)'  
-            //       else if(d.lotId =='HeteroSetup') return '000000'
-            //           else if (d.lotId =='HomoSetup') return '545454'  
-            //               else return colorCycle[d.productGroup];
-            //       })   
-            //      // d3.selectAll('#attribute').classed('cbp-spmenu-open', false)
-            //      boolSelected = false;
-            //      clickedElement = '';
-            //  }
-            //  else if(d.lotId != clickedElement && boolSelected == true){
-
-            //  }
-            //  else{
-            //     d3.selectAll('#'+selectedLotId)
-            //     displayAttribute(d, datum,divID, scheduleName)
-            //     selectLots(selectedLotId, eventId,divID)
-            //     if (d.lotId.indexOf('_' ) >0){
-            //         clickedElement = d.lotId.substring(0, d.lotId.indexOf('_'))
-            //     }
-            //     else clickedElement = d.lotId
-            //         boolSelected = true;
-            //     buttonOn = false;
-            // }
         })
 
         var svg = d3.select("#" + divID).append("svg").attr("width", processWidth);
@@ -504,6 +480,8 @@ function timelineHover(traveledTime, divID, scheduleName) {
         yScale = chart.exportYScale();
         colorCycle = chart.exportColorCycle();
         d3.select('.operations').data([ganttData]).exit().remove();
+
+
 
     //Disables the doubleclick zoom function on the graph.    
     d3.selectAll("svg").on("dblclick.zoom", null);
@@ -526,13 +504,13 @@ function displayAttribute(d, datum, divID, scheduleName){
     var productInfo = allProductInfo[scheduleName];
     var denominator = allDenominator[scheduleName];
 
-    
+	console.log(divID);    
     var lotId = d.lotId;
     if(lotId.indexOf('_')>0) lotId = lotId.substring(0, lotId.indexOf('_'))
         var decisionKey = d.degree + '_' + lotId;
     var decisionsArray = decisionInfo[decisionKey];
     var currentStatus = decisionsArray[0];
-    // create a new popup window
+    // create a new popup windowsssss
     var newWindow = document.createElement("div");
     newWindow.setAttribute("id", "dialogbox");
 
@@ -550,9 +528,9 @@ function displayAttribute(d, datum, divID, scheduleName){
     descionDiv.appendChild(tbl);
     newWindow.appendChild(descionDiv);
     
-	var ssss =  document.getElementById("left");
+	var ssss =  document.getElementById("graphTabs");
 	ssss.appendChild(newWindow);
-
+	
     //If Decision stuff is there it will display 
     if(typeof decisionsArray!== "undefined"){
        	
@@ -671,10 +649,11 @@ function displayAttribute(d, datum, divID, scheduleName){
  $(function(){
     $( "#dialogbox" ).dialog({
                autoOpen: true,
-               minWidth: 1350,
+               width: 1350,
+               collision: "none",
+               
                title: lotId,
-               my: "bottom center",
-               at: "bottom center",
+               position:{my:"center bottom", at: "center bottom"}
 
             });
  });
@@ -836,6 +815,7 @@ function displayAttribute(d, datum, divID, scheduleName){
 //         .on("mouseout", function(d) {
 //             d3.select(this).style("cursor", "default")
 //         })
+////////////////////THIS SIS THE HTING CONTRONLLLING THE FILL WHEN CLICKED DSKLFJSDL
 //         .on("click", function (d, i) {
 //             if(boolSelected == true){
 //                 var decisionLotId = d.html.substring(d.html.indexOf('-')+1, d.html.length)
@@ -1005,10 +985,8 @@ function ProductionStatus(TKPIs, TproductionStat, href22, TKPI){
      .attr("x", (graphWidth / 2))             
      .attr("y", 0 - (margin.top / 2))
      .text("KPI");
-     
      var kpis = svg1.selectAll('.KPIs')
      .data(TKPIs)
-     
      kpis.enter()
      .append('g')
      .attr('class', 'KPIs')
@@ -1391,7 +1369,7 @@ function drawVerticalLine(inputSvg, scaleX, scaleY, max){
 
 // Creates new scheduleObj with the given properties. 
 function scheduleObj(name, ganttData, productInfo, decisionInfo, denominator, KPI, maxTime,
-    productionStatus) {
+    productionStatus, kpis) {
     this.name = name;
     this.ganttData = ganttData;
     this.productInfo = productInfo;
@@ -1401,7 +1379,7 @@ function scheduleObj(name, ganttData, productInfo, decisionInfo, denominator, KP
     this.maxTime = maxTime;
     this.productionStatus = productionStatus;
     this.divID ="";
-
+    this.KPIs = kpis;
 }
 
 
@@ -1409,3 +1387,406 @@ function scheduleObj(name, ganttData, productInfo, decisionInfo, denominator, KP
 // $('a[data-toggle="tab"]').on('shown.bs.tab', function(e){
 //     activeSchedule = 
 // })
+
+//---------------------------- Compare Page Stuff ------------------------------------------------
+
+
+// at each load it deletes the previous compare contents and creates new ones.
+function comparePage(){
+	$("#comparepage").html("<br><br>");
+	
+	var numOfSchedules = schedules.length;
+	var widthDivision = window.innerWidth / numOfSchedules;
+	widthDivision = widthDivision-15;
+	for (var i = 0; i<schedules.length; i ++){
+		var s = schedules[i];
+		var comparepagediv = document.getElementById("comparepage");
+		var newcontainer = document.createElement("div");
+		newcontainer.setAttribute("class", "cpagecontainer");
+		newcontainer.setAttribute("id","comparepage"+i);
+		comparepagediv.appendChild(newcontainer);
+		compareHelper(s.KPIs, s.productionStatus,s.KPI, "comparepage" + i, widthDivision, s.name)
+	}
+
+}
+
+function compareHelper(TKPIs, TproductionStat, TKPI, conatinerName, dividedW, name){
+    
+    var canvasWidth = processWidth/3.3;
+    graphWidth = dividedW - graphMargin.left - graphMargin.right;
+    graphHeight = 400 - graphMargin.top - graphMargin.bottom;
+    
+
+     // KPI
+     var svg1 = d3.select("#"+conatinerName).append('svg').attr('id', 'KPIText').attr('width', dividedW).attr('height', 400)
+     .append('g').attr("transform", "translate(" + graphMargin.left + "," + (graphMargin.top)+ ")");
+     
+     var fontSize = 18; 
+
+
+     svg1.append("text")
+     .attr('class', 'statusTitle')
+     .attr("x", (graphWidth / 3))             
+     .attr("y", 0 - (margin.top / 2))
+     .text(name);
+     
+     svg1.append("text")
+     .attr('class', 'statusTitle')
+     .attr("x", 14)             
+     .attr("y", 18 - (margin.top / 2))
+     .text("KPI");
+
+     var kpis = svg1.selectAll('.KPIs')
+     .data(TKPIs)
+     kpis.enter()
+     .append('g')
+     .attr('class', 'KPIs')
+     .attr("transform", function(d, i) { return "translate(0," + (i * (fontSize*1.7) +30)+ ")"; })
+     .append('text')
+     .attr('x', 12)
+     .attr('y', 3)
+     .text(function(d){
+        if(d.key == 'Stocker_size') return d.key + ": " + d.value;
+        if(d.key == 'Makespan') return d.key + ": " + (d.value/60).toFixed(1) + " (min)";
+        if(d.key == 'Total_Wiplevel') return d.key + ": " + d.value;
+        if(d.key == 'AVG_Wiplevel') return d.key + ": " + d.value.toFixed(2);
+        if(d.key == 'Waiting_Time') return 'Waiting Time / TAT : ' + d.value.toFixed(3);
+        else return d.key + ": " + d.value.toFixed(3);
+    })
+     .style('font-size', fontSize)
+     
+     kpis.exit().remove();
+
+     
+     svg1 = d3.select("#" + conatinerName).append('br')
+    // WIP Level
+    svg1 = d3.select("#" + conatinerName).append('svg').attr('width', dividedW).attr('height', 400)
+    .append('g').attr("transform", "translate(" + graphMargin.left + "," + graphMargin.top+ ")");
+    
+    var xScale = d3.time.scale()
+    .domain([d3.min(TproductionStat['WIPLevel'], function(d){return d.time}), d3.max(TproductionStat['WIPLevel'], function(d){return d.time})])
+        .range([0, graphWidth]); // FIX
+        
+        var xAxis = d3.svg.axis()
+        .scale(xScale)
+        .orient('bottom')
+        .ticks(8)
+        .tickFormat(tickFormat.format)
+        .tickSize(tickFormat.tickSize);
+        
+        var yScale = d3.scale.linear()
+        .domain([0, TKPI['Stocker_size']+1])
+        .range([graphHeight, 0]);
+        
+        var yAxis = d3.svg.axis()
+        .scale(yScale)
+        .orient('left')
+        .tickSize(2);    
+        
+        var line = d3.svg.line()
+        .x(function(d) { return xScale(d.time); })
+        .y(function(d) { return yScale(+d.number); })
+//            .inperpolate('linear') ;
+
+
+var horizontalLine = svg1
+.append('line')
+.attr("x1", xScale(d3.min(TproductionStat['WIPLevel'], function(d){return d.time})))
+.attr("y1", yScale(TKPI['Stocker_size']))
+.attr("x2", xScale(d3.max(TproductionStat['WIPLevel'], function(d){return d.time})))
+.attr("y2", yScale(TKPI['Stocker_size']))
+.style("stroke-width", 1)
+.style("stroke", "red")
+
+drawVerticalLine(svg1, xScale, yScale, TKPI['Stocker_size'])
+
+svg1.append("text")
+.attr('class', 'statusTitle')
+.attr("x", (graphWidth / 2))             
+.attr("y", 0 - (margin.top / 2))
+.text("WIP Level");
+
+svg1.append('path')
+.attr('class', 'statusLine')
+.attr("d", line(TproductionStat['WIPLevel']))
+
+svg1.append("g")
+.attr("class", "x axis")
+.attr("transform", "translate(0," + graphHeight + ")")
+.call(xAxis);
+
+svg1.append("g")
+.attr("class", "y axis")
+.call(yAxis);
+	
+	svg1 = d3.select("#" + conatinerName).append('br')
+     // Input Count
+     svg1 = d3.select("#" + conatinerName).append('svg').attr('width', dividedW).attr('height', 400)
+     .append('g').attr("transform", "translate(" + graphMargin.left + "," + graphMargin.top+ ")");
+     
+     var xScale = d3.time.scale()
+     .domain([d3.min(TproductionStat['InputCount'], function(d){return d.time}), d3.max(TproductionStat['InputCount'], function(d){return d.time})])
+        .range([0, graphWidth]); // FIX
+        
+        var xAxis = d3.svg.axis()
+        .scale(xScale)
+        .orient('bottom')
+        .tickFormat(tickFormat.format)
+        .tickSize(tickFormat.tickSize);
+        
+        var yScale = d3.scale.linear()
+        .domain([0, d3.max(TproductionStat['InputCount'], function(d){return d.number})])
+        .range([graphHeight, 0]);
+        
+        var yAxis = d3.svg.axis()
+        .scale(yScale)
+        .orient('left')
+        .tickSize(2);    
+        
+        svg1.append("text")
+        .attr('class', 'statusTitle')
+        .attr("x", (graphWidth / 2))             
+        .attr("y", 0 - (margin.top / 2))
+        .text("투입량");
+        
+        svg1.append('path')
+        .attr('class', 'statusLine')
+        .attr("d", line(TproductionStat['InputCount']))
+
+        svg1.append('path')
+        .attr('class', 'statusLine2')
+        .attr("d", line(TproductionStat['InTargetCount']))
+        
+        svg1.append("g")
+        .attr("class", "x axis")
+        .attr("transform", "translate(0," + graphHeight + ")")
+        .call(xAxis);
+
+        svg1.append("g")
+        .attr("class", "y axis")
+        .call(yAxis);
+
+        var dataLabel = []
+        dataLabel.push('In Target')
+        dataLabel.push('투입량')
+        
+        var legend = svg1.selectAll(".legend")
+        .data(dataLabel)
+        .enter().append("g")
+        .attr("class", "legend")
+        .attr("transform", function(d, i) { return "translate(0," + ((i * 20))+ ")"; });          
+        legend.append("rect")
+        .attr("x", graphWidth - graphWidth*0.98)
+        .attr("width", 18)
+        .attr("height", 18)
+        .style("fill", function(d, i){ 
+            if (d.indexOf('In') > -1){
+                return 'tomato'
+            }else{
+                return '#3366cc'
+            }
+            
+        });
+
+      // draw legend text
+      legend.append("text")
+      .attr("x", graphWidth - graphWidth*0.98 + 20)
+      .attr("y", 9)
+      .attr("dy", ".35em")
+      .style("text-anchor", "front")
+      .text(function(d) { return d;})
+      
+      drawVerticalLine(svg1, xScale, yScale, d3.max(TproductionStat['InputCount'], function(d){return d.number}))
+    // Ship Count
+    //THIS ONE USED TO BE STATUS_2
+    svg1 = d3.select("#" + conatinerName).append('br')
+    shipSvg = d3.select("#"+ conatinerName).append('svg').attr('width', dividedW).attr('height', 400)
+    .append('g').attr("transform", "translate(" + graphMargin.left + "," + graphMargin.top+ ")");
+    
+    shipXScale = d3.time.scale()
+    .domain([d3.min(TproductionStat['ShipCount'], function(d){return (d.time)}), d3.max(TproductionStat['ShipCount'], function(d){return (d.time)})])
+        .range([0, graphWidth]); // FIX
+        
+        shipXAxis = d3.svg.axis()
+        .scale(shipXScale)
+        .orient('bottom')
+        .tickFormat(tickFormat.format)
+        .tickSize(tickFormat.tickSize);
+        
+        
+        shipYScale = d3.scale.linear()
+        .domain([0, d3.max(TproductionStat['ShipCount'], function(d){return d.number})])
+        .range([graphHeight, 0]);
+        
+        shipYAxis = d3.svg.axis()
+        .scale(shipYScale)
+        .orient('left')
+        .tickSize(2);    
+        
+        shipSvg.append("text")
+        .attr('class', 'statusTitle')
+        .attr("x", (graphWidth / 2))             
+        .attr("y", 0 - (margin.top / 2))
+        .text("산출물");
+        
+        shipLine = d3.svg.line()
+        .x(function(d) { return shipXScale(d.time); })
+        .y(function(d) { return shipYScale(+d.number); })
+
+        shipSvg.append('path')
+        .attr('id', 'defaultShipLine')
+        .attr('class', 'statusLine')
+        .attr("d", shipLine(TproductionStat['ShipCount']))
+        
+        shipSvg.append("g")
+        .attr("class", "x axis")
+        .attr('id', 'shipXAxis')
+        .attr("transform", "translate(0," + graphHeight + ")")
+        .call(shipXAxis);
+
+        shipSvg.append("g")
+        .attr("class", "y axis")
+        .call(shipYAxis);
+   // drawVerticalLine(shipSvg, shipXScale, shipYScale, d3.max(productionStatus['ShipCount'], function(d){return d.number}))
+   
+   var verticalLine = shipSvg
+   .append('line')
+   .attr("x1", shipXScale(86399*1000-32400000))
+   .attr("y1", shipYScale(0))
+   .attr("x2", shipXScale(86399*1000-32400000))
+   .attr("y2", shipYScale(d3.max(TproductionStat['ShipCount'], function(d){return d.number})))
+   .attr('class','dateDividerShip')
+   .style("stroke-width", 1)
+   .style("stroke", "gray")
+   var verticalLine2 = shipSvg
+   .append('line')
+   .attr("x1", shipXScale(86399*2*1000-32400000))
+   .attr("y1", shipYScale(0))
+   .attr("x2", shipXScale(86399*2*1000-32400000))
+   .attr("y2", shipYScale(d3.max(TproductionStat['ShipCount'], function(d){return d.number})))
+   .attr('class','dateDividerShip')
+   .style("stroke-width", 1)
+   .style("stroke", "gray")
+    // Util Graph 
+    svg1 = d3.select("#" + conatinerName).append('br')
+    svg1 = d3.select("#" + conatinerName).append('svg').attr('width', dividedW).attr('height', 400)
+    .append('g').attr("transform", "translate(" + graphMargin.left + "," + (graphMargin.top)+ ")");
+    
+    
+    var xScale = d3.time.scale()
+    .domain([d3.min(TproductionStat['WB_Util'], function(d){return d.time}), d3.max(TproductionStat['WB_Util'], function(d){return d.time})])
+        .range([0, graphWidth]); // FIX
+        
+        var xAxis = d3.svg.axis()
+        .scale(xScale)
+        .orient('bottom')
+        .tickFormat(tickFormat.format)
+        .tickSize(tickFormat.tickSize);
+        
+        var yScale = d3.scale.linear()
+        .domain([0, d3.max(TproductionStat['WB_Util'], function(d){return d.number+0.02})])
+        .range([graphHeight, 0]);
+        
+        var yAxis = d3.svg.axis()
+        .scale(yScale)
+        .orient('left')
+        .tickSize(2);    
+        
+        svg1.append("text")
+        .attr('class', 'statusTitle')
+        .attr("x", (graphWidth / 2))             
+        .attr("y", 0 - (margin.top / 2))
+        .text("Util Graph");
+        
+        svg1.append('path')
+        .attr('class', 'statusLine2')
+        .attr("d", line(TproductionStat['DA_Util']))
+
+        svg1.append('path')
+        .attr('class', 'statusLine')
+        .attr("d", line(TproductionStat['WB_Util']))
+
+        svg1.append("g")
+        .attr("class", "x axis")
+        .attr("transform", "translate(0," + graphHeight + ")")
+        .call(xAxis);
+
+        svg1.append("g")
+        .attr("class", "y axis")
+        .call(yAxis);
+        
+        var dataLabel = []
+        dataLabel.push('DA Util')
+        dataLabel.push('WB Util')
+        
+        legend = svg1.selectAll(".legend")
+        .data(dataLabel)
+        .enter().append("g")
+        .attr("class", "legend")
+        .attr("transform", function(d, i) { return "translate(0," + ((i * 20) + graphHeight*0.87)+ ")"; });          
+        legend.append("rect")
+        .attr("x", graphWidth - graphWidth*0.98)
+        .attr("width", 18)
+        .attr("height", 18)
+        .style("fill", function(d, i){
+            if (d.indexOf('DA') > -1){
+                return 'tomato'
+            }else{
+                return '#3366cc'
+            }
+            
+        });
+
+      // draw legend text
+      legend.append("text")
+      .attr("x", graphWidth - graphWidth*0.98 + 20)
+      .attr("y", 9)
+      .attr("dy", ".35em")
+      .style("text-anchor", "front")
+      .text(function(d) { return d;})
+      
+
+     // Merge Count
+ //    svg1 = d3.select("#status_2").append('svg').attr('width', canvasWidth).attr('height', 400)
+ //               .append('g').attr("transform", "translate(" + graphMargin.left + "," + (graphMargin.top)+ ")");
+ 
+ //    var xScale = d3.time.scale()
+ //        .domain([0, d3.max(productionStatus['MergeCount'], function(d){return d.time*1000})])
+ //        .range([0, graphWidth]); // FIX
+ 
+ //    var xAxis = d3.svg.axis()
+ //        .scale(xScale)
+ //        .orient('bottom')
+ //        .tickFormat(tickFormat.format)
+ //        .tickSize(tickFormat.tickSize); 
+ 
+ //    var yScale = d3.scale.linear()
+ //         .domain([0, d3.max(productionStatus['MergeCount'], function(d){return d.number})])
+ //         .range([graphHeight, 0]);
+ 
+ //    var yAxis = d3.svg.axis()
+ //        .scale(yScale)
+ //        .orient('left')
+ //        .tickSize(2);    
+ 
+ //    svg1.append("text")
+ //        .attr('class', 'statusTitle')
+ //        .attr("x", (graphWidth / 2))             
+ //        .attr("y", 0 - (margin.top / 2))
+ //        .text("Merge Count");
+ 
+ //    svg1.append('path')
+ //        .attr('class', 'statusLine')
+ //        .attr("d", line(productionStatus['MergeCount']))
+ 
+	// svg1.append("g")
+	// 	.attr("class", "x axis")
+	// 	.attr("transform", "translate(0," + graphHeight + ")")
+	// 	.call(xAxis);
+
+	// svg1.append("g")
+	// 	.attr("class", "y axis")
+	// 	.call(yAxis);
+
+
+}

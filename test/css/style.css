@@ -13,10 +13,19 @@ body {
 }
 
 #dialogbox{
-    text-align: center; 
-    font-size:12px;
-     #Decision{visibility:'hidden'}
+    text-align: center;
+    /*top:600px;*/
+    font-size:10px;
+    #Decision{visibility:'hidden'}
 
+}
+.ui-dialog{
+    top:1500 !important;
+    position: static;
+}
+.cpagecontainer{
+    display: inline-block;
+    
 }
 
 table{
@@ -45,16 +54,12 @@ table, td, th {   border: 1px solid black;}
 
 #chooseFileBar {
     display: flex;
-    position: relative;
     margin-top: 1px; 
     left: 3em;
     width: 100%;
-    float: left;
 }
 
-#graphTabs{
-    float:right;
-}
+
 #left {
     display: flex;
     border-left: 1px solid gray;
@@ -342,7 +347,8 @@ table {
 
 /*For Status Viewer*/
 .statusTitle{
-    text-anchor: middle;
+    text-align: left;
+    text-anchor: left;
     font-size: 16px;
     font-weight: bold;
 }
