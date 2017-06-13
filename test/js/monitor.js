@@ -69,9 +69,6 @@ var openFile = function (event) {
     //d3.select('.remove').remove()
     //d3.select('#chart').selectAll('svg').remove();
     //Makes the bars hidden.
-    document.getElementById("views").classList.remove("visibleBar");
-    document.getElementById("views").classList.add("hiddenBar");
-
     var input = event.target;
     var reader = new FileReader();
 
@@ -298,15 +295,7 @@ var openFile = function (event) {
         window.alert("No File Selected");
     }
     
-    if(dataCount > 0){
-        //Makes the View tabs visible
-        document.getElementById("views").classList.remove("hiddenBar");
-        document.getElementById("views").classList.add("visibleBar");
-    }else{
-        //Makes the bars hidden.
-        document.getElementById("views").classList.remove("visibleBar");
-        document.getElementById("views").classList.add("hiddenBar");
-    }
+    
 };
 
 var openCompareFile = function (event) {
