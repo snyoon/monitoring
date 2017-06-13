@@ -28,7 +28,7 @@
         // colorCycle = d3.scale.category20(),
 
         colorPropertyName = null,
-        display = "rect",
+        display = "rect", 
         beginning = 0,
         labelMargin = 0,
         ending = 0,
@@ -86,7 +86,7 @@
       };
       
       
-      height = window.innerHeight - document.getElementById("chooseFileBar").offsetHeight - document.getElementById("listOfCharts").offsetHeight;
+      height = window.innerHeight - document.getElementById("myFiles").offsetHeight - document.getElementById("listOfCharts").offsetHeight;
 
       var panExtent;
       var appendLabelAxis = function(g, yAxis) {
@@ -188,7 +188,7 @@
       xScale = d3.time.scale()
         // .domain([panExtent.x[0]>(-ending/ 2)?panExtent.x[0]:(-ending / 2),
         //         panExtent.x[1]< ending ?panExtent.x[1]:ending])
-        .domain([beginning, ending])
+        .domain([beginning, ending])  
         .range([margin.left, width - margin.right]); // FIX
 
         var xAxis = d3.svg.axis()
