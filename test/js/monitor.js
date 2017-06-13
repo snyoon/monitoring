@@ -302,11 +302,6 @@ var openFile = function (event) {
         window.alert("No File Selected");
     }
     
-<<<<<<< HEAD
-    
-=======
-
->>>>>>> 54c8261363ad42950dec2a52bee62543ab5097fc
 };
 
 var openCompareFile = function (event) {
