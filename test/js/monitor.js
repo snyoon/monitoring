@@ -82,7 +82,8 @@ var openFile = function (event) {
     var text = reader.result;
     var node = document.getElementById('output');
     testOut = reader.result;
-    inputData = JSON.parse(testOut)
+    inputData = JSON.parse(testOut);
+    inputCorrectCheck(inputData);
     var index = 0;
         //Creates the scheduleObj for the read schedule
         var TscheduleName = document.getElementById("myFiles").files[0].name;
@@ -294,7 +295,6 @@ var openFile = function (event) {
         })
     };
 
-
     // For when you cancel file selection
     try{
         reader.readAsText(input.files[0]);
@@ -502,8 +502,7 @@ function displayAttribute(d, datum, divID, scheduleName){
     var decisionInfo = alldecisionInfo[scheduleName];
     var productInfo = allProductInfo[scheduleName];
     var denominator = allDenominator[scheduleName];
-
-	console.log(divID);    
+   
     var lotId = d.lotId;
     if(lotId.indexOf('_')>0) lotId = lotId.substring(0, lotId.indexOf('_'))
         var decisionKey = d.degree + '_' + lotId;
@@ -581,10 +580,13 @@ function displayAttribute(d, datum, divID, scheduleName){
             var row = tbl.insertRow(i + 2);
             var dobj =decisionsArray[i];
             var decisionCell = row.insertCell(0);
+            // decisionCell.outerHTML = "<th>" + dobj.decision +"</th>"
             decisionCell.innerHTML = dobj.decision;
+            
+
             if(i  == decisionsArray.length - 1){
                 //UPDATE THIS PLEASE
-                decisionCell.innerHTML = "proto??"
+                decisionCell.innerHTML = "Proto Action"
             }
             var operationCell = row.insertCell(1);
             operationCell.innerHTML = dobj.operationId;
@@ -645,14 +647,16 @@ function displayAttribute(d, datum, divID, scheduleName){
         + '<br>';
  attviewDiv.appendChild(fblocktext);
 
+window.onload = tableclick();
+
  $(function(){
     $( "#dialogbox" ).dialog({
                autoOpen: true,
-               width: 1350,
+               width: "auto",
+               resize: "auto",
                collision: "none",
-               
                title: lotId,
-               position:{my:"center bottom", at: "center bottom"}
+               position:{my:"right bottom", at: "right bottom"}
 
             });
  });
@@ -1396,7 +1400,7 @@ function comparePage(){
 	
 	var numOfSchedules = schedules.length;
 	var widthDivision = window.innerWidth / numOfSchedules;
-	widthDivision = widthDivision-15;
+	widthDivision = widthDivision-20;
 	for (var i = 0; i<schedules.length; i ++){
 		var s = schedules[i];
 		var comparepagediv = document.getElementById("comparepage");
@@ -1788,4 +1792,86 @@ svg1.append("g")
 	// 	.call(yAxis);
 
 
+}
+
+
+function inputCorrectCheck( inputD ){
+	if (typeof inputD === 'object' && inputD !== null){
+		Object.keys(inputD).forEach(function(key,index){
+
+			if(typeof inputD[key]==='object'){
+				inputCorrectCheck(inputD[key]);
+			}
+			if(Array.isArray(inputD[key]) && inputD[key].length == 0){
+				console.log("Fix the array in ");
+				console.log(inputD);
+			}
+			if(Object.keys(inputD[key]).length === 0 && inputD[key].constructor === Object){
+				console.log("fix the key "+ key +" in ");
+				console.log(inputD);
+			}
+		})
+	}
+}
+
+function tableclick(){
+	// console.log(document.getElementById('dtable'));
+
+	// $('th').click(alert("yes"));
+	// var r = 1;
+	// while(row = table.rows[r++]){
+	// 	console.log(row.innerHTML);
+	// 	row[0].on("click", alert("hello"));
+	// }
+	// d3.selectAll('th').addEventListener("mouseover", function(d) {
+ //            	d3.select(this).style("cursor", "pointer")
+ //        	})
+
+ //    d3.selectAll('th').addEventListener("click", function (d, i) {
+ //            if(boolSelected == true){
+ //                var decisionLotId = d.html.substring(d.html.indexOf('-')+1, d.html.length)
+ //                var rects = d3.selectAll('.operationRect')
+ //                    // 같은 랏을 두 번 선택했을 때는 다시 원래대로 돌아가게 함
+ //                    if(decisionLotId.indexOf(candidatedElement) > -1){
+ //                        rects.style('fill', function (d,i){
+ //                            if(d.lotId.indexOf(clickedElement)>-1){
+ //                                if(d.lotId.indexOf('WIP')>-1){
+ //                                    if(clickedElement.indexOf('WIP')>-1) return colorCycle[d.productGroup];
+ //                                    else return 'white';
+ //                                }
+ //                                else return colorCycle[d.productGroup];
+ //                            }
+ //                            else return 'white'
+ //                        })
+ //                        candidatedElement = 'can'
+ //                    }
+ //                    else{
+ //                        // 최초 선택의 경우 
+ //                        rects.style("fill", function (d, i){
+ //                            // 선택된 lot을 색칠하기 위함
+ //                            if(d.lotId.indexOf(decisionLotId)>-1){
+ //                                // 지금 색칠해야 하는 lot이 WIP이라면 lot 이름을 공유하기 때문에
+ //                                // 만약, 선택된 lot이 WIP이 아니었으면 lot 이름을 공유하는 WIP들은 색칠하지 않는다
+ //                                // 만약, 선택된 lot이 WIP이면 원래대로 색칠을 해준다                            
+ //                                if(d.lotId.indexOf('WIP')>-1){
+ //                                    if(decisionLotId.indexOf('WIP')>-1) return colorCycle[d.productGroup];
+ //                                    else return 'white';
+ //                                }
+ //                                else return colorCycle[d.productGroup];
+ //                            } 
+ //                            else{
+ //                                if(d.lotId.indexOf(clickedElement) > -1) {
+ //                                    if(d.lotId.indexOf('WIP')>-1){
+ //                                        if(clickedElement.indexOf('WIP')>-1) return colorCycle[d.productGroup];
+ //                                        else return 'white';
+ //                                    }
+ //                                    else return colorCycle[d.productGroup];
+ //                                }
+ //                                else return 'white';
+ //                            } 
+ //                        }) 
+ //                        candidatedElement = decisionLotId;       
+ //                    }
+ //                }
+ //            })
 }

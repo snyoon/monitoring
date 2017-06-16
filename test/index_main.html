@@ -21,25 +21,26 @@ if (session.getAttribute("u_id")==null) {
     <meta charset='utf-8'>
     <link rel="stylesheet" type="text/css" href="css/style.css" />
     <link rel="stylesheet" type="text/css" href="css/bootstrap.css" /> </head>
-
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
     <link href = "https://code.jquery.com/ui/1.10.4/themes/ui-lightness/jquery-ui.css"
          rel = "stylesheet">
     
     
 <body id="body" class='cbp-spmenu-push'>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+   <!--  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script> -->
     <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
     <script src = "https://code.jquery.com/jquery-1.10.2.js"></script>
     <script src = "https://code.jquery.com/ui/1.10.4/jquery-ui.js"></script>
     <div id='left'>
             <ul id="timelineandstatistics" class="nav nav-tabs">
+                <input id="myFiles" type='file' accept='text/plain' onchange='openFile(event)'>
                 <li class="nav active">
                 <a data-toggle="tab" href="#graphTabs"> Time Lines</a>
                 </li>
                 <li class="nav">
                 <a data-toggle="tab" href="#comparepage"> Compare Page</a>
                 </li>
-                <input id="myFiles" type='file' accept='text/plain' onchange='openFile(event)'>
+                
             <div id="graphstats" class="tab-content">
                 <div id= "graphTabs" class="tab-pane fade active in">
                     <ul id="listOfCharts" class="nav nav-tabs"> </ul>

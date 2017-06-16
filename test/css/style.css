@@ -15,13 +15,16 @@ body {
 #dialogbox{
     text-align: center;
     /*top:600px;*/
-    font-size:10px;
+    font-size:90%;
     #Decision{visibility:'hidden'}
 
 }
 .ui-dialog{
     top:1500 !important;
     position: static;
+}
+#comparepage{
+    display: inline-block;
 }
 .cpagecontainer{
     display: inline-block;
