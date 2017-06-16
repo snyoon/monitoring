@@ -503,8 +503,7 @@ function displayAttribute(d, datum, divID, scheduleName){
     var decisionInfo = alldecisionInfo[scheduleName];
     var productInfo = allProductInfo[scheduleName];
     var denominator = allDenominator[scheduleName];
-
-	console.log(divID);    
+   
     var lotId = d.lotId;
     if(lotId.indexOf('_')>0) lotId = lotId.substring(0, lotId.indexOf('_'))
         var decisionKey = d.degree + '_' + lotId;
