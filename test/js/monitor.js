@@ -185,6 +185,17 @@ var openFile = function (event) {
             chartNavStatA.appendChild(document.createTextNode("Statistics View"));
             chartNavStat.appendChild(chartNavStatA);
             chartNav.appendChild(chartNavStat);
+            //Load Analysis Tab
+            var chartNavLoad = document.createElement("li");
+            chartNavLoad.setAttribute("class", "nav");
+            var chartNavLoadA = document.createElement("a");
+            chartNavLoadA.setAttribute("data-toggle", "tab");
+            var href33 = "load" +divID;
+            chartNavLoadA.setAttribute("href", "#" + href33);
+            chartNavLoadA.appendChild(document.createTextNode("Load Analysis"));
+            chartNavLoad.appendChild(chartNavLoadA);
+            chartNav.appendChild(chartNavLoad);
+
             //making the different chart content html
             var chartTypesContent = document.createElement("div");
             chartTypesContent.setAttribute("id", "chartTypesContent");
@@ -200,8 +211,13 @@ var openFile = function (event) {
             statChartDive.setAttribute("id", href22);
             statChartDive.setAttribute("class","tab-pane fade");
 
+            var loadChartDive = document.createElement("div");
+            loadChartDive.setAttribute("id", href33);
+            loadChartDive.setAttribute("class","tab-pane fade");          
+
             chartTypesContent.appendChild(scheduleChartDive);
             chartTypesContent.appendChild(statChartDive);
+            chartTypesContent.appendChild(loadChartDive);
 
 
 
@@ -259,6 +275,18 @@ var openFile = function (event) {
             chartNavStatA.appendChild(document.createTextNode("Statistics View"));
             chartNavStat.appendChild(chartNavStatA);
             chartNav.appendChild(chartNavStat);
+            //Load Analysis Tab
+            var chartNavLoad = document.createElement("li");
+            chartNavLoad.setAttribute("class", "nav");
+            var chartNavLoadA = document.createElement("a");
+            chartNavLoadA.setAttribute("data-toggle", "tab");
+            var href33 = "load" +divID;
+            chartNavLoadA.setAttribute("href", "#" + href33);
+            chartNavLoadA.appendChild(document.createTextNode("Load Analysis"));
+            chartNavLoad.appendChild(chartNavLoadA);
+            chartNav.appendChild(chartNavLoad);
+
+
             //making the different chart content html
             var chartTypesContent = document.createElement("div");
             chartTypesContent.setAttribute("id", "chartTypesContent");
@@ -274,13 +302,19 @@ var openFile = function (event) {
             statChartDive.setAttribute("id", href22);
             statChartDive.setAttribute("class","tab-pane fade");
 
+            var loadChartDive = document.createElement("div");
+            loadChartDive.setAttribute("id", href33);
+            loadChartDive.setAttribute("class","tab-pane fade");
+
             chartTypesContent.appendChild(scheduleChartDive);
             chartTypesContent.appendChild(statChartDive);
+            chartTypesContent.appendChild(loadChartDive);
 
         }
         
       	timelineHover(traveledTime, href11, TscheduleName);
         ProductionStatus(TKPIs, TproductionStat, href22, TKPI);
+        loadTabCreate(href33);
         comparePage();
         for (var i = 0; i < TganttData.length; i++) {
             var tempLabel = TganttData[i]['label'];
@@ -1875,4 +1909,77 @@ function tableclick(){
  //                    }
  //                }
  //            })
+}
+
+function loadTabCreate(divID, Targetarray, Productarray){
+    var div = document.getElementById(divID);
+    var listofProducts = [];
+
+    for(var i =0; i<Productarray.length, i++){
+        if(Productarray.productGroup != "N"){
+            var tempPO = productOBJ(Productarray[i].productId, Productarray[i].time, Productarray[i]. jskldfjsdlkfjsdlk)
+            listofProducts.push(tempPO);
+        }
+    }
+
+    listofProducts.sort(function(a,b) {return (a.id > b.id) ? 1 : ((b.id > a.id) ? -1 : 0);} ); 
+
+    var table = document.createElement("table");
+
+    var header = table.createTHead();
+    var rowHeader = header.insertRow(0);
+    var header1cell = rowHeader.insertCell(0);
+    header1cell.setAttribute("colspan", 4);
+    header1cell.innerHTML= "Product Info";
+
+    var numbOfDays = Targetarray[0].length;
+
+    var header2cell = rowHeader.insertCell(1);
+    header2cell.setAttribute("colspan", 2*numbOfDays);
+    header2cell.innerHTML= "Production Target";
+
+    var header3cell = rowHeader.insertCell(2);
+    header3cell.setAttribute("colspan", 2*numbOfDays);
+    header3cell.innerHTML= "M/C required";
+
+    var row2Header = header.insertRow(1);
+    var row2c0 = row2Header.insertCell(0);
+    row2c0.innerHTML="Product Group";
+    var row2c1 = row2Header.insertCell(1);
+    row2c1.innerHTML="Product";
+    var row2c2 = row2Header.insertCell(2);
+    row2c2.innerHTML="Resource";
+    var row2c3 = row2Header.insertCell(3);
+    row2c3.innerHTML="Process Time(sum)";
+
+    dayCells(row2Header,4, numbOfDays * 2);
+    dayCells(row2Header, 4 + (numbOfDays *2), numbOfDays * 2);
+
+    
+
+}
+
+function dayCells(row, startIndex, nOD){
+    var tracker = 0;
+    for(var i = startIndex; i<startindex + nod; i++){
+        var tempCell = row.insertCell(i);
+        if(tracker%2==0){
+            tempCell.innerHTML = "Day" + i - startindex + 1;
+        }else{
+            tempCell.innerHTML = "Actual";
+            tempCell.setAttribute("font-size", "75%");
+        }
+        tracker++;
+    }
+}
+
+function productOBJ(id, time, target, load,){
+    this.id = id;
+
+    this.group = id.split("_")[0];
+    this.productid= id.split("_")[1]
+
+    this.processTime = time;
+    this.target= target;
+    this.load = load;
 }
