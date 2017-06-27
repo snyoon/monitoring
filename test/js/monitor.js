@@ -1911,13 +1911,19 @@ function tableclick(){
  //            })
 }
 
-function loadTabCreate(divID, Targetarray, Productarray){
+function loadTabCreate(divID, LAjsonobj){
+
+    var TargetObject = LAjsonobj.TargetInfo;
+    var Productarray = LAjsonobj.ProductInfo;
+    var LoadObject = LAjsonobj.LoadInfo;
+
     var div = document.getElementById(divID);
     var listofProducts = [];
 
     for(var i =0; i<Productarray.length, i++){
         if(Productarray.productGroup != "N"){
-            var tempPO = productOBJ(Productarray[i].productId, Productarray[i].time, Productarray[i]. jskldfjsdlkfjsdlk)
+            var tempid = Productarray[i].productId;
+            var tempPO = productOBJ(tempid, Productarray[i].processingTime, TargetObject.tempid, LoadObject.tempid);
             listofProducts.push(tempPO);
         }
     }
@@ -1955,7 +1961,16 @@ function loadTabCreate(divID, Targetarray, Productarray){
     dayCells(row2Header,4, numbOfDays * 2);
     dayCells(row2Header, 4 + (numbOfDays *2), numbOfDays * 2);
 
-    
+    for(var ii = 0; ii < listofProducts.length; ii++){
+        var tr = table.getElementsByTagName("tr");
+
+        for(var z =0; z<tr.length; z++){
+            var sas = tr[z].getElementById("td")[0];
+            
+        }
+    }    
+
+
 
 }
 
