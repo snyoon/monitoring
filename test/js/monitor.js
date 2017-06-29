@@ -641,6 +641,9 @@ function displayAttribute(d, datum, divID, scheduleName){
             var rewardCell =row.insertCell(avArray.length + 5);
             //rewardCell.innerHTML = Math.round(dobj.reward * 100)/100;
             rewardCell.innerHTML = dobj.reward.toFixed(3);
+            if(Math.abs(dobj.reward) > 9000){
+            	rewardCell.innerHTML = "";
+            }
         }
     }
     var attviewDiv = document.getElementById("attViewss");
@@ -1942,31 +1945,44 @@ function loadTabCreate(divID, LAjsonobj){
     header1cell.innerHTML= "Product Info";
 
     var numbOfDays = listofProducts[0].target.length;
+    var numbOfDaysLoad = listofProducts[0].load.DA.length;
+    console.log(numbOfDaysLoad);
 
     var header2cell = rowHeader.insertCell(1);
     header2cell.setAttribute("colspan", 2*numbOfDays);
     header2cell.innerHTML= "Production Target";
 
     var header3cell = rowHeader.insertCell(2);
-    header3cell.setAttribute("colspan", 2*numbOfDays);
+    header3cell.setAttribute("colspan", 2*numbOfDaysLoad);
     header3cell.innerHTML= "M/C required";
 
     var row2Header = header.insertRow(1);
     var row2c0 = row2Header.insertCell(0);
+    row2c0.setAttribute("rowspan",2);
     row2c0.innerHTML="Product Group";
     var row2c1 = row2Header.insertCell(1);
+    row2c1.setAttribute("rowspan",2);
     row2c1.innerHTML="Product";
     var row2c2 = row2Header.insertCell(2);
+    row2c2.setAttribute("rowspan",2);
     row2c2.innerHTML="Resource";
     var row2c3 = row2Header.insertCell(3);
+    row2c3.setAttribute("rowspan",2);
     row2c3.innerHTML="Process Time(sum)";
 
-    dayCells(row2Header,4, numbOfDays);
-    dayCells(row2Header, 4 + (numbOfDays *2), numbOfDays);
+    topDayCells(row2Header,4,numbOfDays);
+    topDayCells(row2Header, 4+ numbOfDays, numbOfDaysLoad);
+
+    var row3header = header.insertRow(2);
+    // for(var ii= 0; ii<4;ii++){
+    // 	var tempp = row3header.insertCell(ii);
+    // }
+    dayCells(row3header,0, numbOfDays);
+    dayCells(row3header, 0 + (numbOfDays *2), numbOfDaysLoad);
 
     for(var ii = 0; ii < listofProducts.length; ii++){
         var tempProduct = listofProducts[ii];
-        tableLoadFiller(0,tempProduct,(numbOfDays*2), table);
+        tableLoadFiller(0,tempProduct,(numbOfDays*2), table,(numbOfDaysLoad*2));
     }
     table.style.textAlign ="center";
     table.style.position ="relative";
@@ -1975,7 +1991,19 @@ function loadTabCreate(divID, LAjsonobj){
     div.appendChild(table);
 }
 
-function tableLoadFiller(index, product,days,table){
+function topDayCells(row,startIndex, nOD){
+    var daytracker=1;
+    for(var i = startIndex; i<startIndex + (nOD); i++){
+        var tempCell = row.insertCell(i);
+        tempCell.setAttribute("colspan", 2);
+        tempCell.innerHTML = "Day " + daytracker;
+        daytracker++;
+    }
+
+}
+
+function tableLoadFiller(index, product,days,table,daysload){
+	console.log(product);
     var tracker =0;
     var temprow = table.insertRow(-1);
     var temprow2 = table.insertRow(-1);
@@ -2000,7 +2028,7 @@ function tableLoadFiller(index, product,days,table){
             }
         }
         tracker = 0;
-        for(var i = 0; i<days;i++){
+        for(var i = 0; i<daysload;i++){
            var tempcell = temprow.insertCell(4+(days)+i);
             if(i%2 == 0){
                 tempcell.innerHTML = Math.round(product.load.DA[tracker].expected * 10000)/10000;
@@ -2028,7 +2056,7 @@ function tableLoadFiller(index, product,days,table){
             }
         }
         tracker = 0;
-        for(var i = 0; i<days;i++){
+        for(var i = 0; i<daysload;i++){
            var tempcell = temprow2.insertCell(4+(days)+i);
             if(i%2 == 0){
                 tempcell.innerHTML = Math.round(product.load.WB[tracker].expected * 10000)/10000;
@@ -2057,7 +2085,7 @@ function tableLoadFiller(index, product,days,table){
             }
         }
         tracker =0;
-        for(var i = 0; i<days;i++){
+        for(var i = 0; i<daysload;i++){
            var tempcell = temprow.insertCell(4+(days)+i);
             if(i%2 == 0){
                 tempcell.innerHTML = Math.round(product.load.DA[tracker].expected * 10000)/10000;
@@ -2083,7 +2111,7 @@ function tableLoadFiller(index, product,days,table){
             }
         }
         tracker =0;
-        for(var i = 0; i<days;i++){
+        for(var i = 0; i<daysload;i++){
            var tempcell = temprow2.insertCell(4+(days)+i);
             if(i%2 == 0){
                 tempcell.innerHTML = Math.round(product.load.WB[tracker].expected * 10000)/10000;
@@ -2119,7 +2147,8 @@ function dayCells(row, startIndex, nOD){
     for(var i = startIndex; i<startIndex + (2*nOD); i++){
         var tempCell = row.insertCell(i);
         if(tracker%2==0){
-            tempCell.innerHTML = "Day" + daytracker;
+            tempCell.innerHTML = "Target";
+            tempCell.setAttribute("font-size", "75%");
             daytracker++;
         }else{
             tempCell.innerHTML = "Actual";
