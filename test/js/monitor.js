@@ -314,7 +314,7 @@ var openFile = function (event) {
         
       	timelineHover(traveledTime, href11, TscheduleName);
         ProductionStatus(TKPIs, TproductionStat, href22, TKPI);
-        loadTabCreate(href33);
+        loadTabCreate(href33,inputData.LoadAnalysis);
         comparePage();
         for (var i = 0; i < TganttData.length; i++) {
             var tempLabel = TganttData[i]['label'];
@@ -1916,20 +1916,24 @@ function loadTabCreate(divID, LAjsonobj){
     var TargetObject = LAjsonobj.TargetInfo;
     var Productarray = LAjsonobj.ProductInfo;
     var LoadObject = LAjsonobj.LoadInfo;
-
     var div = document.getElementById(divID);
     var listofProducts = [];
 
-    for(var i =0; i<Productarray.length, i++){
-        if(Productarray.productGroup != "N"){
+    for(var i =0; i<Productarray.length; i++){
+        if(Productarray[i].productGroup === "N"){
+            // var tempid = Productarray[i].productId;
+            // console.log(Productarray[i].productGroup);
+            // var tempPO = productOBJ(tempid, Productarray[i].processingTime.DA, Productarray[i].processingTime.WB, TargetObject.tempid, LoadObject.tempid);
+            // console.log(tempPO);
+            // listofProducts.push(tempPO);
+
+        }else{
             var tempid = Productarray[i].productId;
-            var tempPO = productOBJ(tempid, Productarray[i].processingTime, TargetObject.tempid, LoadObject.tempid);
+            var tempPO = new productOBJ(tempid, Productarray[i].processingTime.DA, Productarray[i].processingTime.WB, TargetObject[tempid], LoadObject[tempid]);
             listofProducts.push(tempPO);
         }
     }
-
     listofProducts.sort(function(a,b) {return (a.id > b.id) ? 1 : ((b.id > a.id) ? -1 : 0);} ); 
-
     var table = document.createElement("table");
 
     var header = table.createTHead();
@@ -1938,7 +1942,7 @@ function loadTabCreate(divID, LAjsonobj){
     header1cell.setAttribute("colspan", 4);
     header1cell.innerHTML= "Product Info";
 
-    var numbOfDays = Targetarray[0].length;
+    var numbOfDays = listofProducts[0].target.length;
 
     var header2cell = rowHeader.insertCell(1);
     header2cell.setAttribute("colspan", 2*numbOfDays);
@@ -1958,28 +1962,166 @@ function loadTabCreate(divID, LAjsonobj){
     var row2c3 = row2Header.insertCell(3);
     row2c3.innerHTML="Process Time(sum)";
 
-    dayCells(row2Header,4, numbOfDays * 2);
-    dayCells(row2Header, 4 + (numbOfDays *2), numbOfDays * 2);
+    dayCells(row2Header,4, numbOfDays);
+    dayCells(row2Header, 4 + (numbOfDays *2), numbOfDays);
 
     for(var ii = 0; ii < listofProducts.length; ii++){
-        var tr = table.getElementsByTagName("tr");
+        var tempProduct = listofProducts[ii];
+        tableLoadFiller(0,tempProduct,(numbOfDays*2), table);
+    }
+    table.style.textAlign ="center";
+    table.style.position ="relative";
+    table.style.top = "10px";
 
-        for(var z =0; z<tr.length; z++){
-            var sas = tr[z].getElementById("td")[0];
-            
+    div.appendChild(table);
+}
+
+function tableLoadFiller(index, product,days,table){
+    var tracker =0;
+    var temprow = table.insertRow(-1);
+    var temprow2 = table.insertRow(-1);
+
+    if(!tableCheckForPG(table, product.group)){
+        var c10 = temprow.insertCell(0);
+        c10.innerHTML = product.group;
+        var c11 = temprow.insertCell(1);
+        c11.innerHTML = product.productid;
+        var c12 = temprow.insertCell(2);
+        c12.innerHTML = "DA";
+        var c13 = temprow.insertCell(3);
+        c13.innerHTML = product.processTimeDA;
+        tracker = 0;
+        for(var i = 0; i<days;i++){
+           var tempcell = temprow.insertCell(4+i);
+           if(i%2 == 0){
+                tempcell.innerHTML = product.target[tracker].target;
+            }else{
+                tempcell.innerHTML = product.target[tracker].actual;
+                tracker++
+            }
         }
-    }    
+        tracker = 0;
+        for(var i = 0; i<days;i++){
+           var tempcell = temprow.insertCell(4+(days)+i);
+            if(i%2 == 0){
+                tempcell.innerHTML = Math.round(product.load.DA[tracker].expected * 10000)/10000;
+            }else{
+                tempcell.innerHTML = Math.round(product.load.DA[tracker].actual * 10000)/10000;
+                tracker++;
+            }
+        }
 
+        var c20 = temprow2.insertCell(0);
+        c20.innerHTML = "";
+        var c21 = temprow2.insertCell(1);
+        c21.innerHTML = product.productid;
+        var c22 = temprow2.insertCell(2);
+        c22.innerHTML = "WB";
+        var c23 = temprow2.insertCell(3);
+        c23.innerHTML = product.processTimeWB;
+        tracker = 0;
+        for(var i = 0; i<days;i++){
+           var tempcell = temprow2.insertCell(4+i);
+           if(i%2 == 0){
+                //tempcell.innerHTML = product.target[i].target;
+            }else{
+                //tempcell.innerHTML = product.target[i].actual;
+            }
+        }
+        tracker = 0;
+        for(var i = 0; i<days;i++){
+           var tempcell = temprow2.insertCell(4+(days)+i);
+            if(i%2 == 0){
+                tempcell.innerHTML = Math.round(product.load.WB[tracker].expected * 10000)/10000;
+            }else{
+                tempcell.innerHTML = Math.round(product.load.WB[tracker].actual * 10000)/10000;
+                tracker++;
+            }
+        }
+    }else{
+        var c10 = temprow.insertCell(0);
+        c10.innerHTML = "";
+        var c11 = temprow.insertCell(1);
+        c11.innerHTML = product.productid;
+        var c12 = temprow.insertCell(2);
+        c12.innerHTML = "DA";
+        var c13 = temprow.insertCell(3);
+        c13.innerHTML = product.processTimeDA;
+        tracker = 0;
+        for(var i = 0; i<days;i++){
+           var tempcell = temprow.insertCell(4+i);
+           if(i%2 == 0){
+                tempcell.innerHTML = product.target[tracker].target;
+            }else{
+                tempcell.innerHTML = product.target[tracker].actual;
+                tracker++;
+            }
+        }
+        tracker =0;
+        for(var i = 0; i<days;i++){
+           var tempcell = temprow.insertCell(4+(days)+i);
+            if(i%2 == 0){
+                tempcell.innerHTML = Math.round(product.load.DA[tracker].expected * 10000)/10000;
+            }else{
+                tempcell.innerHTML = Math.round(product.load.DA[tracker].actual * 10000)/10000;
+                tracker++;
+            }
+        }
+        var c20 = temprow2.insertCell(0);
+        c20.innerHTML = "";
+        var c21 = temprow2.insertCell(1);
+        c21.innerHTML = product.productid;
+        var c22 = temprow2.insertCell(2);
+        c22.innerHTML = "WB";
+        var c23 = temprow2.insertCell(3);
+        c23.innerHTML = product.processTimeWB;
+        for(var i = 0; i<days;i++){
+           var tempcell = temprow2.insertCell(4+i);
+           if(i%2 == 0){
+                //tempcell.innerHTML = product.target[i].target;
+            }else{
+                //tempcell.innerHTML = product.target[i].actual;
+            }
+        }
+        tracker =0;
+        for(var i = 0; i<days;i++){
+           var tempcell = temprow2.insertCell(4+(days)+i);
+            if(i%2 == 0){
+                tempcell.innerHTML = Math.round(product.load.WB[tracker].expected * 10000)/10000;
+            }else{
+                tempcell.innerHTML = Math.round(product.load.WB[tracker].actual * 10000)/10000;
+                tracker++;
+            }
+        }
+    }
 
+}
 
+function tableCheckForPG(table, toInsert){
+    var filter = toInsert.toUpperCase();
+    var tr = table.getElementsByTagName("tr");
+    var td;
+    for(var i = 0; i<tr.length; i++){
+        td = tr[i].getElementsByTagName("td")[0];
+        if (td) {
+            if (td.innerHTML.toUpperCase().indexOf(filter) > -1) {
+                return true;
+            }else {
+                
+            }
+        } 
+    }
+    return false;   
 }
 
 function dayCells(row, startIndex, nOD){
     var tracker = 0;
-    for(var i = startIndex; i<startindex + nod; i++){
+    var daytracker=1;
+    for(var i = startIndex; i<startIndex + (2*nOD); i++){
         var tempCell = row.insertCell(i);
         if(tracker%2==0){
-            tempCell.innerHTML = "Day" + i - startindex + 1;
+            tempCell.innerHTML = "Day" + daytracker;
+            daytracker++;
         }else{
             tempCell.innerHTML = "Actual";
             tempCell.setAttribute("font-size", "75%");
@@ -1988,13 +2130,14 @@ function dayCells(row, startIndex, nOD){
     }
 }
 
-function productOBJ(id, time, target, load,){
+function productOBJ(id, datime, wbtime, target, load){
     this.id = id;
 
     this.group = id.split("_")[0];
     this.productid= id.split("_")[1]
 
-    this.processTime = time;
+    this.processTimeWB = wbtime;
+    this.processTimeDA = datime;
     this.target= target;
     this.load = load;
 }
