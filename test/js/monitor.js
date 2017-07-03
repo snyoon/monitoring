@@ -1988,7 +1988,7 @@ function loadTabCreate(divID, LAjsonobj){
     table.style.textAlign ="center";
     table.style.position ="relative";
     table.style.top = "10px";
-
+    table.style.fontSize = "140%";
     div.appendChild(table);
 }
 
@@ -2008,6 +2008,7 @@ function tableLoadFiller(index, product,days,table,daysload){
     var tracker =0;
     var temprow = table.insertRow(-1);
     var temprow2 = table.insertRow(-1);
+    temprow2.style.background = "#ffcc99";
 
     if(!tableCheckForPG(table, product.group)){
         var c10 = temprow.insertCell(0);
@@ -2021,6 +2022,7 @@ function tableLoadFiller(index, product,days,table,daysload){
         tracker = 0;
         for(var i = 0; i<days;i++){
            var tempcell = temprow.insertCell(4+i);
+           tempcell.style.padding="5px"
            if(i%2 == 0){
                 tempcell.innerHTML = product.target[tracker].target;
             }else{
@@ -2031,6 +2033,7 @@ function tableLoadFiller(index, product,days,table,daysload){
         tracker = 0;
         for(var i = 0; i<daysload;i++){
            var tempcell = temprow.insertCell(4+(days)+i);
+           tempcell.style.padding="5px"
             if(i%2 == 0){
                 tempcell.innerHTML = Math.round(product.load.DA[tracker].expected * 10000)/10000;
             }else{
@@ -2050,6 +2053,7 @@ function tableLoadFiller(index, product,days,table,daysload){
         tracker = 0;
         for(var i = 0; i<days;i++){
            var tempcell = temprow2.insertCell(4+i);
+           tempcell.style.padding="5px"
            if(i%2 == 0){
                 //tempcell.innerHTML = product.target[i].target;
             }else{
@@ -2059,6 +2063,7 @@ function tableLoadFiller(index, product,days,table,daysload){
         tracker = 0;
         for(var i = 0; i<daysload;i++){
            var tempcell = temprow2.insertCell(4+(days)+i);
+           tempcell.style.padding="5px"
             if(i%2 == 0){
                 tempcell.innerHTML = Math.round(product.load.WB[tracker].expected * 10000)/10000;
             }else{
@@ -2078,6 +2083,7 @@ function tableLoadFiller(index, product,days,table,daysload){
         tracker = 0;
         for(var i = 0; i<days;i++){
            var tempcell = temprow.insertCell(4+i);
+           tempcell.style.padding="5px"
            if(i%2 == 0){
                 tempcell.innerHTML = product.target[tracker].target;
             }else{
@@ -2088,6 +2094,7 @@ function tableLoadFiller(index, product,days,table,daysload){
         tracker =0;
         for(var i = 0; i<daysload;i++){
            var tempcell = temprow.insertCell(4+(days)+i);
+           tempcell.style.padding="5px"
             if(i%2 == 0){
                 tempcell.innerHTML = Math.round(product.load.DA[tracker].expected * 10000)/10000;
             }else{
@@ -2105,6 +2112,7 @@ function tableLoadFiller(index, product,days,table,daysload){
         c23.innerHTML = product.processTimeWB;
         for(var i = 0; i<days;i++){
            var tempcell = temprow2.insertCell(4+i);
+           tempcell.style.padding="5px"
            if(i%2 == 0){
                 //tempcell.innerHTML = product.target[i].target;
             }else{
@@ -2114,6 +2122,7 @@ function tableLoadFiller(index, product,days,table,daysload){
         tracker =0;
         for(var i = 0; i<daysload;i++){
            var tempcell = temprow2.insertCell(4+(days)+i);
+           tempcell.style.padding="5px"
             if(i%2 == 0){
                 tempcell.innerHTML = Math.round(product.load.WB[tracker].expected * 10000)/10000;
             }else{
