@@ -539,7 +539,6 @@ function displayAttribute(d, datum, divID, scheduleName){
     var denominator = allDenominator[scheduleName];
    
     var lotId = d.lotId;
-    console.log(lotId);
     if(lotId.indexOf('_')>0) lotId = lotId.substring(0, lotId.indexOf('_'))
         var decisionKey = d.degree + '_' + lotId;
     var decisionsArray = decisionInfo[decisionKey];
@@ -2006,7 +2005,6 @@ function topDayCells(row,startIndex, nOD){
 }
 
 function tableLoadFiller(index, product,days,table,daysload){
-	console.log(product);
     var tracker =0;
     var temprow = table.insertRow(-1);
     var temprow2 = table.insertRow(-1);
@@ -2196,189 +2194,205 @@ function timelineCreate(schedule, div){
     for (var i = 0; i < tlINFO.length; i++) {
         indivObjectHandler(tlINFO[i], data, schedule.Decision, scheduleName);
     }
+    console.log(data);
 
     var options = {
         width:'100%',
-        height: window.innerHeight - document.getElementById("myFiles").offsetHeight - document.getElementById("listOfCharts").offsetHeight,
-        zoomMax: 31556952000
+        height: window.innerHeight - document.getElementById("myFiles").offsetHeight - (document.getElementById("listOfCharts").offsetHeight * 2),
+        zoomMax: 31556952000,
+        stackSubgroups: false,
+        groupOrder: "id",
 
     };
 
     var timeline = new vis.Timeline(container, data, options);
 
-    timeline.on("select", function(properties){
-        var decisionInfo = alldecisionInfo[scheduleName];
-        var productInfo = allProductInfo[scheduleName];
-        var denominator = allDenominator[scheduleName];
+ //    timeline.on("select", function(properties){
+ //        var decisionInfo = alldecisionInfo[scheduleName];
+ //        var productInfo = allProductInfo[scheduleName];
+ //        var denominator = allDenominator[scheduleName];
 
-        var decisionKey = properties.content;
-        console.log(properties);
-        var decisionsArray = decisionInfo[decisionKey];
-        var currentStatus = decisionsArray[0];
+ //        var decisionKey = properties.content;
+ //        console.log(properties);
+ //        var decisionsArray = decisionInfo[decisionKey];
+ //        var currentStatus = decisionsArray[0];
 
-        var newWindow = document.createElement("div");
-        newWindow.setAttribute("id", "dialogbox");
+ //        var newWindow = document.createElement("div");
+ //        newWindow.setAttribute("id", "dialogbox");
 
-        var statDiv =document.createElement("div");
-        statDiv.setAttribute("id", "attViewss");
-        statDiv.setAttribute("class", "atributedisplay")
+ //        var statDiv =document.createElement("div");
+ //        statDiv.setAttribute("id", "attViewss");
+ //        statDiv.setAttribute("class", "atributedisplay")
 
-        var descionDiv = document.createElement("div");
-        descionDiv.setAttribute("id", "Decision");
+ //        var descionDiv = document.createElement("div");
+ //        descionDiv.setAttribute("id", "Decision");
 
-        var tbl = document.createElement("table");
-        tbl.setAttribute("id", "dtable");
+ //        var tbl = document.createElement("table");
+ //        tbl.setAttribute("id", "dtable");
 
-        newWindow.appendChild(statDiv);
-        descionDiv.appendChild(tbl);
-        newWindow.appendChild(descionDiv);
+ //        newWindow.appendChild(statDiv);
+ //        descionDiv.appendChild(tbl);
+ //        newWindow.appendChild(descionDiv);
     
-        var ssss =  document.getElementById("graphTabs");
-        ssss.appendChild(newWindow);
+ //        var ssss =  document.getElementById("graphTabs");
+ //        ssss.appendChild(newWindow);
     
-        //If Decision stuff is there it will display 
-        if(typeof decisionsArray!== "undefined"){
+ //        //If Decision stuff is there it will display 
+ //        if(typeof decisionsArray!== "undefined"){
 
-            descionDiv.style.visibility ="visible";
-            var avLabelRow = tbl.insertRow(0);
-            var decisionID = avLabelRow.insertCell(0);
-            decisionID.innerHTML = "Decision Id";
+ //            descionDiv.style.visibility ="visible";
+ //            var avLabelRow = tbl.insertRow(0);
+ //            var decisionID = avLabelRow.insertCell(0);
+ //            decisionID.innerHTML = "Decision Id";
 
-            decisionID.on("mouseover", function(d) {
-                d3.select(this).style("cursor", "pointer")
-            })
-            .on("mouseout", function(d) {
-                d3.select(this).style("cursor", "default")
-            });
+ //            decisionID.on("mouseover", function(d) {
+ //                d3.select(this).style("cursor", "pointer")
+ //            })
+ //            .on("mouseout", function(d) {
+ //                d3.select(this).style("cursor", "default")
+ //            });
 
-            var opID = avLabelRow.insertCell(1);
-            opID.innerHTML = "Operation ID";
-            var proType = avLabelRow.insertCell(2);
-            proType.innerHTML = "Product Type";
-            var currentLocation = avLabelRow.insertCell(3);
-            currentLocation.innerHTML = "Current Location";
-            var  fID = avLabelRow.insertCell(4);
-            fID.innerHTML = "Flow ID"
-            var avchartlabel = avLabelRow.insertCell(5);
-            var actionvectorsize = decisionsArray[0].actionvector.split(",").length;
-            avchartlabel.setAttribute("colspan", actionvectorsize);
-            var labelss = "Action Vector <div style= 'font-size:75%; column-count: " + actionvectorsize + "'>";
-            for (var i = 0; i <= actionvectorsize -1; i++) {
-                labelss+= " <br>" +actionAttribute[i] + "<br>";
-            }
-            labelss += "</div>"
-            avchartlabel.innerHTML =labelss;
-            var rewardLabel = avLabelRow.insertCell(6);
-            rewardLabel.innerHTML = "Reward";
+ //            var opID = avLabelRow.insertCell(1);
+ //            opID.innerHTML = "Operation ID";
+ //            var proType = avLabelRow.insertCell(2);
+ //            proType.innerHTML = "Product Type";
+ //            var currentLocation = avLabelRow.insertCell(3);
+ //            currentLocation.innerHTML = "Current Location";
+ //            var  fID = avLabelRow.insertCell(4);
+ //            fID.innerHTML = "Flow ID"
+ //            var avchartlabel = avLabelRow.insertCell(5);
+ //            var actionvectorsize = decisionsArray[0].actionvector.split(",").length;
+ //            avchartlabel.setAttribute("colspan", actionvectorsize);
+ //            var labelss = "Action Vector <div style= 'font-size:75%; column-count: " + actionvectorsize + "'>";
+ //            for (var i = 0; i <= actionvectorsize -1; i++) {
+ //                labelss+= " <br>" +actionAttribute[i] + "<br>";
+ //            }
+ //            labelss += "</div>"
+ //            avchartlabel.innerHTML =labelss;
+ //            var rewardLabel = avLabelRow.insertCell(6);
+ //            rewardLabel.innerHTML = "Reward";
 
-            var lablelsOfVectors = tbl.insertRow(1);
+ //            var lablelsOfVectors = tbl.insertRow(1);
         
 
-            //------------------------ To display action vector things -----------------------------
-            for (var i = 0; i <= decisionsArray.length-1; i++) {
+ //            //------------------------ To display action vector things -----------------------------
+ //            for (var i = 0; i <= decisionsArray.length-1; i++) {
 
-                var row = tbl.insertRow(i + 2);
-                var dobj =decisionsArray[i];
-                var decisionCell = row.insertCell(0);
-                // decisionCell.outerHTML = "<th>" + dobj.decision +"</th>"
-                decisionCell.innerHTML = dobj.decision;
+ //                var row = tbl.insertRow(i + 2);
+ //                var dobj =decisionsArray[i];
+ //                var decisionCell = row.insertCell(0);
+ //                // decisionCell.outerHTML = "<th>" + dobj.decision +"</th>"
+ //                decisionCell.innerHTML = dobj.decision;
             
 
-                if(i  == decisionsArray.length - 1){
-                    decisionCell.innerHTML = "Proto Action"
-                }
-                var operationCell = row.insertCell(1);
-                operationCell.innerHTML = dobj.operationId;
-                var productCell = row.insertCell(2);
-                productCell.innerHTML = dobj.productType;
-                var currentLocationCell = row.insertCell(3);
-                currentLocationCell.innerHTML = dobj.currentLocation;
-                var flowIdCell = row.insertCell(4);
-                flowIdCell.innerHTML = dobj.flowId;
-                var avCell = row.insertCell(5);
-                var av = dobj.actionvector.replace("[", "").replace("]","");
-                var avArray =av.split(",");
+ //                if(i  == decisionsArray.length - 1){
+ //                    decisionCell.innerHTML = "Proto Action"
+ //                }
+ //                var operationCell = row.insertCell(1);
+ //                operationCell.innerHTML = dobj.operationId;
+ //                var productCell = row.insertCell(2);
+ //                productCell.innerHTML = dobj.productType;
+ //                var currentLocationCell = row.insertCell(3);
+ //                currentLocationCell.innerHTML = dobj.currentLocation;
+ //                var flowIdCell = row.insertCell(4);
+ //                flowIdCell.innerHTML = dobj.flowId;
+ //                var avCell = row.insertCell(5);
+ //                var av = dobj.actionvector.replace("[", "").replace("]","");
+ //                var avArray =av.split(",");
 
-            for(var ii = 0; ii <= avArray.length - 1; ii++) {
-                var cell = row.insertCell(5 + ii);
-                cell.innerHTML = avArray[ii];
-            }
-            var rewardCell =row.insertCell(avArray.length + 5);
-            //rewardCell.innerHTML = Math.round(dobj.reward * 100)/100;
-            rewardCell.innerHTML = dobj.reward.toFixed(3);
-        }
-    }
-    var attviewDiv = document.getElementById("attViewss");
+ //            for(var ii = 0; ii <= avArray.length - 1; ii++) {
+ //                var cell = row.insertCell(5 + ii);
+ //                cell.innerHTML = avArray[ii];
+ //            }
+ //            var rewardCell =row.insertCell(avArray.length + 5);
+ //            //rewardCell.innerHTML = Math.round(dobj.reward * 100)/100;
+ //            rewardCell.innerHTML = dobj.reward.toFixed(3);
+ //        }
+ //    }
+ //    var attviewDiv = document.getElementById("attViewss");
 
-    var startingTime = new Date(d.starting_time);
-    var endingTime = new Date(d.ending_time);    
-    var decisionTime = 0;
-    if(decisionsArray != null)decisionTime = decisionsArray[0].decisionTime;
-    decisionTime = new Date(decisionTime);
+ //    var startingTime = new Date(d.starting_time);
+ //    var endingTime = new Date(d.ending_time);    
+ //    var decisionTime = 0;
+ //    if(decisionsArray != null)decisionTime = decisionsArray[0].decisionTime;
+ //    decisionTime = new Date(decisionTime);
 
-    var fblocktext = document.createElement("strong");
-    fblocktext.innerHTML = 'Lot Id: '+ d.lotId + '<br>'
-        +'Starting Time: '+ startingTime.getDate() + '일 ' + addZero(startingTime.getHours()) + ':' + addZero(startingTime.getMinutes()) + '<br>'
-        +'Ending Time: '+ endingTime.getDate() + '일 ' + addZero(endingTime.getHours()) + ':' + addZero(endingTime.getMinutes()) 
-        + '<br>'
-        +'Decision Time: '+ decisionTime.getDate() + '일 ' + addZero(decisionTime.getHours()) + ':' + addZero(decisionTime.getMinutes()) 
-        + '<br>'
-        +'Operation: '+ d.degree + '<br>'
-        +'Quantity: '+ d.quantity + '<br> <br>'
-        +'Product Id: '+ d.productId + '<br>' 
-        +'Product Group: '+ productInfo[d.productId]['productGroup'] + '<br>'
-        +'Flow Id: '+ productInfo[d.productId]['flowId'] + '<br>' 
-        +'Operation Seq.: '+ productInfo[d.productId]['operationSequence'] + '<br>'
-        +'Resource: '+ datum.label + '<br>'
-        +'Resource Model: '+ datum.resourceModel + '<br> <br>'
-        + 'DA WIP Level: '+ currentStatus['dawipLevel'] + ' / ' + denominator['Stocker_size']+ '<br>'
-        +'WB WIP Level: '+ currentStatus['wbwipLevel'] + ' / ' + denominator['Stocker_size']
-       + '<br>' 
-       +'Working DA: '+ currentStatus['workingDA'] + ' / ' + denominator['DA_resource']
-       + '<br>'
-       +'Working WB: '+ currentStatus['workingWB'] + ' / ' + denominator['WB_resource']
-       + '<br>'
-       +'투입량: '+ currentStatus['inputCount'] + ' / ' + denominator['MAX_inputcount']
-       + '<br>'
-       +'생산량: '+ currentStatus['outputCount'] + ' / ' + denominator['MAX_outputcount']
-       + '<br>'
-       +'투입 가능량: '+ currentStatus['currentCSTQuantity'] 
-        + '<br>';
- attviewDiv.appendChild(fblocktext);
+ //    var fblocktext = document.createElement("strong");
+ //    fblocktext.innerHTML = 'Lot Id: '+ d.lotId + '<br>'
+ //        +'Starting Time: '+ startingTime.getDate() + '일 ' + addZero(startingTime.getHours()) + ':' + addZero(startingTime.getMinutes()) + '<br>'
+ //        +'Ending Time: '+ endingTime.getDate() + '일 ' + addZero(endingTime.getHours()) + ':' + addZero(endingTime.getMinutes()) 
+ //        + '<br>'
+ //        +'Decision Time: '+ decisionTime.getDate() + '일 ' + addZero(decisionTime.getHours()) + ':' + addZero(decisionTime.getMinutes()) 
+ //        + '<br>'
+ //        +'Operation: '+ d.degree + '<br>'
+ //        +'Quantity: '+ d.quantity + '<br> <br>'
+ //        +'Product Id: '+ d.productId + '<br>' 
+ //        +'Product Group: '+ productInfo[d.productId]['productGroup'] + '<br>'
+ //        +'Flow Id: '+ productInfo[d.productId]['flowId'] + '<br>' 
+ //        +'Operation Seq.: '+ productInfo[d.productId]['operationSequence'] + '<br>'
+ //        +'Resource: '+ datum.label + '<br>'
+ //        +'Resource Model: '+ datum.resourceModel + '<br> <br>'
+ //        + 'DA WIP Level: '+ currentStatus['dawipLevel'] + ' / ' + denominator['Stocker_size']+ '<br>'
+ //        +'WB WIP Level: '+ currentStatus['wbwipLevel'] + ' / ' + denominator['Stocker_size']
+ //       + '<br>' 
+ //       +'Working DA: '+ currentStatus['workingDA'] + ' / ' + denominator['DA_resource']
+ //       + '<br>'
+ //       +'Working WB: '+ currentStatus['workingWB'] + ' / ' + denominator['WB_resource']
+ //       + '<br>'
+ //       +'투입량: '+ currentStatus['inputCount'] + ' / ' + denominator['MAX_inputcount']
+ //       + '<br>'
+ //       +'생산량: '+ currentStatus['outputCount'] + ' / ' + denominator['MAX_outputcount']
+ //       + '<br>'
+ //       +'투입 가능량: '+ currentStatus['currentCSTQuantity'] 
+ //        + '<br>';
+ // attviewDiv.appendChild(fblocktext);
 
- $(function(){
-    $( "#dialogbox" ).dialog({
-               autoOpen: true,
-               width: "auto", 
-               resize: "auto",
-               collision: "none",
-               title: lotId,
-               position:{my:"right bottom", at: "right bottom"}
+ // $(function(){
+ //    $( "#dialogbox" ).dialog({
+ //               autoOpen: true,
+ //               width: "auto", 
+ //               resize: "auto",
+ //               collision: "none",
+ //               title: lotId,
+ //               position:{my:"right bottom", at: "right bottom"}
 
-            });
- });
+ //            });
+ // });
 
-    });
+ //    });
 }
 
 
 
-function indivObjectHandler(object, data, decision, schedulename){
+function indivObjectHandler(object, data, decision, schedulename, listofGroups){
     var times = object.times;
     var idnum = 1;
     var objectlabel = object.label;
     for(var i = 0; i < times.length; i++){
         //FORMAT TIME 
         var STARTDATE = times[i].new_start_time;
+        STARTDATE = STARTDATE.replace(" ", "T");
+        STARTDATE = STARTDATE + "Z";
+        var sd = new Date(STARTDATE);
         console.log(STARTDATE);
         var ENDDATE = times[i].new_end_time;
+        ENDDATE = ENDDATE.replace(" ", "T");
+        ENDDATE = ENDDATE + "Z";
+        var ed = new Date(ENDDATE);
         var idid = objectlabel + idnum;
         var lotId = times[i].lotId;
         if(lotId.indexOf('_')>0) lotId = lotId.substring(0, lotId.indexOf('_'));
+
+        var lotIdID = lotId.substr(lotId.length - 4);
+
         var decisionKey = times[i].degree + '_' + lotId;
 
-        data.add({id: idid, text: times[i].productId, start: STARTDATE, end: ENDDATE,
-            group: object.label, className: times[i].productGroup, content: decisionKey});
+        // data.add({id: idid, text: times[i].productId, start: sd, end: ed,
+        //     group: objectlabel, className: times[i].productGroup, content: lotIdID});
+
+
+        data.add({id: idid, text: times[i].productId, start: sd, end: ed,
+            group: objectlabel, content: idid});
         idnum++;
     }
 
