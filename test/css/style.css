@@ -404,3 +404,18 @@ table{
     border-collapse: collapse;
     border: 1px solid black;
 }
+
+/*Time line Color*/
+/* Use this to automate it later.
+https://davidwalsh.name/add-rules-stylesheets*/
+.MCP{
+    color: black;
+    background-color: green;
+}
+.DDW{
+    color: black;
+    background-color:orange; 
+}
+.c12{
+    color black
+}
