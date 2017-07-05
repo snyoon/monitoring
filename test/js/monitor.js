@@ -350,6 +350,7 @@ var openFile = function (event) {
         window.alert("No File Selected");
     }
     
+
     // $("#listOfCharts").on("click", "a", function (e) {
     //     e.preventDefault();
 
