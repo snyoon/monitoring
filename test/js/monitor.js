@@ -60,6 +60,7 @@ var shipLine
 var graphWidth
 var graphHeight
 
+var currentTab;
 
 
 var openFile = function (event) {
@@ -137,17 +138,27 @@ var openFile = function (event) {
         if(schedules.length >1){
             //this is making non active tabs 
             var graphTabs = document.getElementById("listOfCharts");
-            var li = document.createElement("li");
-            li.setAttribute("class", "nav");
-            var tabA = document.createElement("a");
-            var divID = "chartdiv" + schedules.length;
-            var tabhref = "#" + divID;
-            tabA.setAttribute("data-toggle", "tab");
-            tabA.setAttribute("href", tabhref);
-            tabA.appendChild(document.createTextNode(TscheduleName));
+            // var li = document.createElement("li");
+            // li.setAttribute("class", "nav");
+            // var arbID = divID+"123123";
+            // li.setAttribute("id",arbID);
+            // var tabA = document.createElement("a");
+             var divID = "chartdiv" + schedules.length;
+            // var tabhref = "#" + divID;
+            // tabA.setAttribute("data-toggle", "tab");
+            // tabA.setAttribute("href", tabhref);
+            // tabA.appendChild(document.createTextNode(TscheduleName));
 
-            li.appendChild(tabA);
-            graphTabs.appendChild(li)
+            // var buttonClose = document.createElement("button");
+            // buttonClose.setAttribute("class", "close closeTab");
+            // buttonClose.setAttribute("type", "button");
+            // buttonClose.appendChild(document.createTextNode("   x"));
+            // buttonClose.setAttribute("onclick", "doeThisDosoemthing(arbID)");
+
+            $("#listOfCharts").append('<li class="nav"><a data-toggle="tab" href="#' + divID + '"><button class="close closeTab" type="button" >×</button>'+TscheduleName+'</a></li>');
+            // tabA.appendChild(buttonClose);
+            // li.appendChild(tabA);
+            // graphTabs.appendChild(li)
             
             //creates the tabcontent divs for the loaded files.
             //havent added charts 
@@ -218,26 +229,29 @@ var openFile = function (event) {
             chartTypesContent.appendChild(scheduleChartDive);
             chartTypesContent.appendChild(statChartDive);
             chartTypesContent.appendChild(loadChartDive);
-
+            //doeThisDosoemthing();
 
 
         }else{
             var graphTabs = document.getElementById("listOfCharts");
-            var li = document.createElement("li");
-            //makes this the active tab
-            li.setAttribute("class", "nav active");
+            // var li = document.createElement("li");
+            // //makes this the active tab
+            // li.setAttribute("class", "nav active");
 
-            var tabA = document.createElement("a");
-            //id of the tab is the file name
-            tabA.setAttribute("data-toggle", "tab");
-            var divID = "chartdiv" + schedules.length;
-            newSchedule.divID = divID;
-            var tabhref = "#" +divID;
-            tabA.setAttribute("href", tabhref);
-            tabA.appendChild(document.createTextNode(TscheduleName));
+            // var tabA = document.createElement("a");
+            // //id of the tab is the file name
+            // tabA.setAttribute("data-toggle", "tab");
+             var divID = "chartdiv" + schedules.length;
+            // newSchedule.divID = divID;
+            // var tabhref = "#" +divID;
+            // tabA.setAttribute("href", tabhref);
+            // tabA.appendChild(document.createTextNode(TscheduleName));
 
-            li.appendChild(tabA);
-            graphTabs.appendChild(li);
+            $("#listOfCharts").append('<li class="nav active"><a data-toggle="tab" href="#' + divID + '"><button class="close closeTab" type="button" >×</button>'+TscheduleName+'</a></li>');
+            
+
+            // li.appendChild(tabA);
+            // graphTabs.appendChild(li);
 
             //creates the tabcontent divs for the loaded files.
             //havent added charts 
@@ -311,8 +325,8 @@ var openFile = function (event) {
             chartTypesContent.appendChild(loadChartDive);
 
         }
-        
-      	timelineHover(traveledTime, href11, TscheduleName);
+        doeThisDosoemthing(TscheduleName);
+        timelineHover(traveledTime, href11, TscheduleName);
         ProductionStatus(TKPIs, TproductionStat, href22, TKPI);
         loadTabCreate(href33,inputData.LoadAnalysis);
         comparePage();
@@ -336,7 +350,27 @@ var openFile = function (event) {
         window.alert("No File Selected");
     }
     
+
+    // $("#listOfCharts").on("click", "a", function (e) {
+    //     e.preventDefault();
+
+    //     $(this).tab('show');
+    //     $currentTab = $(this);
+    // });
 };
+
+function doeThisDosoemthing(link){
+
+    listofnames.splice(listofnames.indexOf(link));
+    $(".closeTab").click(function () {
+        console.log($("#listOfCharts"));
+        var tabContentId = $(this).parent().attr("href");
+        $(this).parent().parent().remove(); //remove li of tab
+        $('#listOfCharts a:last').tab('show'); // Select first tab
+        $(tabContentId).remove(); //remove respective tab content
+
+    });
+}
 
 var openCompareFile = function (event) {
     var input = event.target;
@@ -538,6 +572,7 @@ function displayAttribute(d, datum, divID, scheduleName){
     var denominator = allDenominator[scheduleName];
    
     var lotId = d.lotId;
+    console.log(lotId);
     if(lotId.indexOf('_')>0) lotId = lotId.substring(0, lotId.indexOf('_'))
         var decisionKey = d.degree + '_' + lotId;
     var decisionsArray = decisionInfo[decisionKey];
@@ -1913,6 +1948,7 @@ function tableclick(){
  //            })
 }
 
+
 function loadTabCreate(divID, LAjsonobj){
 
     var TargetObject = LAjsonobj.TargetInfo;
@@ -2178,3 +2214,5 @@ function productOBJ(id, datime, wbtime, target, load){
     this.target= target;
     this.load = load;
 }
+
+
