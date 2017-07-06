@@ -368,7 +368,12 @@ function doeThisDosoemthing(link){
         $(this).parent().parent().remove(); //remove li of tab
         $('#listOfCharts a:last').tab('show'); // Select first tab
         $(tabContentId).remove(); //remove respective tab content
-
+        var result = $.grep(schedules, function(e){if(e.name == link){schedules.remove(e);} });
+        console.log(result);
+        console.log(schedules);
+        schedules.slice(schedules.indexOf(result[0]));
+        console.log(schedules);
+        comparePage()
     });
 }
 
@@ -572,7 +577,6 @@ function displayAttribute(d, datum, divID, scheduleName){
     var denominator = allDenominator[scheduleName];
    
     var lotId = d.lotId;
-    console.log(lotId);
     if(lotId.indexOf('_')>0) lotId = lotId.substring(0, lotId.indexOf('_'))
         var decisionKey = d.degree + '_' + lotId;
     var decisionsArray = decisionInfo[decisionKey];
@@ -1982,7 +1986,6 @@ function loadTabCreate(divID, LAjsonobj){
 
     var numbOfDays = listofProducts[0].target.length;
     var numbOfDaysLoad = listofProducts[0].load.DA.length;
-    console.log(numbOfDaysLoad);
 
     var header2cell = rowHeader.insertCell(1);
     header2cell.setAttribute("colspan", 2*numbOfDays);
@@ -2039,7 +2042,6 @@ function topDayCells(row,startIndex, nOD){
 }
 
 function tableLoadFiller(index, product,days,table,daysload){
-	console.log(product);
     var tracker =0;
     var temprow = table.insertRow(-1);
     var temprow2 = table.insertRow(-1);
