@@ -408,14 +408,23 @@ table{
 /*Time line Color*/
 /* Use this to automate it later.
 https://davidwalsh.name/add-rules-stylesheets*/
-.MCP{
+.vis-item.MCP{
     color: black;
     background-color: green;
 }
-.DDW{
+.vis-item.DDW{
     color: black;
     background-color:orange; 
 }
-.c12{
-    color black
+.vis-item.C12{
+    color: black;
+    background-color: rgb(31, 119, 180);
+}
+.vis-item.reserve{
+    background: repeating-linear-gradient(-45deg, #de9dd4, #de9dd4 5px, white 5px, white 10px);
+    background-color: rgba(255,0,0,  0) ;
+}
+.vis-item.setup{
+    color: black;
+    background-color:black;
 }

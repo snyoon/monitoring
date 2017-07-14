@@ -2190,23 +2190,41 @@ function timelineCreate(schedule, div){
     //CREATE STYLES FOR ALL THE DIFFERENT PRODUCT GROUPS
 
     var data = new vis.DataSet();
-
+    var listOfGroups = []
+    var groups = new vis.DataSet();
     for (var i = 0; i < tlINFO.length; i++) {
-        indivObjectHandler(tlINFO[i], data, schedule.Decision, scheduleName);
+        indivObjectHandler(tlINFO[i], data, schedule.Decision, scheduleName, listOfGroups);
+    }
+
+    for(var i =0; i < listOfGroups.length; i++){
+        groups.add({id: listOfGroups[i], content: listOfGroups[i]})
     }
     console.log(data);
 
     var options = {
         width:'100%',
-        height: window.innerHeight - document.getElementById("myFiles").offsetHeight - (document.getElementById("listOfCharts").offsetHeight * 2),
+        //height: window.innerHeight - document.getElementById("myFiles").offsetHeight - (document.getElementById("listOfCharts").offsetHeight * 2),
+        //maxHeight: window.innerHeight - document.getElementById("myFiles").offsetHeight - (document.getElementById("listOfCharts").offsetHeight * 2),
         zoomMax: 31556952000,
         stackSubgroups: false,
         groupOrder: "id",
+        stack: false,
+        orientation: {
+            axis: "both"},
+        margin: {
+            item : {
+                horizontal : 0
+            }
+    }
 
     };
 
-    var timeline = new vis.Timeline(container, data, options);
-
+    //var timeline = new vis.Timeline(container, data, groups, options);
+    var timeline = new vis.Timeline(container);
+    timeline.setOptions(options);
+    timeline.setGroups(groups);
+    timeline.setItems(data);
+    console.log(timeline);
  //    timeline.on("select", function(properties){
  //        var decisionInfo = alldecisionInfo[scheduleName];
  //        var productInfo = allProductInfo[scheduleName];
@@ -2373,26 +2391,37 @@ function indivObjectHandler(object, data, decision, schedulename, listofGroups){
         var STARTDATE = times[i].new_start_time;
         STARTDATE = STARTDATE.replace(" ", "T");
         STARTDATE = STARTDATE + "Z";
-        var sd = new Date(STARTDATE);
-        console.log(STARTDATE);
+        var sd = new Date(times[i].starting_time);
         var ENDDATE = times[i].new_end_time;
         ENDDATE = ENDDATE.replace(" ", "T");
         ENDDATE = ENDDATE + "Z";
-        var ed = new Date(ENDDATE);
+        var ed = new Date(times[i].ending_time);
         var idid = objectlabel + idnum;
         var lotId = times[i].lotId;
         if(lotId.indexOf('_')>0) lotId = lotId.substring(0, lotId.indexOf('_'));
+        if(lotId.includes("Setup")){
+           var lotIdID = '\u200b';
+           var classID = "setup";
 
-        var lotIdID = lotId.substr(lotId.length - 4);
+        }else if(lotId.includes("RESERVED")){
+            var classID = "reserve";
+            var lotIdID ='\u200b';
+        }else{
+            var lotIdID = lotId.substr(lotId.length - 4);
+            var classID = times[i].productGroup;
+        }
 
         var decisionKey = times[i].degree + '_' + lotId;
+        if((ed + sd ) != (2 * ed)){
+         data.add({id: idid, text: times[i].productId, start: sd, end: ed,
+             group: objectlabel, subgroup: objectlabel, className: classID, content: lotIdID});
+        }
 
-        // data.add({id: idid, text: times[i].productId, start: sd, end: ed,
-        //     group: objectlabel, className: times[i].productGroup, content: lotIdID});
+        if(listofGroups.indexOf(objectlabel)<0){
+            listofGroups.push(objectlabel);
+        }
 
-
-        data.add({id: idid, text: times[i].productId, start: sd, end: ed,
-            group: objectlabel, content: idid});
+        
         idnum++;
     }
 
