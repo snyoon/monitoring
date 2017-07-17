@@ -1948,7 +1948,7 @@ function loadTabCreate(divID, LAjsonobj){
 
     var numbOfDays = listofProducts[0].target.length;
     var numbOfDaysLoad = listofProducts[0].load.DA.length;
-    console.log(numbOfDaysLoad);
+
 
     var header2cell = rowHeader.insertCell(1);
     header2cell.setAttribute("colspan", 2*numbOfDays);
@@ -2181,7 +2181,6 @@ function productOBJ(id, datime, wbtime, target, load){
 }
 
 function timelineCreate(schedule, div){
-
     var container = document.getElementById(div);
 
     var tlINFO = schedule.ganttData;
@@ -2199,7 +2198,6 @@ function timelineCreate(schedule, div){
     for(var i =0; i < listOfGroups.length; i++){
         groups.add({id: listOfGroups[i], content: listOfGroups[i]})
     }
-    console.log(data);
 
     var options = {
         width:'100%',
@@ -2224,11 +2222,20 @@ function timelineCreate(schedule, div){
     timeline.setOptions(options);
     timeline.setGroups(groups);
     timeline.setItems(data);
-    console.log(timeline);
+
+    timeline.on('select', function(properties){
+        var temp = data.get(properties.items[0]);
+        multiSelectClick(timeline, temp, data);
+    })
+    timeline.on('doubleClick', function(properties){
+        var decisionInfo = alldecisionInfo[scheduleName];
+        var productInfo = allProductInfo[scheduleName];
+        var denominator = allDenominator[scheduleName];
+
+        
+    })
+
  //    timeline.on("select", function(properties){
- //        var decisionInfo = alldecisionInfo[scheduleName];
- //        var productInfo = allProductInfo[scheduleName];
- //        var denominator = allDenominator[scheduleName];
 
  //        var decisionKey = properties.content;
  //        console.log(properties);
@@ -2381,12 +2388,30 @@ function timelineCreate(schedule, div){
 }
 
 
+function multiSelectClick(timeline, clicked, list){
+    var look = clicked.content;
+    
+    var group11 =[];
+    var group2 = list.get({
+        filter: function(item){
+            if(item.content == look){
+                        group11.push(item.id);
+                        return(item.id);
+                    }}
+    }) 
+    timeline.setSelection(group11);
+}
+
 
 function indivObjectHandler(object, data, decision, schedulename, listofGroups){
     var times = object.times;
     var idnum = 1;
     var objectlabel = object.label;
     for(var i = 0; i < times.length; i++){
+
+        var idididid = times[i].lotId;
+        if(idididid.indexOf('_')>0) idididid = idididid.substring(0, idididid.indexOf('_'))
+        var decisionKey = times[i].degree + '_' + idididid;
         //FORMAT TIME 
         var STARTDATE = times[i].new_start_time;
         STARTDATE = STARTDATE.replace(" ", "T");
@@ -2412,8 +2437,13 @@ function indivObjectHandler(object, data, decision, schedulename, listofGroups){
         }
 
         var decisionKey = times[i].degree + '_' + lotId;
+        if(decisionKey.indexOf("Setup")>0){
+            decisionKey = decisionKey + idnum;
+        }else if(decisionKey.indexOf("RESEREVD")){
+            decisionKey = decisionKey + idnum;
+        }
         if((ed + sd ) != (2 * ed)){
-         data.add({id: idid, text: times[i].productId, start: sd, end: ed,
+         data.add({id: decisionKey, text: times[i].productId, start: sd, end: ed,
              group: objectlabel, subgroup: objectlabel, className: classID, content: lotIdID});
         }
 
@@ -2421,7 +2451,7 @@ function indivObjectHandler(object, data, decision, schedulename, listofGroups){
             listofGroups.push(objectlabel);
         }
 
-        
+        console.log(data);
         idnum++;
     }
 
