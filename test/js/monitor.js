@@ -524,9 +524,11 @@ function timelineHover(traveledTime, divID, scheduleName) {
                  clickedElement = '';
              }
              else if(d.lotId != clickedElement && boolSelected == true){
+
  
              }
              else{
+                console.log("This is the selected eventId  " + eventId)
                 d3.selectAll('#'+selectedLotId)
                 displayAttribute(d, datum,divID, scheduleName)
                 selectLots(selectedLotId, eventId,divID)
@@ -576,7 +578,12 @@ function displayAttribute(d, datum, divID, scheduleName){
     if(lotId.indexOf('_')>0) lotId = lotId.substring(0, lotId.indexOf('_'))
         var decisionKey = d.degree + '_' + lotId;
     var decisionsArray = decisionInfo[decisionKey];
-    var currentStatus = decisionsArray[0];
+
+    if(decisionsArray == null){
+        return;
+    }else{
+        var currentStatus = decisionsArray[0];
+    }
     // create a new popup windowsssss
     var newWindow = document.createElement("div");
     newWindow.setAttribute("id", "dialogbox");
