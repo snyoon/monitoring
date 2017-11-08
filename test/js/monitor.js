@@ -1973,18 +1973,9 @@ function loadTabCreate(divID, LAjsonobj){
     var listofProducts = [];
  
     for(var i =0; i<filteredProductarray.length; i++){
-        if(filteredProductarray[i].productGroup === "N"){
-            // var tempid = filteredProductarray[i].productId;
-            // console.log(filteredProductarray[i].productGroup);
-            // var tempPO = productOBJ(tempid, filteredProductarray[i].processingTime.DA, Productarray[i].processingTime.WB, TargetObject.tempid, LoadObject.tempid);
-            // console.log(tempPO);
-            // listofProducts.push(tempPO);
- 
-        }else{
-            var tempid = filteredProductarray[i].productId;
-            var tempPO = new productOBJ(tempid, filteredProductarray[i].processingTime.DA, Productarray[i].processingTime.WB, TargetObject[tempid], LoadObject[tempid]);
-            listofProducts.push(tempPO);
-        }
+        var tempid = filteredProductarray[i].productId;
+        var tempPO = new productOBJ(tempid, filteredProductarray[i].processingTime.DA, Productarray[i].processingTime.WB, TargetObject[tempid], LoadObject[tempid]);
+        listofProducts.push(tempPO);
     }
     listofProducts.sort(function(a,b) {return (a.id > b.id) ? 1 : ((b.id > a.id) ? -1 : 0);} ); 
     var table = document.createElement("table");

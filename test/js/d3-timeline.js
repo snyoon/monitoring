@@ -62,12 +62,13 @@
         yScale,
         // For Product Group Color
         c10 = d3.scale.category10();
-        colorDomain = ["C12", "DDW", "MCP"]
+        colorDomain = ["C12", "DDW", "MCP", "N"]
         c10.domain(colorDomain)
         var colorCycle = {
           "C12" : c10("C12"), 
           "DDW" : c10("DDW"),
-          "MCP" : c10("MCP")
+          "MCP" : c10("MCP"),
+          "N" :  c10("N")
         // 'SDP_01': '#2A75A6',
         // 'SDP_02': '#AEC6EB',
         // 'SDP_03': '#FD7E12',
@@ -308,7 +309,7 @@
         if(d.lotId != 'OVERFLOW' && d.lotId != 'RESERVED' && d.lotId.indexOf('Setup') < 0 ){
           if(d.lotId.indexOf('WIP')>-1) return 'WIP'
             else{
-              var displayedLotId = d.lotId.substring(3, d.lotId.length)
+              var displayedLotId = d.lotId.substring(0, d.lotId.length)
               return displayedLotId
             }
           } 
@@ -480,7 +481,7 @@ operationsEnter.append(function (d, i) {
                           if(d.lotId != 'OVERFLOW' && d.lotId != 'RESERVED' && d.lotId.indexOf('Setup') < 0 ){
                             if(d.lotId.indexOf('WIP')>-1) return 'WIP'
                               else{
-                                var displayedLotId = d.lotId.substring(3, d.lotId.length)
+                                var displayedLotId = d.lotId.substring(0, d.lotId.length)
                                 return displayedLotId
                                 // return d.lotId.substring(1, d.lotId.length);  
                               }
