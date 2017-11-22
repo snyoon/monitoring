@@ -2212,9 +2212,9 @@ function productOBJ(id, datime, wbtime, target, load){
  
     this.group = id.split("_")[0];
     this.productid= id.split("_")[1]
- 
-    this.processTimeWB = wbtime;
-    this.processTimeDA = datime;
+ 	
+    this.processTimeWB = wbtime.toFixed(2);
+    this.processTimeDA = datime.toFixed(2);
     this.target= target;
     this.load = load;
 }
