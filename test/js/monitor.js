@@ -517,7 +517,7 @@ function timelineHover(traveledTime, divID, scheduleName) {
               if(d.lotId  == 'RESERVED') return 'url(#diagonal-stripe-1)' 
                   else if(d.lotId =='HeteroSetup') return '000000'
                       else if (d.lotId =='HomoSetup') return '545454' 
-                          else return colorCycle[d.productGroup];
+                          else return colorCycle[d.productId];
                   })   
                  // d3.selectAll('#attribute').classed('cbp-spmenu-open', false)
                  boolSelected = false;
@@ -995,10 +995,10 @@ function selectLots(lotId, eventId, idofchart){
     rects.style("fill", function (d, i) {
         if(d.lotId.indexOf(motherLotId)>-1){
             if(d.lotId.indexOf('WIP')>-1){
-                if(motherLotId.indexOf('WIP')>-1) return colorCycle[d.productGroup];
+                if(motherLotId.indexOf('WIP')>-1) return colorCycle[d.productId];
                 else return 'white'
             }
-        else return colorCycle[d.productGroup];
+        else return colorCycle[d.productId];
     } 
     else return 'white'
 })
