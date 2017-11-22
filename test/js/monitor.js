@@ -368,7 +368,6 @@ function doeThisDosoemthing(link){
         $(this).parent().parent().remove(); //remove li of tab
         $('#listOfCharts a:last').tab('show'); // Select first tab
         $(tabContentId).remove(); //remove respective tab content
- 
     });
 }
  
@@ -574,7 +573,6 @@ function displayAttribute(d, datum, divID, scheduleName){
     var denominator = allDenominator[scheduleName];
     
     var lotId = d.lotId;
-    console.log(lotId);
     if(lotId.indexOf('_')>0) lotId = lotId.substring(0, lotId.indexOf('_'))
         var decisionKey = d.degree + '_' + lotId;
     var decisionsArray = decisionInfo[decisionKey];
@@ -2214,9 +2212,9 @@ function productOBJ(id, datime, wbtime, target, load){
  
     this.group = id.split("_")[0];
     this.productid= id.split("_")[1]
- 
-    this.processTimeWB = wbtime;
-    this.processTimeDA = datime;
+ 	
+    this.processTimeWB = wbtime.toFixed(2);
+    this.processTimeDA = datime.toFixed(2);
     this.target= target;
     this.load = load;
 }
