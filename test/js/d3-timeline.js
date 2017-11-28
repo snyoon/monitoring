@@ -62,13 +62,13 @@
         yScale,
         // For Product Group Color
         c10 = d3.scale.category10();
-        colorDomain = ["C12", "DDW", "MCP", "N"]
-        c10.domain(colorDomain)
+        // colorDomain = ["C12", "DDW", "MCP", "N"]
+        colorDomain = ["2MCP_01", "2MCP_02", "2MCP_03"]
+        c10.domain(colorDomain);
         var colorCycle = {
-          "C12" : c10("C12"), 
-          "DDW" : c10("DDW"),
-          "MCP" : c10("MCP"),
-          "N" :  c10("N")
+          "2MCP_01" : c10("2MCP_01"), 
+          "2MCP_02" : c10("2MCP_02"),
+          "2MCP_03" : c10("2MCP_03"),
         // 'SDP_01': '#2A75A6',
         // 'SDP_02': '#AEC6EB',
         // 'SDP_03': '#FD7E12',
@@ -84,7 +84,28 @@
         // '3MCP_02': '#D87CC6',
         // '4MCP_01': '#F9B8D3',
         // '4MCP_02': '#7E7E7E'
-      };
+        };
+      //   var colorCycle = {
+      //     "C12" : c10("C12"), 
+      //     "DDW" : c10("DDW"),
+      //     "MCP" : c10("MCP"),
+      //     "N" :  c10("N")
+      //   // 'SDP_01': '#2A75A6',
+      //   // 'SDP_02': '#AEC6EB',
+      //   // 'SDP_03': '#FD7E12',
+      //   // 'DDP_01': '#FCB972',
+      //   // 'DDP_02': '#2AA12D',
+      //   // 'DDP_03': '#A0D993',
+      //   // 'DDP_04': '#8BC432',
+      //   // 'QDP_01': '#FF9894',
+      //   // 'QDP_02': '#9663C3',
+      //   // '2MCP_01': '#C8ADDB',
+      //   // '2MCP_02': '#8B5844',
+      //   // '3MCP_01': '#C19992',
+      //   // '3MCP_02': '#D87CC6',
+      //   // '4MCP_01': '#F9B8D3',
+      //   // '4MCP_02': '#7E7E7E'
+      // };
       
       
       height = window.innerHeight - document.getElementById("myFiles").offsetHeight - document.getElementById("listOfCharts").offsetHeight;
@@ -423,7 +444,7 @@ operationsEnter.append(function (d, i) {
                         if(d.lotId  == 'RESERVED') return  'url(#diagonal-stripe-1)' 
                           else if(d.lotId =='HeteroSetup') return '000000'
                             else if (d.lotId =='HomoSetup') return '545454'
-                              else return c10(d.productGroup)
+                              else return c10(d.productId)
                         // else  return 'url(#diagonal-stripe-1) #fff'
                     })
                     /*.style('opacity', function(d, i){
