@@ -522,29 +522,28 @@ operationsEnter.append(function (d, i) {
 
 }
 
-
 // ---------- Vertical Line ------------
-    // var vertical = d3.select("#process")
-    //     .append("div")
-    //     .attr("class", "remove")
-    //     .style("position", "absolute")
-    //     .style("z-index", "19")
-    //     .style("width", "2px")
-    //     .style("height", (height-margin.bottom-10)+"px")
-    //     .style("top", "50px")
-    //     .style("bottom", "10px")
-    //     .style("left", "0px")
-    //     .style("background", "red");
+    var vertical = d3.select("#process")
+        .append("div")
+        .attr("class", "remove")
+        .style("position", "absolute")
+        .style("z-index", "19")
+        .style("width", "2px")
+        .style("height", (height-margin.bottom-10)+"px")
+        .style("top", "50px")
+        .style("bottom", "10px")
+        .style("left", "0px")
+        .style("background", "red");
 
-    // d3.select("#process")
-    //     .on("mousemove", function(){  
-    //         mousex = d3.mouse(this);
-    //         mousex = mousex[0] + 5;
-    //         vertical.style("left", mousex + "px" )})
-    //     .on("mouseover", function(){  
-    //         mousex = d3.mouse(this);
-    //         mousex = mousex[0] + 5;
-    //         vertical.style("left", mousex + "px")});
+    d3.select("#process")
+        .on("mousemove", function(){  
+            mousex = d3.mouse(this);
+            mousex = mousex[0] + 5;
+            vertical.style("left", mousex + "px" )})
+        .on("mouseover", function(){  
+            mousex = d3.mouse(this);
+            mousex = mousex[0] + 5;
+            vertical.style("left", mousex + "px")});
 
   }
 // ---------0----------------------

@@ -1,4 +1,4 @@
-    processWidth = document.body.clientWidth
+processWidth = document.body.clientWidth;
     //None of the original code was deleted. just commented out with OG tag. 
     var testOut;
     var fileTest;
@@ -73,7 +73,8 @@ var openFile = function (event) {
  
     var input = event.target;
     var reader = new FileReader();
- 
+    // NEW CODE
+    // Stops you from opening multiples of the same file by comparing the file names. 
     reader.onload = function () {
      if(listofnames.indexOf(document.getElementById("myFiles").files[0].name) != -1) {
         window.alert("This file is already in use.");
@@ -86,7 +87,9 @@ var openFile = function (event) {
     inputData = JSON.parse(testOut);
     inputCorrectCheck(inputData);
     var index = 0;
-        //Creates the scheduleObj for the read schedule
+    // ~~~~~~~~~~~~~~~~~~scheduleOBJ CREATION~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    //Creates the scheduleObj for the read schedule
+    // parases through the file input
         var TscheduleName = document.getElementById("myFiles").files[0].name;
         listofnames.push(TscheduleName);
         actionAttribute = inputData['actionAttribute'];
@@ -130,7 +133,8 @@ var openFile = function (event) {
             TmaxTime,
             TproductionStat,
             TKPIs);
- 
+        //~~~~~~~~~~~~END OF SCHEDULEOBJ CREATION~~~~~~~~~~~~~~~~~~~~~~~~~~
+
         activeSchedule = newSchedule;
         //adds the newly read file onto the list of schedules. 
         schedules.push(newSchedule);
@@ -153,15 +157,19 @@ var openFile = function (event) {
             // buttonClose.setAttribute("class", "close closeTab");
             // buttonClose.setAttribute("type", "button");
             // buttonClose.appendChild(document.createTextNode("   x"));
-            // buttonClose.setAttribute("onclick", "doeThisDosoemthing(arbID)");
+            // buttonClose.setAttribute("onclick", "chartRemoveFunction(arbID)");
  
             $("#listOfCharts").append('<li class="nav"><a data-toggle="tab" href="#' + divID + '"><button class="close closeTab" type="button" >×</button>'+TscheduleName+'</a></li>');
             // tabA.appendChild(buttonClose);
             // li.appendChild(tabA);
             // graphTabs.appendChild(li)
-             
-            //creates the tabcontent divs for the loaded files.
-            //havent added charts 
+            
+
+            // NEW CODE
+            // Below sets up the different tabs for each of the uploaded files.
+            // (basically sets up the HTML document)
+
+            //creates the tabcontent divs for the loaded files. 
             var tabContentDiv = document.getElementById("tabcontentsChart");
             var div = document.createElement("div");
             //var divID = "chartdiv" + schedules.length;
@@ -206,6 +214,17 @@ var openFile = function (event) {
             chartNavLoadA.appendChild(document.createTextNode("Load Analysis"));
             chartNavLoad.appendChild(chartNavLoadA);
             chartNav.appendChild(chartNavLoad);
+
+            //WIP Analysis Tab
+            var chartNavWip = document.createElement("li");
+            chartNavWip.setAttribute("class", "nav");
+            var chartNavWipA = document.createElement("a");
+            chartNavWipA.setAttribute("data-toggle", "tab");
+            var href44 = "wip" +divID;
+            chartNavWipA.setAttribute("href", "#" + href44);
+            chartNavWipA.appendChild(document.createTextNode("WIP Charts"));
+            chartNavWip.appendChild(chartNavWipA);
+            chartNav.appendChild(chartNavWip);
  
             //making the different chart content html
             var chartTypesContent = document.createElement("div");
@@ -224,12 +243,16 @@ var openFile = function (event) {
  
             var loadChartDive = document.createElement("div");
             loadChartDive.setAttribute("id", href33);
-            loadChartDive.setAttribute("class","tab-pane fade");          
+            loadChartDive.setAttribute("class","tab-pane fade");  
+
+            var wipChartDive = document.createElement("div");
+            wipChartDive.setAttribute("id", href44);
+            wipChartDive.setAttribute("class","tab-pane fade");          
  
             chartTypesContent.appendChild(scheduleChartDive);
             chartTypesContent.appendChild(statChartDive);
             chartTypesContent.appendChild(loadChartDive);
-            //doeThisDosoemthing();
+            chartTypesContent.appendChild(wipChartDive);
  
  
         }else{
@@ -299,7 +322,17 @@ var openFile = function (event) {
             chartNavLoadA.appendChild(document.createTextNode("Load Analysis"));
             chartNavLoad.appendChild(chartNavLoadA);
             chartNav.appendChild(chartNavLoad);
- 
+
+            //WIP Analysis Tab
+            var chartNavWip = document.createElement("li");
+            chartNavWip.setAttribute("class", "nav");
+            var chartNavWipA = document.createElement("a");
+            chartNavWipA.setAttribute("data-toggle", "tab");
+            var href44 = "wip" +divID;
+            chartNavWipA.setAttribute("href", "#" + href44);
+            chartNavWipA.appendChild(document.createTextNode("WIP Charts"));
+            chartNavWip.appendChild(chartNavWipA);
+            chartNav.appendChild(chartNavWip);
  
             //making the different chart content html
             var chartTypesContent = document.createElement("div");
@@ -319,16 +352,24 @@ var openFile = function (event) {
             var loadChartDive = document.createElement("div");
             loadChartDive.setAttribute("id", href33);
             loadChartDive.setAttribute("class","tab-pane fade");
+
+            var wipChartDive = document.createElement("div");
+            wipChartDive.setAttribute("id", href44);
+            wipChartDive.setAttribute("class","tab-pane fade"); 
  
             chartTypesContent.appendChild(scheduleChartDive);
             chartTypesContent.appendChild(statChartDive);
             chartTypesContent.appendChild(loadChartDive);
+            chartTypesContent.appendChild(wipChartDive);
  
         }
-        doeThisDosoemthing(TscheduleName);
+        //NEW CODE chartRemoveFunction, production status and load tabe create,
+        // compare pages have explanaintiosn at definition
+        chartRemoveFunction(TscheduleName);
         timelineHover(traveledTime, href11, TscheduleName);
         ProductionStatus(TKPIs, TproductionStat, href22, TKPI);
         loadTabCreate(href33,inputData.LoadAnalysis);
+        wipTabCreate(href44,inputData.ProductionStatus[8]);
         comparePage();
         for (var i = 0; i < TganttData.length; i++) {
             var tempLabel = TganttData[i]['label'];
@@ -359,11 +400,12 @@ var openFile = function (event) {
     // });
 };
  
-function doeThisDosoemthing(link){
- 
+//NEW CODE
+//Gets rid of the selected file from the list of files that have been uploaded
+//Just used in case you add a file, delete the file, but the nyou want to reupload the file. 
+function chartRemoveFunction(link){
     listofnames.splice(listofnames.indexOf(link));
     $(".closeTab").click(function () {
-        console.log($("#listOfCharts"));
         var tabContentId = $(this).parent().attr("href");
         $(this).parent().parent().remove(); //remove li of tab
         $('#listOfCharts a:last').tab('show'); // Select first tab
@@ -499,7 +541,7 @@ function timelineHover(traveledTime, divID, scheduleName) {
     var boolSelected = false;
     var clickedElement = "";
      
-    chart = d3.timeline().width(processWidth).stack().margin(margin)
+    chart = d3.timeline(divID).width(processWidth).stack().margin(margin)
     .traveledTime(traveledTime).showTimeAxisTick().hover(function (d, i, datum) {
             // d is the current rendering object
             // i is the index during d3 rendering
@@ -527,7 +569,7 @@ function timelineHover(traveledTime, divID, scheduleName) {
  
              }
              else{
-                console.log("This is the selected eventId  " + eventId)
+                //console.log("This is the selected eventId  " + eventId)
                 d3.selectAll('#'+selectedLotId)
                 displayAttribute(d, datum,divID, scheduleName)
                 selectLots(selectedLotId, eventId,divID)
@@ -553,6 +595,32 @@ function timelineHover(traveledTime, divID, scheduleName) {
  
     //Disables the doubleclick zoom function on the graph.    
     d3.selectAll("svg").on("dblclick.zoom", null);
+
+    // ---------- Vertical Line ------------
+    // TO DO
+    // heightGraph = window.innerHeight - document.getElementById("myFiles").offsetHeight - document.getElementById("listOfCharts").offsetHeight;
+    // var vertical = d3.select("#" + divID)
+    //     .append("div")
+    //     .attr("class", "remove")
+    //     .style("position", "absolute")
+    //     .style("z-index", "19")
+    //     .style("width", "2px")
+    //     .style("height", (heightGraph-30-10)+"px")
+    //     .style("top", "50px")
+    //     .style("bottom", "10px")
+    //     .style("left", "0px")
+    //     .style("background", "red");
+
+    // d3.select("#" + divID)
+    //     .on("mousemove", function(){  
+    //         mousex = d3.mouse(this);
+    //         mousex = mousex[0] + 5;
+    //         vertical.style("left", mousex + "px" )})
+    //     .on("mouseover", function(){  
+    //         mousex = d3.mouse(this);
+    //         mousex = mousex[0] + 5;
+    //         vertical.style("left", mousex + "px")});
+
      
 }
  
@@ -1049,6 +1117,7 @@ d3.select('#resourceView').on('click', function(){
  
  
 //------------------------------- Production Status Graphs ----------------------------------
+//This code is basically taken from previous version but just linked to the statistic tab. 
 function ProductionStatus(TKPIs, TproductionStat, href22, TKPI){
     var canvasWidth = processWidth/3.3;
     graphWidth = canvasWidth - graphMargin.left - graphMargin.right;
@@ -1424,24 +1493,24 @@ function displayKPI(lotId){
 }
  
 function drawVerticalLine(inputSvg, scaleX, scaleY, max){
- var verticalLine = inputSvg
- .append('line')
- .attr("x1", scaleX((86399)*1000-32400000))
- .attr("y1", scaleY(0))
- .attr("x2", scaleX((86399)*1000-32400000))
- .attr("y2", scaleY(max))
- .style('class','dateDivider')
- .style("stroke-width", 1)
- .style("stroke", "gray")
- var verticalLine2 = inputSvg
- .append('line')
- .attr("x1", scaleX(86399*2*1000-32400000))
- .attr("y1", scaleY(0))
- .attr("x2", scaleX(86399*2*1000-32400000))
- .attr("y2", scaleY(max))
- .style('class','dateDivider')
- .style("stroke-width", 1)
- .style("stroke", "gray")
+    var verticalLine = inputSvg
+    .append('line')
+    .attr("x1", scaleX((86399)*1000-32400000))
+    .attr("y1", scaleY(0))
+    .attr("x2", scaleX((86399)*1000-32400000))
+    .attr("y2", scaleY(max))
+    .style('class','dateDivider')
+    .style("stroke-width", 1)
+    .style("stroke", "gray")
+    var verticalLine2 = inputSvg
+    .append('line')
+    .attr("x1", scaleX(86399*2*1000-32400000))
+    .attr("y1", scaleY(0))
+    .attr("x2", scaleX(86399*2*1000-32400000))
+    .attr("y2", scaleY(max))
+    .style('class','dateDivider')
+    .style("stroke-width", 1)
+    .style("stroke", "gray")
 }
  
  
@@ -1953,9 +2022,14 @@ function tableclick(){
  //            })
 }
  
- 
+ //NEW CODE
+// creates the statistics table and links it to the statistics tab
+// divID: id of the div that it should be under in HTML DOC
+// LAjsonobj is the  id the loadanylisys portion of the input file
+// so since the data is seperated by products, we put all the data into productOBJ's 
+// and then take those objects and go through them and add each one to a table that we create. 
 function loadTabCreate(divID, LAjsonobj){
- 
+ //~~~~~~~~~~~~~~~~~~~~~~~ Parsing the file~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     var TargetObject = LAjsonobj.TargetInfo;
     var Productarray = LAjsonobj.ProductInfo;
     var filteredProductarray = [];
@@ -1964,12 +2038,11 @@ function loadTabCreate(divID, LAjsonobj){
             filteredProductarray.push(Productarray[i]);
         };
     };
-    console.log(filteredProductarray);
      
     var LoadObject = LAjsonobj.LoadInfo;
     var div = document.getElementById(divID);
     var listofProducts = [];
- 
+    //~~~~~~~~~~~~~~~~~~~~~~~~ making the productobjs~~~~~~~~~~~~~~~~~~~~~~~~~~~
     for(var i =0; i<filteredProductarray.length; i++){
         var tempid = filteredProductarray[i].productId;
         var tempPO = new productOBJ(tempid, filteredProductarray[i].processingTime.DA, Productarray[i].processingTime.WB, TargetObject[tempid], LoadObject[tempid]);
@@ -1977,7 +2050,8 @@ function loadTabCreate(divID, LAjsonobj){
     }
     listofProducts.sort(function(a,b) {return (a.id > b.id) ? 1 : ((b.id > a.id) ? -1 : 0);} ); 
     var table = document.createElement("table");
- 
+    //~~~~~~~~~~~~~Creating the table~~~~~~~~~~~~~~~~~~~~~~
+
     var header = table.createTHead();
     var rowHeader = header.insertRow(0);
     var header1cell = rowHeader.insertCell(0);
@@ -1986,7 +2060,6 @@ function loadTabCreate(divID, LAjsonobj){
  
     var numbOfDays = listofProducts[0].target.length;
     var numbOfDaysLoad = listofProducts[0].load.DA.length;
-    console.log(numbOfDaysLoad);
  
     var header2cell = rowHeader.insertCell(1);
     header2cell.setAttribute("colspan", 2*numbOfDays);
@@ -2009,17 +2082,15 @@ function loadTabCreate(divID, LAjsonobj){
     var row2c3 = row2Header.insertCell(3);
     row2c3.setAttribute("rowspan",2);
     row2c3.innerHTML="Process Time(sum)";
- 
+    //these just make the nice day headings under the 
+    // target and laod 
     topDayCells(row2Header,4,numbOfDays);
     topDayCells(row2Header, 4+ numbOfDays, numbOfDaysLoad);
  
     var row3header = header.insertRow(2);
-    // for(var ii= 0; ii<4;ii++){
-    //  var tempp = row3header.insertCell(ii);
-    // }
     dayCells(row3header,0, numbOfDays);
     dayCells(row3header, 0 + (numbOfDays *2), numbOfDaysLoad);
- 
+    //goes and fil lthe table
     for(var ii = 0; ii < listofProducts.length; ii++){
         var tempProduct = listofProducts[ii];
         tableLoadFiller(0,tempProduct,(numbOfDays*2), table,(numbOfDaysLoad*2));
@@ -2030,7 +2101,7 @@ function loadTabCreate(divID, LAjsonobj){
     table.style.fontSize = "140%";
     div.appendChild(table);
 }
- 
+
 function topDayCells(row,startIndex, nOD){
     var daytracker=1;
     for(var i = startIndex; i<startIndex + (nOD); i++){
@@ -2043,7 +2114,6 @@ function topDayCells(row,startIndex, nOD){
 }
  
 function tableLoadFiller(index, product,days,table,daysload){
-    console.log(product);
     var tracker =0;
     var temprow = table.insertRow(-1);
     var temprow2 = table.insertRow(-1);
@@ -2206,7 +2276,7 @@ function dayCells(row, startIndex, nOD){
         tracker++;
     }
 }
- 
+
 function productOBJ(id, datime, wbtime, target, load){
     this.id = id;
  
@@ -2218,3 +2288,70 @@ function productOBJ(id, datime, wbtime, target, load){
     this.target= target;
     this.load = load;
 }
+
+function wipTabCreate(divID, jSon){
+    $("#"+divID).html("<br><br><br>");
+    var numberOfCharts = jSon.values.length;
+    var values = jSon.values;
+    var heighOfCharts = document.getElementById(divID).offsetHeight;
+    var container = document.getElementById(divID);
+
+    //var dataset = new vis.DataSet();
+    for (var i = 0; i < numberOfCharts; i++) {
+        var listofgroups = [];
+        var dataset = new vis.DataSet();
+        var currentValue = values[i];
+        var productValue;
+        var keysss;
+        for(key in currentValue){
+            productValue = currentValue[key];
+            keysss= key
+        }
+        for (var x = 0; x < productValue.WB.length; x++) {
+            wipDataAdd(productValue.WB[x], dataset, listofgroups);
+        }
+        console.log(productValue.DA)
+        for (var x = 0; x < productValue.DA.length; x++) {
+            console.log("running")
+            wipDataAdd(productValue.DA[x], dataset, listofgroups);
+        }
+
+        var options = {
+            legend: true,
+            dataAxis:{
+                showMinorLabel: true,
+                left:{
+                    title:{
+                        text: keysss
+                    }
+                }
+            }};
+        var groupDataSet = new vis.DataSet();
+        for(var s = 0; s <listofgroups.length; s++){
+            var groupTemp={
+                id: listofgroups[s],
+                content: listofgroups[s],
+            }
+            groupDataSet.add(groupTemp);
+        }
+        console.log(groupDataSet)
+        var graph2d = new vis.Graph2d(container, dataset, groupDataSet, options);
+    }
+
+}
+
+function wipDataAdd(object, dataset, listofgroups){
+    var group = object.id;
+    if(!(listofgroups.includes(group))){
+        listofgroups.push(group);
+    }
+    var plots = object.plots;
+    for(var i = 0; i < plots.length; i++){
+        var time = new Date(plots[i].time);
+        dataset.add({x: time, y:plots[i].number, group: group});
+    }
+    console.log(dataset);
+}
+
+
+
