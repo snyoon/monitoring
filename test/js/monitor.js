@@ -65,7 +65,7 @@ var currentTab;
 var activeProducts=[];
  
 var openFile = function (event) {
- 
+    activeProducts = [];
     //Deletes the Charts if there were antyhing there..
     // OG CODE REMOVED 
     //d3.select('.remove').remove()
@@ -2338,7 +2338,6 @@ function wipTabCreate(divID, jSon){
     $("#"+divID).html("<br><br><br>");
     var numberOfCharts = jSon.values.length;
     var values = jSon.values;
-    var heighOfCharts = document.getElementById(divID).offsetHeight;
     var container = document.getElementById(divID);
 
     //var dataset = new vis.DataSet();
@@ -2399,44 +2398,11 @@ function eqpTabCreate(divID, object, listofProducts){
     $("#"+divID).html("<br><br><br>");
     var container = document.getElementById(divID);
     var values = object.values;
-
-    var groupDataSet = new vis.DataSet();
-        for(var s = 0; s <listofProducts.length; s++){
-            var groupTemp={
-                id: listofProducts[s],
-                content: listofProducts[s],
-                options:{
-                    drawPoints: false
-                }
-            }
-            groupDataSet.add(groupTemp);
-        }
-    groupDataSet.add({
-                    id:"to",
-                    content: "To",
-                    options:{
-                        style:"points",
-                        drawPoints:{
-                            style:"circle"
-                        }
-                    }
-    });
-
-        
-    groupDataSet.add({
-                    id:"from",
-                    content: "From",
-                    options:{
-                        style:"points",
-                        drawPoints:{
-                            style:"square"
-                        }
-                    }
-    }); 
     for( var i = 0; i < values.length; i++){
         var dawb;
         var dataset = new vis.DataSet();
         var datasetSetup = new vis.DataSet();
+        var groupDataSetEQP = new vis.DataSet();
         var keysss;
         for(key in values[i]){
             dawb = values[i][key];
@@ -2447,8 +2413,37 @@ function eqpTabCreate(divID, object, listofProducts){
             for(var k = 0; k< temppro.length; k++){
                 eqpDataAdd(temppro[k], dataset, listofProducts[x]);
             }
+            var groupTemp={
+                id: listofProducts[x],
+                content: listofProducts[x],
+                options:{
+                    drawPoints: false
+                }
+            }
+            groupDataSetEQP.add(groupTemp);
+ 
         }
 
+        groupDataSetEQP.add({
+                id:"to",
+                content: "To",
+                options:{
+                    style:"points",
+                    drawPoints:{
+                        style:"circle"
+                    }
+                }
+        });
+        groupDataSetEQP.add({
+                id:"from",
+                content: "From",
+                options:{
+                    style:"points",
+                    drawPoints:{
+                        style:"square"
+                    }
+                }
+        });
         //this loop to get the setup plot points and make a scatter plot
         var setupPlots = dawb.setup;
         for(var x=0; x<setupPlots.length;x++){
@@ -2471,9 +2466,8 @@ function eqpTabCreate(divID, object, listofProducts){
             );
             dataset.add({x:toitem[0].x, y:toitem[0].y, group:"to"});
             dataset.add({x:fromitem[0].x, y:fromitem[0].y, group:"from"})
-
-            
         }
+
         var options = {
             width: "100%",
             legend: true,
@@ -2484,11 +2478,9 @@ function eqpTabCreate(divID, object, listofProducts){
                     }
                 }
             }};
-               
-
-        var graph2d = new vis.Graph2d(container, dataset, groupDataSet, options)
-        
+        var graph2d = new vis.Graph2d(container, dataset, groupDataSetEQP, options)  
     }
+
 }
 
 function eqpDataAdd(object, dataset, group){
