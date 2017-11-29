@@ -61,7 +61,8 @@ var graphWidth
 var graphHeight
  
 var currentTab;
- 
+// List of products that are actually being worked on. 
+var activeProducts=[];
  
 var openFile = function (event) {
  
@@ -133,6 +134,17 @@ var openFile = function (event) {
             TmaxTime,
             TproductionStat,
             TKPIs);
+
+        var temptarget = inputData.LoadAnalysis.TargetInfo;
+        var tempproductarray = inputData.LoadAnalysis.ProductInfo;
+
+        //This pushes product IDs that are active into global variable 
+        //activeProducts. List is used later to go through json objects.
+        for (var i = tempproductarray.length - 1; i >= 0; i--) {
+            if (temptarget[tempproductarray[i].productId]) {
+                activeProducts.push(tempproductarray[i].productId);
+                };
+            };
         //~~~~~~~~~~~~END OF SCHEDULEOBJ CREATION~~~~~~~~~~~~~~~~~~~~~~~~~~
 
         activeSchedule = newSchedule;
@@ -225,6 +237,17 @@ var openFile = function (event) {
             chartNavWipA.appendChild(document.createTextNode("WIP Charts"));
             chartNavWip.appendChild(chartNavWipA);
             chartNav.appendChild(chartNavWip);
+
+            //best EQP  Tab
+            var chartNavEQP = document.createElement("li");
+            chartNavEQP.setAttribute("class", "nav");
+            var chartNavEQPA = document.createElement("a");
+            chartNavEQPA.setAttribute("data-toggle", "tab");
+            var href55 = "eqp" +divID;
+            chartNavEQPA.setAttribute("href", "#" + href55);
+            chartNavEQPA.appendChild(document.createTextNode("Best EQP"));
+            chartNavEQP.appendChild(chartNavEQPA);
+            chartNav.appendChild(chartNavEQP);
  
             //making the different chart content html
             var chartTypesContent = document.createElement("div");
@@ -247,12 +270,17 @@ var openFile = function (event) {
 
             var wipChartDive = document.createElement("div");
             wipChartDive.setAttribute("id", href44);
-            wipChartDive.setAttribute("class","tab-pane fade");          
+            wipChartDive.setAttribute("class","tab-pane fade");  
+
+            var EQPChartDive = document.createElement("div");
+            EQPChartDive.setAttribute("id", href55);
+            EQPChartDive.setAttribute("class","tab-pane fade");        
  
             chartTypesContent.appendChild(scheduleChartDive);
             chartTypesContent.appendChild(statChartDive);
             chartTypesContent.appendChild(loadChartDive);
             chartTypesContent.appendChild(wipChartDive);
+            chartTypesContent.appendChild(EQPChartDive);
  
  
         }else{
@@ -333,6 +361,17 @@ var openFile = function (event) {
             chartNavWipA.appendChild(document.createTextNode("WIP Charts"));
             chartNavWip.appendChild(chartNavWipA);
             chartNav.appendChild(chartNavWip);
+
+            //best EQP  Tab
+            var chartNavEQP = document.createElement("li");
+            chartNavEQP.setAttribute("class", "nav");
+            var chartNavEQPA = document.createElement("a");
+            chartNavEQPA.setAttribute("data-toggle", "tab");
+            var href55 = "eqp" +divID;
+            chartNavEQPA.setAttribute("href", "#" + href55);
+            chartNavEQPA.appendChild(document.createTextNode("Best EQP"));
+            chartNavEQP.appendChild(chartNavEQPA);
+            chartNav.appendChild(chartNavEQP);
  
             //making the different chart content html
             var chartTypesContent = document.createElement("div");
@@ -356,11 +395,16 @@ var openFile = function (event) {
             var wipChartDive = document.createElement("div");
             wipChartDive.setAttribute("id", href44);
             wipChartDive.setAttribute("class","tab-pane fade"); 
+
+            var EQPChartDive = document.createElement("div");
+            EQPChartDive.setAttribute("id", href55);
+            EQPChartDive.setAttribute("class","tab-pane fade"); 
  
             chartTypesContent.appendChild(scheduleChartDive);
             chartTypesContent.appendChild(statChartDive);
             chartTypesContent.appendChild(loadChartDive);
             chartTypesContent.appendChild(wipChartDive);
+            chartTypesContent.appendChild(EQPChartDive);
  
         }
         //NEW CODE chartRemoveFunction, production status and load tabe create,
@@ -370,6 +414,7 @@ var openFile = function (event) {
         ProductionStatus(TKPIs, TproductionStat, href22, TKPI);
         loadTabCreate(href33,inputData.LoadAnalysis);
         wipTabCreate(href44,inputData.ProductionStatus[8]);
+        eqpTabCreate(href55,inputData.ProductionStatus[9], activeProducts);
         comparePage();
         for (var i = 0; i < TganttData.length; i++) {
             var tempLabel = TganttData[i]['label'];
@@ -2310,16 +2355,14 @@ function wipTabCreate(divID, jSon){
         for (var x = 0; x < productValue.WB.length; x++) {
             wipDataAdd(productValue.WB[x], dataset, listofgroups);
         }
-        console.log(productValue.DA)
         for (var x = 0; x < productValue.DA.length; x++) {
-            console.log("running")
             wipDataAdd(productValue.DA[x], dataset, listofgroups);
         }
 
         var options = {
+            width: "100%",
             legend: true,
             dataAxis:{
-                showMinorLabel: true,
                 left:{
                     title:{
                         text: keysss
@@ -2334,8 +2377,8 @@ function wipTabCreate(divID, jSon){
             }
             groupDataSet.add(groupTemp);
         }
-        console.log(groupDataSet)
         var graph2d = new vis.Graph2d(container, dataset, groupDataSet, options);
+    
     }
 
 }
@@ -2350,8 +2393,107 @@ function wipDataAdd(object, dataset, listofgroups){
         var time = new Date(plots[i].time);
         dataset.add({x: time, y:plots[i].number, group: group});
     }
-    console.log(dataset);
 }
 
+function eqpTabCreate(divID, object, listofProducts){
+    $("#"+divID).html("<br><br><br>");
+    var container = document.getElementById(divID);
+    var values = object.values;
+
+    var groupDataSet = new vis.DataSet();
+        for(var s = 0; s <listofProducts.length; s++){
+            var groupTemp={
+                id: listofProducts[s],
+                content: listofProducts[s],
+                options:{
+                    drawPoints: false
+                }
+            }
+            groupDataSet.add(groupTemp);
+        }
+    groupDataSet.add({
+                    id:"to",
+                    content: "To",
+                    options:{
+                        style:"points",
+                        drawPoints:{
+                            style:"circle"
+                        }
+                    }
+    });
+
+        
+    groupDataSet.add({
+                    id:"from",
+                    content: "From",
+                    options:{
+                        style:"points",
+                        drawPoints:{
+                            style:"square"
+                        }
+                    }
+    }); 
+    for( var i = 0; i < values.length; i++){
+        var dawb;
+        var dataset = new vis.DataSet();
+        var datasetSetup = new vis.DataSet();
+        var keysss;
+        for(key in values[i]){
+            dawb = values[i][key];
+            keysss = key;
+        }
+        for(var x = 0; x < listofProducts.length; x++){
+            var temppro = dawb[listofProducts[x]];
+            for(var k = 0; k< temppro.length; k++){
+                eqpDataAdd(temppro[k], dataset, listofProducts[x]);
+            }
+        }
+
+        //this loop to get the setup plot points and make a scatter plot
+        var setupPlots = dawb.setup;
+        for(var x=0; x<setupPlots.length;x++){
+            var tempSetup = setupPlots[x];
+            var items = dataset.get({
+                filter: function (item) {
+                    var timetemp = Date.parse(item.x);
+                    return (timetemp == tempSetup.time);
+                }
+            });
+            var toitem = items.filter(  
+                function (value) {  
+                    return (value.group === tempSetup.to);  
+                }  
+            );
+            var fromitem = items.filter(  
+                function (value) {  
+                    return (value.group === tempSetup.from);  
+                }  
+            );
+            dataset.add({x:toitem[0].x, y:toitem[0].y, group:"to"});
+            dataset.add({x:fromitem[0].x, y:fromitem[0].y, group:"from"})
+
+            
+        }
+        var options = {
+            width: "100%",
+            legend: true,
+            dataAxis:{
+                left:{
+                    title:{
+                        text: keysss
+                    }
+                }
+            }};
+               
+
+        var graph2d = new vis.Graph2d(container, dataset, groupDataSet, options)
+        
+    }
+}
+
+function eqpDataAdd(object, dataset, group){
+    var time = new Date(object.time);
+    dataset.add({x:time, y: object.number, group: group});
+}
 
 
