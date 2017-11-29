@@ -214,6 +214,17 @@ var openFile = function (event) {
             chartNavLoadA.appendChild(document.createTextNode("Load Analysis"));
             chartNavLoad.appendChild(chartNavLoadA);
             chartNav.appendChild(chartNavLoad);
+
+            //WIP Analysis Tab
+            var chartNavWip = document.createElement("li");
+            chartNavWip.setAttribute("class", "nav");
+            var chartNavWipA = document.createElement("a");
+            chartNavWipA.setAttribute("data-toggle", "tab");
+            var href44 = "wip" +divID;
+            chartNavWipA.setAttribute("href", "#" + href44);
+            chartNavWipA.appendChild(document.createTextNode("WIP Charts"));
+            chartNavWip.appendChild(chartNavWipA);
+            chartNav.appendChild(chartNavWip);
  
             //making the different chart content html
             var chartTypesContent = document.createElement("div");
@@ -232,11 +243,16 @@ var openFile = function (event) {
  
             var loadChartDive = document.createElement("div");
             loadChartDive.setAttribute("id", href33);
-            loadChartDive.setAttribute("class","tab-pane fade");          
+            loadChartDive.setAttribute("class","tab-pane fade");  
+
+            var wipChartDive = document.createElement("div");
+            wipChartDive.setAttribute("id", href44);
+            wipChartDive.setAttribute("class","tab-pane fade");          
  
             chartTypesContent.appendChild(scheduleChartDive);
             chartTypesContent.appendChild(statChartDive);
             chartTypesContent.appendChild(loadChartDive);
+            chartTypesContent.appendChild(wipChartDive);
  
  
         }else{
@@ -306,7 +322,17 @@ var openFile = function (event) {
             chartNavLoadA.appendChild(document.createTextNode("Load Analysis"));
             chartNavLoad.appendChild(chartNavLoadA);
             chartNav.appendChild(chartNavLoad);
- 
+
+            //WIP Analysis Tab
+            var chartNavWip = document.createElement("li");
+            chartNavWip.setAttribute("class", "nav");
+            var chartNavWipA = document.createElement("a");
+            chartNavWipA.setAttribute("data-toggle", "tab");
+            var href44 = "wip" +divID;
+            chartNavWipA.setAttribute("href", "#" + href44);
+            chartNavWipA.appendChild(document.createTextNode("WIP Charts"));
+            chartNavWip.appendChild(chartNavWipA);
+            chartNav.appendChild(chartNavWip);
  
             //making the different chart content html
             var chartTypesContent = document.createElement("div");
@@ -326,10 +352,15 @@ var openFile = function (event) {
             var loadChartDive = document.createElement("div");
             loadChartDive.setAttribute("id", href33);
             loadChartDive.setAttribute("class","tab-pane fade");
+
+            var wipChartDive = document.createElement("div");
+            wipChartDive.setAttribute("id", href44);
+            wipChartDive.setAttribute("class","tab-pane fade"); 
  
             chartTypesContent.appendChild(scheduleChartDive);
             chartTypesContent.appendChild(statChartDive);
             chartTypesContent.appendChild(loadChartDive);
+            chartTypesContent.appendChild(wipChartDive);
  
         }
         //NEW CODE chartRemoveFunction, production status and load tabe create,
@@ -338,6 +369,7 @@ var openFile = function (event) {
         timelineHover(traveledTime, href11, TscheduleName);
         ProductionStatus(TKPIs, TproductionStat, href22, TKPI);
         loadTabCreate(href33,inputData.LoadAnalysis);
+        wipTabCreate(href44,inputData.ProductionStatus[8]);
         comparePage();
         for (var i = 0; i < TganttData.length; i++) {
             var tempLabel = TganttData[i]['label'];
@@ -374,7 +406,6 @@ var openFile = function (event) {
 function chartRemoveFunction(link){
     listofnames.splice(listofnames.indexOf(link));
     $(".closeTab").click(function () {
-        console.log($("#listOfCharts"));
         var tabContentId = $(this).parent().attr("href");
         $(this).parent().parent().remove(); //remove li of tab
         $('#listOfCharts a:last').tab('show'); // Select first tab
@@ -538,7 +569,7 @@ function timelineHover(traveledTime, divID, scheduleName) {
  
              }
              else{
-                console.log("This is the selected eventId  " + eventId)
+                //console.log("This is the selected eventId  " + eventId)
                 d3.selectAll('#'+selectedLotId)
                 displayAttribute(d, datum,divID, scheduleName)
                 selectLots(selectedLotId, eventId,divID)
@@ -2029,7 +2060,6 @@ function loadTabCreate(divID, LAjsonobj){
  
     var numbOfDays = listofProducts[0].target.length;
     var numbOfDaysLoad = listofProducts[0].load.DA.length;
-    console.log(numbOfDaysLoad);
  
     var header2cell = rowHeader.insertCell(1);
     header2cell.setAttribute("colspan", 2*numbOfDays);
@@ -2084,7 +2114,6 @@ function topDayCells(row,startIndex, nOD){
 }
  
 function tableLoadFiller(index, product,days,table,daysload){
-    console.log(product);
     var tracker =0;
     var temprow = table.insertRow(-1);
     var temprow2 = table.insertRow(-1);
@@ -2247,7 +2276,7 @@ function dayCells(row, startIndex, nOD){
         tracker++;
     }
 }
- 
+
 function productOBJ(id, datime, wbtime, target, load){
     this.id = id;
  
@@ -2259,3 +2288,70 @@ function productOBJ(id, datime, wbtime, target, load){
     this.target= target;
     this.load = load;
 }
+
+function wipTabCreate(divID, jSon){
+    $("#"+divID).html("<br><br><br>");
+    var numberOfCharts = jSon.values.length;
+    var values = jSon.values;
+    var heighOfCharts = document.getElementById(divID).offsetHeight;
+    var container = document.getElementById(divID);
+
+    //var dataset = new vis.DataSet();
+    for (var i = 0; i < numberOfCharts; i++) {
+        var listofgroups = [];
+        var dataset = new vis.DataSet();
+        var currentValue = values[i];
+        var productValue;
+        var keysss;
+        for(key in currentValue){
+            productValue = currentValue[key];
+            keysss= key
+        }
+        for (var x = 0; x < productValue.WB.length; x++) {
+            wipDataAdd(productValue.WB[x], dataset, listofgroups);
+        }
+        console.log(productValue.DA)
+        for (var x = 0; x < productValue.DA.length; x++) {
+            console.log("running")
+            wipDataAdd(productValue.DA[x], dataset, listofgroups);
+        }
+
+        var options = {
+            legend: true,
+            dataAxis:{
+                showMinorLabel: true,
+                left:{
+                    title:{
+                        text: keysss
+                    }
+                }
+            }};
+        var groupDataSet = new vis.DataSet();
+        for(var s = 0; s <listofgroups.length; s++){
+            var groupTemp={
+                id: listofgroups[s],
+                content: listofgroups[s],
+            }
+            groupDataSet.add(groupTemp);
+        }
+        console.log(groupDataSet)
+        var graph2d = new vis.Graph2d(container, dataset, groupDataSet, options);
+    }
+
+}
+
+function wipDataAdd(object, dataset, listofgroups){
+    var group = object.id;
+    if(!(listofgroups.includes(group))){
+        listofgroups.push(group);
+    }
+    var plots = object.plots;
+    for(var i = 0; i < plots.length; i++){
+        var time = new Date(plots[i].time);
+        dataset.add({x: time, y:plots[i].number, group: group});
+    }
+    console.log(dataset);
+}
+
+
+
