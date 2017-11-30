@@ -1207,7 +1207,7 @@ function ProductionStatus(TKPIs, TproductionStat, href22, TKPI){
     .append('g').attr("transform", "translate(" + graphMargin.left + "," + graphMargin.top+ ")");
      
     var xScale = d3.time.scale()
-    .domain([d3.min(TproductionStat['WIPLevel'], function(d){return d.time}), d3.max(TproductionStat['WIPLevel'], function(d){return d.time})])
+    .domain([d3.min(TproductionStat['WIPLevel']['da'], function(d){return d.time}), d3.max(TproductionStat['WIPLevel']['da'], function(d){return d.time})])
         .range([0, graphWidth]); // FIX
          
         var xAxis = d3.svg.axis()
@@ -1217,8 +1217,11 @@ function ProductionStatus(TKPIs, TproductionStat, href22, TKPI){
         .tickFormat(tickFormat.format)
         .tickSize(tickFormat.tickSize);
          
+    maxDAWip = d3.max(TproductionStat['WIPLevel']['da'], function(d){return d.number})
+    maxWBWip = d3.max(TproductionStat['WIPLevel']['wb'], function(d){return d.number})
+    max_y_axis = Math.max(maxDAWip,maxWBWip)
         var yScale = d3.scale.linear()
-        .domain([0, TKPI['Stocker_size']+1])
+        .domain([0, max_y_axis+1])
         .range([graphHeight, 0]);
          
         var yAxis = d3.svg.axis()
@@ -1233,15 +1236,17 @@ function ProductionStatus(TKPIs, TproductionStat, href22, TKPI){
  
  
 var horizontalLine = svg1
+
+
 .append('line')
-.attr("x1", xScale(d3.min(TproductionStat['WIPLevel'], function(d){return d.time})))
-.attr("y1", yScale(TKPI['Stocker_size']))
-.attr("x2", xScale(d3.max(TproductionStat['WIPLevel'], function(d){return d.time})))
-.attr("y2", yScale(TKPI['Stocker_size']))
+.attr("x1", xScale(d3.min(TproductionStat['WIPLevel']['da'], function(d){return d.time})))
+.attr("y1", yScale(max_y_axis))
+.attr("x2", xScale(d3.max(TproductionStat['WIPLevel']['da'], function(d){return d.time})))
+.attr("y2", yScale(max_y_axis))
 .style("stroke-width", 1)
 .style("stroke", "red")
  
-drawVerticalLine(svg1, xScale, yScale, TKPI['Stocker_size'])
+drawVerticalLine(svg1, xScale, yScale, max_y_axis)
  
 svg1.append("text")
 .attr('class', 'statusTitle')
@@ -1250,8 +1255,45 @@ svg1.append("text")
 .text("WIP Level");
  
 svg1.append('path')
+.attr('class', 'statusLine2')
+.attr("d", line(TproductionStat['WIPLevel']['da']))
+
+svg1.append('path')
 .attr('class', 'statusLine')
-.attr("d", line(TproductionStat['WIPLevel']))
+.attr("d", line(TproductionStat['WIPLevel']['wb']))
+
+    
+var dataLabel = []
+    dataLabel.push('DA WIP')
+    dataLabel.push('WB WIP')
+     
+    legend = svg1.selectAll(".legend")
+    .data(dataLabel)
+    .enter().append("g")
+    .attr("class", "legend")
+    // .attr("transform", function(d, i) { return "translate(0," + ((i * 20) + graphHeight*0.87)+ ")"; });          
+    .attr("transform", function(d, i) { return "translate(" + graphWidth * 0.83 +','+ (i * 20 + 10)  +")"; });          
+    legend.append("rect")
+    .attr("x", graphWidth - graphWidth*0.98)
+    .attr("width", 18)
+    .attr("height", 18)
+    .style("fill", function(d, i){
+        if (d.indexOf('DA') > -1){
+            return 'tomato'
+        }else{
+            return '#3366cc'
+        }
+         
+    });
+
+  legend.append("text")
+      .attr("x", graphWidth - graphWidth*0.98 + 20)
+      .attr("y", 9)
+      .attr("dy", ".35em")
+      .style("text-anchor", "front")
+      .text(function(d) { return d;})
+       
+
  
 svg1.append("g")
 .attr("class", "x axis")
@@ -1658,7 +1700,7 @@ function compareHelper(TKPIs, TproductionStat, TKPI, conatinerName, dividedW, na
     .append('g').attr("transform", "translate(" + graphMargin.left + "," + graphMargin.top+ ")");
      
     var xScale = d3.time.scale()
-    .domain([d3.min(TproductionStat['WIPLevel'], function(d){return d.time}), d3.max(TproductionStat['WIPLevel'], function(d){return d.time})])
+    .domain([d3.min(TproductionStat['WIPLevel']['da'], function(d){return d.time}), d3.max(TproductionStat['WIPLevel']['da'], function(d){return d.time})])
         .range([0, graphWidth]); // FIX
          
         var xAxis = d3.svg.axis()
@@ -1685,259 +1727,260 @@ function compareHelper(TKPIs, TproductionStat, TKPI, conatinerName, dividedW, na
  
 var horizontalLine = svg1
 .append('line')
-.attr("x1", xScale(d3.min(TproductionStat['WIPLevel'], function(d){return d.time})))
+.attr("x1", xScale(d3.min(TproductionStat['WIPLevel']['da'], function(d){return d.time})))
 .attr("y1", yScale(TKPI['Stocker_size']))
-.attr("x2", xScale(d3.max(TproductionStat['WIPLevel'], function(d){return d.time})))
+.attr("x2", xScale(d3.max(TproductionStat['WIPLevel']['da'], function(d){return d.time})))
 .attr("y2", yScale(TKPI['Stocker_size']))
 .style("stroke-width", 1)
 .style("stroke", "red")
  
 drawVerticalLine(svg1, xScale, yScale, TKPI['Stocker_size'])
  
-svg1.append("text")
-.attr('class', 'statusTitle')
-.attr("x", (graphWidth / 2))             
-.attr("y", 0 - (margin.top / 2))
-.text("WIP Level");
+// svg1.append("text")
+// .attr('class', 'statusTitle')
+// .attr("x", (graphWidth / 2))             
+// .attr("y", 0 - (margin.top / 2))
+// .text("WIP Level");
  
-svg1.append('path')
-.attr('class', 'statusLine')
-.attr("d", line(TproductionStat['WIPLevel']))
+// svg1.append('path')
+// .attr('class', 'statusLine')
+// .attr("d", line(TproductionStat['WIPLevel']))
  
-svg1.append("g")
-.attr("class", "x axis")
-.attr("transform", "translate(0," + graphHeight + ")")
-.call(xAxis);
+// svg1.append("g")
+// .attr("class", "x axis")
+// .attr("transform", "translate(0," + graphHeight + ")")
+// .call(xAxis);
  
-svg1.append("g")
-.attr("class", "y axis")
-.call(yAxis);
+// svg1.append("g")
+// .attr("class", "y axis")
+// .call(yAxis);
      
-    svg1 = d3.select("#" + conatinerName).append('br')
-     // Input Count
-     svg1 = d3.select("#" + conatinerName).append('svg').attr('width', dividedW).attr('height', 400)
-     .append('g').attr("transform", "translate(" + graphMargin.left + "," + graphMargin.top+ ")");
+//     svg1 = d3.select("#" + conatinerName).append('br')
+//      // Input Count
+//      svg1 = d3.select("#" + conatinerName).append('svg').attr('width', dividedW).attr('height', 400)
+//      .append('g').attr("transform", "translate(" + graphMargin.left + "," + graphMargin.top+ ")");
       
-     var xScale = d3.time.scale()
-     .domain([d3.min(TproductionStat['InputCount'], function(d){return d.time}), d3.max(TproductionStat['InputCount'], function(d){return d.time})])
-        .range([0, graphWidth]); // FIX
+//      var xScale = d3.time.scale()
+//      .domain([d3.min(TproductionStat['InputCount'], function(d){return d.time}), d3.max(TproductionStat['InputCount'], function(d){return d.time})])
+//         .range([0, graphWidth]); // FIX
          
-        var xAxis = d3.svg.axis()
-        .scale(xScale)
-        .orient('bottom')
-        .tickFormat(tickFormat.format)
-        .tickSize(tickFormat.tickSize);
+//         var xAxis = d3.svg.axis()
+//         .scale(xScale)
+//         .orient('bottom')
+//         .tickFormat(tickFormat.format)
+//         .tickSize(tickFormat.tickSize);
          
-        var yScale = d3.scale.linear()
-        .domain([0, d3.max(TproductionStat['InputCount'], function(d){return d.number})])
-        .range([graphHeight, 0]);
+//         var yScale = d3.scale.linear()
+//         .domain([0, d3.max(TproductionStat['InputCount'], function(d){return d.number})])
+//         .range([graphHeight, 0]);
          
-        var yAxis = d3.svg.axis()
-        .scale(yScale)
-        .orient('left')
-        .tickSize(2);    
+//         var yAxis = d3.svg.axis()
+//         .scale(yScale)
+//         .orient('left')
+//         .tickSize(2);    
          
-        svg1.append("text")
-        .attr('class', 'statusTitle')
-        .attr("x", (graphWidth / 2))             
-        .attr("y", 0 - (margin.top / 2))
-        .text("투입량");
-         
-        svg1.append('path')
-        .attr('class', 'statusLine')
-        .attr("d", line(TproductionStat['InputCount']))
+//         svg1.append("text")
+//         .attr('class', 'statusTitle')
+//         .attr("x", (graphWidth / 2))             
+//         .attr("y", 0 - (margin.top / 2))
+//         .text("투입량");
+        
+//         svg1.append('path')
+//         .attr('class', 'statusLine')
+//         .attr("d", line(TproductionStat['InputCount']))
  
-        svg1.append('path')
-        .attr('class', 'statusLine2')
-        .attr("d", line(TproductionStat['InTargetCount']))
-         
-        svg1.append("g")
-        .attr("class", "x axis")
-        .attr("transform", "translate(0," + graphHeight + ")")
-        .call(xAxis);
+//         svg1.append('path')
+//         .attr('class', 'statusLine2')
+//         .attr("d", line(TproductionStat['InTargetCount']))
+
+        
+//         svg1.append("g")
+//         .attr("class", "x axis")
+//         .attr("transform", "translate(0," + graphHeight + ")")
+//         .call(xAxis);
  
-        svg1.append("g")
-        .attr("class", "y axis")
-        .call(yAxis);
+//         svg1.append("g")
+//         .attr("class", "y axis")
+//         .call(yAxis);
  
-        var dataLabel = []
-        dataLabel.push('In Target')
-        dataLabel.push('투입량')
+//         var dataLabel = []
+//         dataLabel.push('In Target')
+//         dataLabel.push('투입량')
          
-        var legend = svg1.selectAll(".legend")
-        .data(dataLabel)
-        .enter().append("g")
-        .attr("class", "legend")
-        .attr("transform", function(d, i) { return "translate(0," + ((i * 20))+ ")"; });          
-        legend.append("rect")
-        .attr("x", graphWidth - graphWidth*0.98)
-        .attr("width", 18)
-        .attr("height", 18)
-        .style("fill", function(d, i){ 
-            if (d.indexOf('In') > -1){
-                return 'tomato'
-            }else{
-                return '#3366cc'
-            }
+//         var legend = svg1.selectAll(".legend")
+//         .data(dataLabel)
+//         .enter().append("g")
+//         .attr("class", "legend")
+//         .attr("transform", function(d, i) { return "translate(0," + ((i * 20))+ ")"; });          
+//         legend.append("rect")
+//         .attr("x", graphWidth - graphWidth*0.98)
+//         .attr("width", 18)
+//         .attr("height", 18)
+//         .style("fill", function(d, i){ 
+//             if (d.indexOf('In') > -1){
+//                 return 'tomato'
+//             }else{
+//                 return '#3366cc'
+//             }
              
-        });
+//         });
  
-      // draw legend text
-      legend.append("text")
-      .attr("x", graphWidth - graphWidth*0.98 + 20)
-      .attr("y", 9)
-      .attr("dy", ".35em")
-      .style("text-anchor", "front")
-      .text(function(d) { return d;})
+//       // draw legend text
+//       legend.append("text")
+//       .attr("x", graphWidth - graphWidth*0.98 + 20)
+//       .attr("y", 9)
+//       .attr("dy", ".35em")
+//       .style("text-anchor", "front")
+//       .text(function(d) { return d;})
        
-      drawVerticalLine(svg1, xScale, yScale, d3.max(TproductionStat['InputCount'], function(d){return d.number}))
-    // Ship Count
-    //THIS ONE USED TO BE STATUS_2
-    svg1 = d3.select("#" + conatinerName).append('br')
-    shipSvg = d3.select("#"+ conatinerName).append('svg').attr('width', dividedW).attr('height', 400)
-    .append('g').attr("transform", "translate(" + graphMargin.left + "," + graphMargin.top+ ")");
+//       drawVerticalLine(svg1, xScale, yScale, d3.max(TproductionStat['InputCount'], function(d){return d.number}))
+//     // Ship Count
+//     //THIS ONE USED TO BE STATUS_2
+//     svg1 = d3.select("#" + conatinerName).append('br')
+//     shipSvg = d3.select("#"+ conatinerName).append('svg').attr('width', dividedW).attr('height', 400)
+//     .append('g').attr("transform", "translate(" + graphMargin.left + "," + graphMargin.top+ ")");
      
-    shipXScale = d3.time.scale()
-    .domain([d3.min(TproductionStat['ShipCount'], function(d){return (d.time)}), d3.max(TproductionStat['ShipCount'], function(d){return (d.time)})])
-        .range([0, graphWidth]); // FIX
+//     shipXScale = d3.time.scale()
+//     .domain([d3.min(TproductionStat['ShipCount'], function(d){return (d.time)}), d3.max(TproductionStat['ShipCount'], function(d){return (d.time)})])
+//         .range([0, graphWidth]); // FIX
          
-        shipXAxis = d3.svg.axis()
-        .scale(shipXScale)
-        .orient('bottom')
-        .tickFormat(tickFormat.format)
-        .tickSize(tickFormat.tickSize);
+//         shipXAxis = d3.svg.axis()
+//         .scale(shipXScale)
+//         .orient('bottom')
+//         .tickFormat(tickFormat.format)
+//         .tickSize(tickFormat.tickSize);
          
          
-        shipYScale = d3.scale.linear()
-        .domain([0, d3.max(TproductionStat['ShipCount'], function(d){return d.number})])
-        .range([graphHeight, 0]);
+//         shipYScale = d3.scale.linear()
+//         .domain([0, d3.max(TproductionStat['ShipCount'], function(d){return d.number})])
+//         .range([graphHeight, 0]);
          
-        shipYAxis = d3.svg.axis()
-        .scale(shipYScale)
-        .orient('left')
-        .tickSize(2);    
+//         shipYAxis = d3.svg.axis()
+//         .scale(shipYScale)
+//         .orient('left')
+//         .tickSize(2);    
          
-        shipSvg.append("text")
-        .attr('class', 'statusTitle')
-        .attr("x", (graphWidth / 2))             
-        .attr("y", 0 - (margin.top / 2))
-        .text("산출물");
+//         shipSvg.append("text")
+//         .attr('class', 'statusTitle')
+//         .attr("x", (graphWidth / 2))             
+//         .attr("y", 0 - (margin.top / 2))
+//         .text("산출물");
          
-        shipLine = d3.svg.line()
-        .x(function(d) { return shipXScale(d.time); })
-        .y(function(d) { return shipYScale(+d.number); })
+//         shipLine = d3.svg.line()
+//         .x(function(d) { return shipXScale(d.time); })
+//         .y(function(d) { return shipYScale(+d.number); })
  
-        shipSvg.append('path')
-        .attr('id', 'defaultShipLine')
-        .attr('class', 'statusLine')
-        .attr("d", shipLine(TproductionStat['ShipCount']))
+//         shipSvg.append('path')
+//         .attr('id', 'defaultShipLine')
+//         .attr('class', 'statusLine')
+//         .attr("d", shipLine(TproductionStat['ShipCount']))
          
-        shipSvg.append("g")
-        .attr("class", "x axis")
-        .attr('id', 'shipXAxis')
-        .attr("transform", "translate(0," + graphHeight + ")")
-        .call(shipXAxis);
+//         shipSvg.append("g")
+//         .attr("class", "x axis")
+//         .attr('id', 'shipXAxis')
+//         .attr("transform", "translate(0," + graphHeight + ")")
+//         .call(shipXAxis);
  
-        shipSvg.append("g")
-        .attr("class", "y axis")
-        .call(shipYAxis);
-   // drawVerticalLine(shipSvg, shipXScale, shipYScale, d3.max(productionStatus['ShipCount'], function(d){return d.number}))
+//         shipSvg.append("g")
+//         .attr("class", "y axis")
+//         .call(shipYAxis);
+//    // drawVerticalLine(shipSvg, shipXScale, shipYScale, d3.max(productionStatus['ShipCount'], function(d){return d.number}))
     
-   var verticalLine = shipSvg
-   .append('line')
-   .attr("x1", shipXScale(86399*1000-32400000))
-   .attr("y1", shipYScale(0))
-   .attr("x2", shipXScale(86399*1000-32400000))
-   .attr("y2", shipYScale(d3.max(TproductionStat['ShipCount'], function(d){return d.number})))
-   .attr('class','dateDividerShip')
-   .style("stroke-width", 1)
-   .style("stroke", "gray")
-   var verticalLine2 = shipSvg
-   .append('line')
-   .attr("x1", shipXScale(86399*2*1000-32400000))
-   .attr("y1", shipYScale(0))
-   .attr("x2", shipXScale(86399*2*1000-32400000))
-   .attr("y2", shipYScale(d3.max(TproductionStat['ShipCount'], function(d){return d.number})))
-   .attr('class','dateDividerShip')
-   .style("stroke-width", 1)
-   .style("stroke", "gray")
-    // Util Graph 
-    svg1 = d3.select("#" + conatinerName).append('br')
-    svg1 = d3.select("#" + conatinerName).append('svg').attr('width', dividedW).attr('height', 400)
-    .append('g').attr("transform", "translate(" + graphMargin.left + "," + (graphMargin.top)+ ")");
+//    var verticalLine = shipSvg
+//    .append('line')
+//    .attr("x1", shipXScale(86399*1000-32400000))
+//    .attr("y1", shipYScale(0))
+//    .attr("x2", shipXScale(86399*1000-32400000))
+//    .attr("y2", shipYScale(d3.max(TproductionStat['ShipCount'], function(d){return d.number})))
+//    .attr('class','dateDividerShip')
+//    .style("stroke-width", 1)
+//    .style("stroke", "gray")
+//    var verticalLine2 = shipSvg
+//    .append('line')
+//    .attr("x1", shipXScale(86399*2*1000-32400000))
+//    .attr("y1", shipYScale(0))
+//    .attr("x2", shipXScale(86399*2*1000-32400000))
+//    .attr("y2", shipYScale(d3.max(TproductionStat['ShipCount'], function(d){return d.number})))
+//    .attr('class','dateDividerShip')
+//    .style("stroke-width", 1)
+//    .style("stroke", "gray")
+//     // Util Graph 
+//     svg1 = d3.select("#" + conatinerName).append('br')
+//     svg1 = d3.select("#" + conatinerName).append('svg').attr('width', dividedW).attr('height', 400)
+//     .append('g').attr("transform", "translate(" + graphMargin.left + "," + (graphMargin.top)+ ")");
      
      
-    var xScale = d3.time.scale()
-    .domain([d3.min(TproductionStat['WB_Util'], function(d){return d.time}), d3.max(TproductionStat['WB_Util'], function(d){return d.time})])
-        .range([0, graphWidth]); // FIX
+//     var xScale = d3.time.scale()
+//     .domain([d3.min(TproductionStat['WB_Util'], function(d){return d.time}), d3.max(TproductionStat['WB_Util'], function(d){return d.time})])
+//         .range([0, graphWidth]); // FIX
          
-        var xAxis = d3.svg.axis()
-        .scale(xScale)
-        .orient('bottom')
-        .tickFormat(tickFormat.format)
-        .tickSize(tickFormat.tickSize);
+//         var xAxis = d3.svg.axis()
+//         .scale(xScale)
+//         .orient('bottom')
+//         .tickFormat(tickFormat.format)
+//         .tickSize(tickFormat.tickSize);
          
-        var yScale = d3.scale.linear()
-        .domain([0, d3.max(TproductionStat['WB_Util'], function(d){return d.number+0.02})])
-        .range([graphHeight, 0]);
+//         var yScale = d3.scale.linear()
+//         .domain([0, d3.max(TproductionStat['WB_Util'], function(d){return d.number+0.02})])
+//         .range([graphHeight, 0]);
          
-        var yAxis = d3.svg.axis()
-        .scale(yScale)
-        .orient('left')
-        .tickSize(2);    
+//         var yAxis = d3.svg.axis()
+//         .scale(yScale)
+//         .orient('left')
+//         .tickSize(2);    
          
-        svg1.append("text")
-        .attr('class', 'statusTitle')
-        .attr("x", (graphWidth / 2))             
-        .attr("y", 0 - (margin.top / 2))
-        .text("Util Graph");
+//         svg1.append("text")
+//         .attr('class', 'statusTitle')
+//         .attr("x", (graphWidth / 2))             
+//         .attr("y", 0 - (margin.top / 2))
+//         .text("Util Graph");
          
-        svg1.append('path')
-        .attr('class', 'statusLine2')
-        .attr("d", line(TproductionStat['DA_Util']))
+//         svg1.append('path')
+//         .attr('class', 'statusLine2')
+//         .attr("d", line(TproductionStat['DA_Util']))
  
-        svg1.append('path')
-        .attr('class', 'statusLine')
-        .attr("d", line(TproductionStat['WB_Util']))
+//         svg1.append('path')
+//         .attr('class', 'statusLine')
+//         .attr("d", line(TproductionStat['WB_Util']))
  
-        svg1.append("g")
-        .attr("class", "x axis")
-        .attr("transform", "translate(0," + graphHeight + ")")
-        .call(xAxis);
+//         svg1.append("g")
+//         .attr("class", "x axis")
+//         .attr("transform", "translate(0," + graphHeight + ")")
+//         .call(xAxis);
  
-        svg1.append("g")
-        .attr("class", "y axis")
-        .call(yAxis);
+//         svg1.append("g")
+//         .attr("class", "y axis")
+//         .call(yAxis);
          
-        var dataLabel = []
-        dataLabel.push('DA Util')
-        dataLabel.push('WB Util')
+//         var dataLabel = []
+//         dataLabel.push('DA Util')
+//         dataLabel.push('WB Util')
          
-        legend = svg1.selectAll(".legend")
-        .data(dataLabel)
-        .enter().append("g")
-        .attr("class", "legend")
-        .attr("transform", function(d, i) { return "translate(0," + ((i * 20) + graphHeight*0.87)+ ")"; });          
-        legend.append("rect")
-        .attr("x", graphWidth - graphWidth*0.98)
-        .attr("width", 18)
-        .attr("height", 18)
-        .style("fill", function(d, i){
-            if (d.indexOf('DA') > -1){
-                return 'tomato'
-            }else{
-                return '#3366cc'
-            }
+//         legend = svg1.selectAll(".legend")
+//         .data(dataLabel)
+//         .enter().append("g")
+//         .attr("class", "legend")
+//         .attr("transform", function(d, i) { return "translate(0," + ((i * 20) + graphHeight*0.87)+ ")"; });          
+//         legend.append("rect")
+//         .attr("x", graphWidth - graphWidth*0.98)
+//         .attr("width", 18)
+//         .attr("height", 18)
+//         .style("fill", function(d, i){
+//             if (d.indexOf('DA') > -1){
+//                 return 'tomato'
+//             }else{
+//                 return '#3366cc'
+//             }
              
-        });
+//         });
  
-      // draw legend text
-      legend.append("text")
-      .attr("x", graphWidth - graphWidth*0.98 + 20)
-      .attr("y", 9)
-      .attr("dy", ".35em")
-      .style("text-anchor", "front")
-      .text(function(d) { return d;})
+//       // draw legend text
+//       legend.append("text")
+//       .attr("x", graphWidth - graphWidth*0.98 + 20)
+//       .attr("y", 9)
+//       .attr("dy", ".35em")
+//       .style("text-anchor", "front")
+//       .text(function(d) { return d;})
        
  
      // Merge Count
