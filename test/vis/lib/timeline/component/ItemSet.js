@@ -35,16 +35,19 @@ function ItemSet(body, options) {
     align: 'auto', // alignment of box items
     stack: true,
     stackSubgroups: true,
-    groupOrderSwap: function(fromGroup, toGroup, groups) {
-    	var targetOrder = toGroup.order;
-    	toGroup.order = fromGroup.order;
-    	fromGroup.order = targetOrder;
+    groupOrderSwap: function(fromGroup, toGroup, groups) {  // eslint-disable-line no-unused-vars
+      var targetOrder = toGroup.order;
+      toGroup.order = fromGroup.order;
+      fromGroup.order = targetOrder;
     },
     groupOrder: 'order',
 
     selectable: true,
     multiselect: false,
-    itemsAlwaysDraggable: false,
+    itemsAlwaysDraggable: {
+      item: false,
+      range: false,
+    },
 
     editable: {
       updateTime: false,
@@ -58,10 +61,14 @@ function ItemSet(body, options) {
       order: false,
       add: false,
       remove: false
-    },    
-    
+    },
+
     snap: TimeStep.snap,
 
+    // Only called when `objectData.target === 'item'.
+    onDropObjectOnItem: function(objectData, item, callback) {
+      callback(item)
+    },
     onAdd: function (item, callback) {
       callback(item);
     },
@@ -128,26 +135,48 @@ function ItemSet(body, options) {
 
   // listeners for the DataSet of the items
   this.itemListeners = {
-    'add': function (event, params, senderId) {
+    'add': function (event, params, senderId) {  // eslint-disable-line no-unused-vars
       me._onAdd(params.items);
     },
-    'update': function (event, params, senderId) {
+    'update': function (event, params, senderId) {  // eslint-disable-line no-unused-vars
       me._onUpdate(params.items);
     },
-    'remove': function (event, params, senderId) {
+    'remove': function (event, params, senderId) {  // eslint-disable-line no-unused-vars
       me._onRemove(params.items);
     }
   };
 
   // listeners for the DataSet of the groups
   this.groupListeners = {
-    'add': function (event, params, senderId) {
+    'add': function (event, params, senderId) {  // eslint-disable-line no-unused-vars
       me._onAddGroups(params.items);
+      
+      if (me.groupsData && me.groupsData.length > 0) {
+          var groupsData = me.groupsData.getDataSet();
+          groupsData.get().forEach(function (groupData) {
+          if (groupData.nestedGroups) {
+            if (groupData.showNested != false) {
+              groupData.showNested = true;
+            }
+            var updatedGroups = [];
+            groupData.nestedGroups.forEach(function(nestedGroupId) {
+              var updatedNestedGroup = groupsData.get(nestedGroupId);
+              if (!updatedNestedGroup) { return; }
+              updatedNestedGroup.nestedInGroup = groupData.id;
+              if (groupData.showNested == false) {
+                updatedNestedGroup.visible = false;
+              }
+              updatedGroups = updatedGroups.concat(updatedNestedGroup);
+            });
+            groupsData.update(updatedGroups, senderId);
+          }
+        });
+      }
     },
-    'update': function (event, params, senderId) {
+    'update': function (event, params, senderId) {  // eslint-disable-line no-unused-vars
       me._onUpdateGroups(params.items);
     },
-    'remove': function (event, params, senderId) {
+    'remove': function (event, params, senderId) {  // eslint-disable-line no-unused-vars
       me._onRemoveGroups(params.items);
     }
   };
@@ -271,51 +300,51 @@ ItemSet.prototype._create = function(){
 /**
  * Set options for the ItemSet. Existing options will be extended/overwritten.
  * @param {Object} [options] The following options are available:
- *                           {String} type
+ *                           {string} type
  *                              Default type for the items. Choose from 'box'
  *                              (default), 'point', 'range', or 'background'.
  *                              The default style can be overwritten by
  *                              individual items.
- *                           {String} align
+ *                           {string} align
  *                              Alignment for the items, only applicable for
  *                              BoxItem. Choose 'center' (default), 'left', or
  *                              'right'.
- *                           {String} orientation.item
+ *                           {string} orientation.item
  *                              Orientation of the item set. Choose 'top' or
  *                              'bottom' (default).
  *                           {Function} groupOrder
  *                              A sorting function for ordering groups
- *                           {Boolean} stack
+ *                           {boolean} stack
  *                              If true (default), items will be stacked on
  *                              top of each other.
- *                           {Number} margin.axis
+ *                           {number} margin.axis
  *                              Margin between the axis and the items in pixels.
  *                              Default is 20.
- *                           {Number} margin.item.horizontal
+ *                           {number} margin.item.horizontal
  *                              Horizontal margin between items in pixels.
  *                              Default is 10.
- *                           {Number} margin.item.vertical
+ *                           {number} margin.item.vertical
  *                              Vertical Margin between items in pixels.
  *                              Default is 10.
- *                           {Number} margin.item
+ *                           {number} margin.item
  *                              Margin between items in pixels in both horizontal
  *                              and vertical direction. Default is 10.
- *                           {Number} margin
+ *                           {number} margin
  *                              Set margin for both axis and items in pixels.
- *                           {Boolean} selectable
+ *                           {boolean} selectable
  *                              If true (default), items can be selected.
- *                           {Boolean} multiselect
+ *                           {boolean} multiselect
  *                              If true, multiple items can be selected.
  *                              False by default.
- *                           {Boolean} editable
+ *                           {boolean} editable
  *                              Set all editable options to true or false
- *                           {Boolean} editable.updateTime
+ *                           {boolean} editable.updateTime
  *                              Allow dragging an item to an other moment in time
- *                           {Boolean} editable.updateGroup
+ *                           {boolean} editable.updateGroup
  *                              Allow dragging an item to an other group
- *                           {Boolean} editable.add
+ *                           {boolean} editable.add
  *                              Allow creating new items on double tap
- *                           {Boolean} editable.remove
+ *                           {boolean} editable.remove
  *                              Allow removing items by clicking the delete button
  *                              top right of a selected item.
  *                           {Function(item: Item, callback: Function)} onAdd
@@ -336,11 +365,25 @@ ItemSet.prototype.setOptions = function(options) {
   if (options) {
     // copy all options that we know
     var fields = [
-      'type', 'rtl', 'align', 'order', 'stack', 'stackSubgroups', 'selectable', 'multiselect', 'itemsAlwaysDraggable', 
+      'type', 'rtl', 'align', 'order', 'stack', 'stackSubgroups', 'selectable', 'multiselect',
       'multiselectPerGroup', 'groupOrder', 'dataAttributes', 'template', 'groupTemplate', 'visibleFrameTemplate',
       'hide', 'snap', 'groupOrderSwap', 'showTooltips', 'tooltip', 'tooltipOnItemUpdateTime'
     ];
     util.selectiveExtend(fields, this.options, options);
+
+    if ('itemsAlwaysDraggable' in options) {
+      if (typeof options.itemsAlwaysDraggable === 'boolean') {
+        this.options.itemsAlwaysDraggable.item = options.itemsAlwaysDraggable;
+        this.options.itemsAlwaysDraggable.range = false;
+      }
+      else if (typeof options.itemsAlwaysDraggable === 'object') {
+        util.selectiveExtend(['item', 'range'], this.options.itemsAlwaysDraggable, options.itemsAlwaysDraggable);
+        // only allow range always draggable when item is always draggable as well
+        if (! this.options.itemsAlwaysDraggable.item) {
+          this.options.itemsAlwaysDraggable.range = false;
+        }
+      }
+    }
 
     if ('orientation' in options) {
       if (typeof options.orientation === 'string') {
@@ -405,7 +448,7 @@ ItemSet.prototype.setOptions = function(options) {
         this.options[name] = fn;
       }
     }).bind(this);
-    ['onAdd', 'onUpdate', 'onRemove', 'onMove', 'onMoving', 'onAddGroup', 'onMoveGroup', 'onRemoveGroup'].forEach(addCallback);
+    ['onDropObjectOnItem', 'onAdd', 'onUpdate', 'onRemove', 'onMove', 'onMoving', 'onAddGroup', 'onMoveGroup', 'onRemoveGroup'].forEach(addCallback);
 
     // force the itemSet to refresh: options like orientation and margins may be changed
     this.markDirty();
@@ -464,7 +507,6 @@ ItemSet.prototype.hide = function() {
 
 /**
  * Show the component in the DOM (when not already visible).
- * @return {Boolean} changed
  */
 ItemSet.prototype.show = function() {
   // show frame containing the items
@@ -533,13 +575,14 @@ ItemSet.prototype.getSelection = function() {
  */
 ItemSet.prototype.getVisibleItems = function() {
   var range = this.body.range.getRange();
+  var right, left;
 
   if (this.options.rtl) { 
-    var right  = this.body.util.toScreen(range.start);
-    var left = this.body.util.toScreen(range.end);
+    right  = this.body.util.toScreen(range.start);
+    left = this.body.util.toScreen(range.end);
   } else {
-    var left  = this.body.util.toScreen(range.start);
-    var right = this.body.util.toScreen(range.end);
+    left  = this.body.util.toScreen(range.start);
+    right = this.body.util.toScreen(range.end);
   }
 
   var ids = [];
@@ -571,7 +614,7 @@ ItemSet.prototype.getVisibleItems = function() {
 
 /**
  * Deselect a selected item
- * @param {String | Number} id
+ * @param {string | number} id
  * @private
  */
 ItemSet.prototype._deselect = function(id) {
@@ -617,9 +660,14 @@ ItemSet.prototype.redraw = function() {
   var visibleInterval = range.end - range.start;
   var zoomed = (visibleInterval != this.lastVisibleInterval) || (this.props.width != this.props.lastWidth);
   var scrolled = range.start != this.lastRangeStart;
-  var forceRestack = (zoomed || scrolled);
+  var changedStackOption = options.stack != this.lastStack;
+  var changedStackSubgroupsOption = options.stackSubgroups != this.lastStackSubgroups;
+  var forceRestack = (zoomed || scrolled || changedStackOption || changedStackSubgroupsOption);
   this.lastVisibleInterval = visibleInterval;
   this.lastRangeStart = range.start;
+  this.lastStack = options.stack;
+  this.lastStackSubgroups = options.stackSubgroups;
+
   this.props.lastWidth = this.props.width;
 
   var firstGroup = this._firstGroup();
@@ -637,13 +685,38 @@ ItemSet.prototype.redraw = function() {
   // redraw the background group
   this.groups[BACKGROUND].redraw(range, nonFirstMargin, forceRestack);
 
-  // redraw all regular groups
-  util.forEach(this.groups, function (group) {
-    var groupMargin = (group == firstGroup) ? firstMargin : nonFirstMargin;
-    var groupResized = group.redraw(range, groupMargin, forceRestack);
-    resized = groupResized || resized;
-    height += group.height;
+  var redrawQueue = {};
+  var redrawQueueLength = 0;
+
+  // collect redraw functions
+  util.forEach(this.groups, function (group, key) {
+    if (key === BACKGROUND) return;
+    var groupMargin = group == firstGroup ? firstMargin : nonFirstMargin;
+    var returnQueue = true;
+    redrawQueue[key] = group.redraw(range, groupMargin, forceRestack, returnQueue);
+    redrawQueueLength = redrawQueue[key].length;
   });
+
+  var needRedraw = redrawQueueLength > 0;
+  if (needRedraw) {
+    var redrawResults = {};
+
+    for (var i = 0; i < redrawQueueLength; i++) {
+      util.forEach(redrawQueue, function (fns, key) {
+        redrawResults[key] = fns[i]();
+      });
+    }
+
+    // redraw all regular groups
+    util.forEach(this.groups, function (group, key) {
+      if (key === BACKGROUND) return;
+      var groupResized = redrawResults[key];
+      resized = groupResized || resized;
+      height += group.height;
+    });
+    height = Math.max(height, minHeight);
+  }
+
   height = Math.max(height, minHeight);
 
   // update frame height
@@ -690,7 +763,6 @@ ItemSet.prototype._firstGroup = function() {
  */
 ItemSet.prototype._updateUngrouped = function() {
   var ungrouped = this.groups[UNGROUPED];
-  var background = this.groups[BACKGROUND];
   var item, itemId;
 
   if (this.groupsData) {
@@ -844,7 +916,7 @@ ItemSet.prototype.setGroups = function(groups) {
           groupsData.update(updatedNestedGroup);
         })
       }
-    })
+    });
 
 
     // subscribe to new dataset
@@ -877,12 +949,11 @@ ItemSet.prototype.getGroups = function() {
 
 /**
  * Remove an item by its id
- * @param {String | Number} id
+ * @param {string | number} id
  */
 ItemSet.prototype.removeItem = function(id) {
   var item = this.itemsData.get(id),
-      dataset = this.itemsData.getDataSet(),
-      itemObj = this.items[id];
+      dataset = this.itemsData.getDataSet();
 
   if (item) {
     // confirm deletion
@@ -925,7 +996,7 @@ ItemSet.prototype._getGroupId = function (itemData) {
 
 /**
  * Handle updated items
- * @param {Number[]} ids
+ * @param {number[]} ids
  * @protected
  */
 ItemSet.prototype._onUpdate = function(ids) {
@@ -981,14 +1052,14 @@ ItemSet.prototype._onUpdate = function(ids) {
 
 /**
  * Handle added items
- * @param {Number[]} ids
+ * @param {number[]} ids
  * @protected
  */
 ItemSet.prototype._onAdd = ItemSet.prototype._onUpdate;
 
 /**
  * Handle removed items
- * @param {Number[]} ids
+ * @param {number[]} ids
  * @protected
  */
 ItemSet.prototype._onRemove = function(ids) {
@@ -1023,7 +1094,7 @@ ItemSet.prototype._order = function() {
 
 /**
  * Handle updated groups
- * @param {Number[]} ids
+ * @param {number[]} ids
  * @private
  */
 ItemSet.prototype._onUpdateGroups = function(ids) {
@@ -1032,7 +1103,7 @@ ItemSet.prototype._onUpdateGroups = function(ids) {
 
 /**
  * Handle changed groups (added or updated)
- * @param {Number[]} ids
+ * @param {number[]} ids
  * @private
  */
 ItemSet.prototype._onAddGroups = function(ids) {
@@ -1080,7 +1151,7 @@ ItemSet.prototype._onAddGroups = function(ids) {
 
 /**
  * Handle removed groups
- * @param {Number[]} ids
+ * @param {number[]} ids
  * @private
  */
 ItemSet.prototype._onRemoveGroups = function(ids) {
@@ -1138,7 +1209,9 @@ ItemSet.prototype._orderGroups = function () {
 
 /**
  * Reorder the nested groups
- * @return {boolean} changed
+ *
+ * @param {Array.<number>} groupIds
+ * @returns {Array.<number>}
  * @private
  */
 ItemSet.prototype._orderNestedGroups = function(groupIds) {
@@ -1156,12 +1229,12 @@ ItemSet.prototype._orderNestedGroups = function(groupIds) {
         },
         order: this.options.groupOrder
       });
-      var nestedGroupIds = nestedGroups.map(function(nestedGroup) { return nestedGroup.id })
+      var nestedGroupIds = nestedGroups.map(function(nestedGroup) { return nestedGroup.id });
       newGroupIdsOrder = newGroupIdsOrder.concat(nestedGroupIds);
     }
-  }, this)
+  }, this);
   return newGroupIdsOrder;
-}
+};
 
 
 /**
@@ -1177,9 +1250,9 @@ ItemSet.prototype._addItem = function(item) {
   var group = this.groups[groupId];
 
   if (!group) {
-   	item.groupShowing = false;
+    item.groupShowing = false;
   } else if (group && group.data && group.data.showNested) {
-  	item.groupShowing = true;
+    item.groupShowing = true;
   }
 
   if (group) group.add(item);
@@ -1227,7 +1300,7 @@ ItemSet.prototype._removeItem = function(item) {
 
 /**
  * Create an array containing all items being a range (having an end date)
- * @param array
+ * @param {Array.<Object>} array
  * @returns {Array}
  * @private
  */
@@ -1264,7 +1337,8 @@ ItemSet.prototype._onTouch = function (event) {
 /**
  * Given an group id, returns the index it has.
  *
- * @param {Number} groupID
+ * @param {number} groupId
+ * @returns {number} index / groupId
  * @private
  */
 ItemSet.prototype._getGroupIndex = function(groupId) {
@@ -1285,7 +1359,7 @@ ItemSet.prototype._onDragStart = function (event) {
   var me = this;
   var props;
 
-  if (item && (item.selected || this.options.itemsAlwaysDraggable)) {
+  if (item && (item.selected || this.options.itemsAlwaysDraggable.item)) {
 
     if (this.options.editable.overrideItems &&
         !this.options.editable.updateTime &&
@@ -1313,8 +1387,7 @@ ItemSet.prototype._onDragStart = function (event) {
       };
 
       this.touchParams.itemProps = [props];
-    }
-    else if (dragRightItem) {
+    } else if (dragRightItem) {
       props = {
         item: dragRightItem,
         initialX: event.center.x,
@@ -1323,11 +1396,19 @@ ItemSet.prototype._onDragStart = function (event) {
       };
 
       this.touchParams.itemProps = [props];
-    }
-    else {
+    } else if (this.options.editable.add && (event.srcEvent.ctrlKey || event.srcEvent.metaKey)) {
+      // create a new range item when dragging with ctrl key down
+      this._onDragStartAddItem(event);
+    } else {
+      if(this.groupIds.length < 1) {
+        // Mitigates a race condition if _onDragStart() is
+        // called after markDirty() without redraw() being called between.
+        this.redraw();
+      }
+      
       var baseGroupIndex = this._getGroupIndex(item.data.group);
 
-      var itemsToDrag = (this.options.itemsAlwaysDraggable && !item.selected) ? [item.id] : this.getSelection();
+      var itemsToDrag = (this.options.itemsAlwaysDraggable.item && !item.selected) ? [item.id] : this.getSelection();
 
       this.touchParams.itemProps = itemsToDrag.map(function (id) {
         var item = me.items[id];
@@ -1342,8 +1423,7 @@ ItemSet.prototype._onDragStart = function (event) {
     }
 
     event.stopPropagation();
-  }
-  else if (this.options.editable.add && (event.srcEvent.ctrlKey || event.srcEvent.metaKey)) {
+  } else if (this.options.editable.add && (event.srcEvent.ctrlKey || event.srcEvent.metaKey)) {
     // create a new range item when dragging with ctrl key down
     this._onDragStartAddItem(event);
   }
@@ -1355,14 +1435,16 @@ ItemSet.prototype._onDragStart = function (event) {
  * @private
  */
 ItemSet.prototype._onDragStartAddItem = function (event) {
+  var xAbs;
+  var x;
   var snap = this.options.snap || null;
 
   if (this.options.rtl) {
-    var xAbs = util.getAbsoluteRight(this.dom.frame);
-    var x = xAbs - event.center.x  + 10;  // plus 10 to compensate for the drag starting as soon as you've moved 10px
+    xAbs = util.getAbsoluteRight(this.dom.frame);
+    x = xAbs - event.center.x  + 10;  // plus 10 to compensate for the drag starting as soon as you've moved 10px
   } else {
-    var xAbs = util.getAbsoluteLeft(this.dom.frame);
-    var x = event.center.x - xAbs - 10;  // minus 10 to compensate for the drag starting as soon as you've moved 10px
+    xAbs = util.getAbsoluteLeft(this.dom.frame);
+    x = event.center.x - xAbs - 10;  // minus 10 to compensate for the drag starting as soon as you've moved 10px
   }
 
   var time = this.body.util.toTime(x);
@@ -1418,11 +1500,12 @@ ItemSet.prototype._onDrag = function (event) {
 
     var me = this;
     var snap = this.options.snap || null;
+    var xOffset;
 
     if (this.options.rtl) {
-      var xOffset = this.body.dom.root.offsetLeft + this.body.domProps.right.width;
+      xOffset = this.body.dom.root.offsetLeft + this.body.domProps.right.width;
     } else {
-      var xOffset = this.body.dom.root.offsetLeft + this.body.domProps.left.width;
+      xOffset = this.body.dom.root.offsetLeft + this.body.domProps.left.width;
     }
 
     var scale = this.body.util.getScale();
@@ -1449,11 +1532,16 @@ ItemSet.prototype._onDrag = function (event) {
     this.touchParams.itemProps.forEach(function (props) {
       var current = me.body.util.toTime(event.center.x - xOffset);
       var initial = me.body.util.toTime(props.initialX - xOffset);
+      var offset;
+      var initialStart;
+      var initialEnd;
+      var start;
+      var end;
 
       if (this.options.rtl) {
-        var offset = -(current - initial); // ms
+        offset = -(current - initial); // ms
       } else {
-        var offset = (current - initial); // ms
+        offset = (current - initial); // ms
       }
 
       var itemData = this._cloneItemData(props.item.data); // clone the data
@@ -1471,15 +1559,15 @@ ItemSet.prototype._onDrag = function (event) {
           // drag left side of a range item
           if (this.options.rtl) {
             if (itemData.end != undefined) {
-              var initialEnd = util.convert(props.data.end, 'Date');
-              var end = new Date(initialEnd.valueOf() + offset);
+              initialEnd = util.convert(props.data.end, 'Date');
+              end = new Date(initialEnd.valueOf() + offset);
               // TODO: pass a Moment instead of a Date to snap(). (Breaking change)
               itemData.end = snap ? snap(end, scale, step) : end;
             }
           } else {
             if (itemData.start != undefined) {
-              var initialStart = util.convert(props.data.start, 'Date');
-              var start = new Date(initialStart.valueOf() + offset);
+              initialStart = util.convert(props.data.start, 'Date');
+              start = new Date(initialStart.valueOf() + offset);
               // TODO: pass a Moment instead of a Date to snap(). (Breaking change)
               itemData.start = snap ? snap(start, scale, step) : start;
             }
@@ -1489,15 +1577,15 @@ ItemSet.prototype._onDrag = function (event) {
           // drag right side of a range item
           if (this.options.rtl) {
             if (itemData.start != undefined) {
-              var initialStart = util.convert(props.data.start, 'Date');
-              var start = new Date(initialStart.valueOf() + offset);
+              initialStart = util.convert(props.data.start, 'Date');
+              start = new Date(initialStart.valueOf() + offset);
               // TODO: pass a Moment instead of a Date to snap(). (Breaking change)
               itemData.start = snap ? snap(start, scale, step) : start;
             }
           } else {
             if (itemData.end != undefined) {
-              var initialEnd = util.convert(props.data.end, 'Date');
-              var end = new Date(initialEnd.valueOf() + offset);
+              initialEnd = util.convert(props.data.end, 'Date');
+              end = new Date(initialEnd.valueOf() + offset);
               // TODO: pass a Moment instead of a Date to snap(). (Breaking change)
               itemData.end = snap ? snap(end, scale, step) : end;
             }
@@ -1507,11 +1595,11 @@ ItemSet.prototype._onDrag = function (event) {
           // drag both start and end
           if (itemData.start != undefined) {
 
-            var initialStart = util.convert(props.data.start, 'Date').valueOf();
-            var start = new Date(initialStart + offset);
+            initialStart = util.convert(props.data.start, 'Date').valueOf();
+            start = new Date(initialStart + offset);
 
             if (itemData.end != undefined) {
-              var initialEnd = util.convert(props.data.end, 'Date');
+              initialEnd = util.convert(props.data.end, 'Date');
               var duration  = initialEnd.valueOf() - initialStart.valueOf();
 
               // TODO: pass a Moment instead of a Date to snap(). (Breaking change)
@@ -1522,12 +1610,9 @@ ItemSet.prototype._onDrag = function (event) {
               // TODO: pass a Moment instead of a Date to snap(). (Breaking change)
               itemData.start = snap ? snap(start, scale, step) : start;
             }
-
-
           }
         }
       }
-
 
       if (updateGroupAllowed && (!props.dragLeft && !props.dragRight) && newGroupBase!=null) {
         if (itemData.group != undefined) {
@@ -1556,7 +1641,7 @@ ItemSet.prototype._onDrag = function (event) {
 /**
  * Move an item to another group
  * @param {Item} item
- * @param {String | Number} groupId
+ * @param {string | number} groupId
  * @private
  */
 ItemSet.prototype._moveToGroup = function(item, groupId) {
@@ -1630,29 +1715,28 @@ ItemSet.prototype._onGroupClick = function (event) {
 
   if (!group || !group.nestedGroups) return;
 
-  var groupsData = this.groupsData;
-  if (this.groupsData instanceof DataView) {
-    groupsData = this.groupsData.getDataSet()
-  }
+  var groupsData = this.groupsData.getDataSet();
 
-  group.showNested = !group.showNested;
+  var nestingGroup = groupsData.get(group.groupId)
+  if (nestingGroup.showNested == undefined) { nestingGroup.showNested = true; }
+  nestingGroup.showNested = !nestingGroup.showNested;
 
   var nestedGroups = groupsData.get(group.nestedGroups).map(function(nestedGroup) {
-    if (nestedGroup.visible == undefined) { nestedGroup.visible = true; }
-    nestedGroup.visible = !!group.showNested;
+    nestedGroup.visible = nestingGroup.showNested;
     return nestedGroup;
   });
-  groupsData.update(nestedGroups);
 
-  if (group.showNested) {
+  groupsData.update(nestedGroups.concat(nestingGroup));
+
+  if (nestingGroup.showNested) {
     util.removeClassName(group.dom.label, 'collapsed');
     util.addClassName(group.dom.label, 'expanded');
   } else {
     util.removeClassName(group.dom.label, 'expanded');
-    var collapsedDirClassName = this.options.rtl ? 'collapsed-rtl' : 'collapsed'
+    var collapsedDirClassName = this.options.rtl ? 'collapsed-rtl' : 'collapsed';
     util.addClassName(group.dom.label, collapsedDirClassName);
   }
-}
+};
 
 ItemSet.prototype._onGroupDragStart = function (event) {
 	if (this.options.groupEditable.order) {
@@ -1662,11 +1746,11 @@ ItemSet.prototype._onGroupDragStart = function (event) {
 			event.stopPropagation();
 			
 			this.groupTouchParams.originalOrder = this.groupsData.getIds({
-			    order: this.options.groupOrder
-		    });
+              order: this.options.groupOrder
+            });
 		}
 	}
-}
+};
 
 ItemSet.prototype._onGroupDrag = function (event) {
 	if (this.options.groupEditable.order && this.groupTouchParams.group) {
@@ -1712,8 +1796,8 @@ ItemSet.prototype._onGroupDrag = function (event) {
 			
 			// fetch current order of groups
 			var newOrder = groupsData.getIds({
-			  order: this.options.groupOrder
-		  });
+              order: this.options.groupOrder
+            });
 
 			
 			// in case of changes since _onGroupDragStart
@@ -1741,17 +1825,17 @@ ItemSet.prototype._onGroupDrag = function (event) {
 					// if dragged group was move upwards everything below should have an offset
 					if (newOrder[curPos+newOffset] == draggedId) {
 						newOffset = 1;
-						continue;
+
 					}
 					// if dragged group was move downwards everything above should have an offset
 					else if (origOrder[curPos+orgOffset] == draggedId) {
 						orgOffset = 1;
-						continue;
+
 					} 
 					// found a group (apart from dragged group) that has the wrong position -> switch with the 
 					// group at the position where other one should be, fix index arrays and continue
 					else {
-						var slippedPosition = newOrder.indexOf(origOrder[curPos+orgOffset])
+						var slippedPosition = newOrder.indexOf(origOrder[curPos+orgOffset]);
 						var switchGroup = groupsData.get(newOrder[curPos+newOffset]);
 						var shouldBeGroup = groupsData.get(origOrder[curPos+orgOffset]);
 						this.options.groupOrderSwap(switchGroup, shouldBeGroup, groupsData);
@@ -1769,69 +1853,68 @@ ItemSet.prototype._onGroupDrag = function (event) {
 			
 		}
 	}
-}
+};
 
 ItemSet.prototype._onGroupDragEnd = function (event) {
-	if (this.options.groupEditable.order && this.groupTouchParams.group) {
-		event.stopPropagation();
+  if (this.options.groupEditable.order && this.groupTouchParams.group) {
+    event.stopPropagation();
 		
-		// update existing group
-		var me = this;
-		var id = me.groupTouchParams.group.groupId;
-		var dataset = me.groupsData.getDataSet();
-        var groupData = util.extend({}, dataset.get(id)); // clone the data
-        me.options.onMoveGroup(groupData, function (groupData) {
-          if (groupData) {
-            // apply changes
-        	groupData[dataset._fieldId] = id; // ensure the group contains its id (can be undefined)
-            dataset.update(groupData);
-          }
-          else {
-        	  
-        	// fetch current order of groups
-  			var newOrder = dataset.getIds({
-  			    order: me.options.groupOrder
-  		    });
-        	  
-            // restore original order
-        	if (!util.equalArray(newOrder, me.groupTouchParams.originalOrder)) {
-        		var origOrder = me.groupTouchParams.originalOrder;
-  				var numGroups = Math.min(origOrder.length, newOrder.length);
-  				var curPos = 0;
-  				while (curPos < numGroups) {
-  					// as long as the groups are where they should be step down along the groups order
-  					while (curPos < numGroups && newOrder[curPos] == origOrder[curPos]) {
-  					    curPos++;
-  					}
-  					
-  					// all ok
-  					if (curPos >= numGroups) {
-  						break;
-  					}
-  					
-						// found a group that has the wrong position -> switch with the 
-						// group at the position where other one should be, fix index arrays and continue
-						var slippedPosition = newOrder.indexOf(origOrder[curPos])
-						var switchGroup = dataset.get(newOrder[curPos]);
-						var shouldBeGroup = dataset.get(origOrder[curPos]);
-						me.options.groupOrderSwap(switchGroup, shouldBeGroup, dataset);
-						dataset.update(switchGroup);
-						dataset.update(shouldBeGroup);
-  						
-  					var switchGroupId = newOrder[curPos];
-  					newOrder[curPos] = origOrder[curPos];
-  					newOrder[slippedPosition] = switchGroupId;
-  						
-  					curPos++;
-  				}
-  			}
+    // update existing group
+    var me = this;
+    var id = me.groupTouchParams.group.groupId;
+    var dataset = me.groupsData.getDataSet();
+    var groupData = util.extend({}, dataset.get(id)); // clone the data
+    me.options.onMoveGroup(groupData, function (groupData) {
+      if (groupData) {
+        // apply changes
+        groupData[dataset._fieldId] = id; // ensure the group contains its id (can be undefined)
+        dataset.update(groupData);
+      }
+      else {
 
-          }
+        // fetch current order of groups
+        var newOrder = dataset.getIds({
+            order: me.options.groupOrder
         });
-        
-        me.body.emitter.emit('groupDragged', { groupId: id });
-	}
-}
+
+        // restore original order
+        if (!util.equalArray(newOrder, me.groupTouchParams.originalOrder)) {
+          var origOrder = me.groupTouchParams.originalOrder;
+          var numGroups = Math.min(origOrder.length, newOrder.length);
+          var curPos = 0;
+          while (curPos < numGroups) {
+            // as long as the groups are where they should be step down along the groups order
+            while (curPos < numGroups && newOrder[curPos] == origOrder[curPos]) {
+              curPos++;
+            }
+
+            // all ok
+            if (curPos >= numGroups) {
+              break;
+            }
+
+            // found a group that has the wrong position -> switch with the
+            // group at the position where other one should be, fix index arrays and continue
+            var slippedPosition = newOrder.indexOf(origOrder[curPos]);
+            var switchGroup = dataset.get(newOrder[curPos]);
+            var shouldBeGroup = dataset.get(origOrder[curPos]);
+            me.options.groupOrderSwap(switchGroup, shouldBeGroup, dataset);
+            dataset.update(switchGroup);
+            dataset.update(shouldBeGroup);
+
+            var switchGroupId = newOrder[curPos];
+            newOrder[curPos] = origOrder[curPos];
+            newOrder[slippedPosition] = switchGroupId;
+
+            curPos++;
+          }
+        }
+      }
+    });
+
+    me.body.emitter.emit('groupDragged', { groupId: id });
+    }
+};
 
 /**
  * Handle selecting/deselecting an item when tapping it
@@ -1949,18 +2032,18 @@ ItemSet.prototype._onMouseMove = function (event) {
 
 /**
  * Handle mousewheel
- * @param event
+ * @param {Event}  event   The event
  * @private
  */
 ItemSet.prototype._onMouseWheel = function(event) {
   if (this.touchParams.itemIsDragging) {
     this._onDragEnd(event);
   }
-}
+};
 
 /**
  * Handle updates of an item on double tap
- * @param event
+ * @param {vis.Item}  item   The item
  * @private
  */
 ItemSet.prototype._onUpdateItem = function (item) {
@@ -1978,11 +2061,23 @@ ItemSet.prototype._onUpdateItem = function (item) {
       }
     });
   }
+};
+
+/**
+ * Handle drop event of data on item
+ * Only called when `objectData.target === 'item'.
+ * @param {Event} event The event 
+ * @private
+ */
+ItemSet.prototype._onDropObjectOnItem = function(event) {
+  var item = this.itemFromTarget(event);
+  var objectData = JSON.parse(event.dataTransfer.getData("text"));
+  this.options.onDropObjectOnItem(objectData, item)
 }
 
 /**
- * Handle creation of an item on double tap
- * @param event
+ * Handle creation of an item on double tap or drop of a drag event
+ * @param {Event} event   The event
  * @private
  */
 ItemSet.prototype._onAddItem = function (event) {
@@ -1991,66 +2086,65 @@ ItemSet.prototype._onAddItem = function (event) {
 
   var me = this;
   var snap = this.options.snap || null;
-  var item = this.itemFromTarget(event);
-
-  if (!item) {
-    // add item
-    if (this.options.rtl) {
-      var xAbs = util.getAbsoluteRight(this.dom.frame);
-      var x = xAbs - event.center.x;
-    } else {
-      var xAbs = util.getAbsoluteLeft(this.dom.frame);
-      var x = event.center.x - xAbs; 
-    }
-    // var xAbs = util.getAbsoluteLeft(this.dom.frame);
-    // var x = event.center.x - xAbs;
-    var start = this.body.util.toTime(x);
-    var scale = this.body.util.getScale();
-    var step = this.body.util.getStep();
-
-    var newItemData;
-    if (event.type == 'drop') {
-      newItemData = JSON.parse(event.dataTransfer.getData("text"))
-      newItemData.content = newItemData.content ? newItemData.content : 'new item'
-      newItemData.start = newItemData.start ? newItemData.start : (snap ? snap(start, scale, step) : start) 
-      newItemData.type = newItemData.type || 'box';
-      newItemData[this.itemsData._fieldId] = newItemData.id || util.randomUUID();
-
-      if (newItemData.type == 'range' && !newItemData.end) {
-        var end = this.body.util.toTime(x + this.props.width / 5);
-        newItemData.end = snap ? snap(end, scale, step) : end;
-      }
-    } else {
-      newItemData = {
-        start: snap ? snap(start, scale, step) : start,
-        content: 'new item'
-      };
-      newItemData[this.itemsData._fieldId] = util.randomUUID();
-
-      // when default type is a range, add a default end date to the new item
-      if (this.options.type === 'range') {
-        var end = this.body.util.toTime(x + this.props.width / 5);
-        newItemData.end = snap ? snap(end, scale, step) : end;
-      }
-    }
-
-    var group = this.groupFromTarget(event);
-    if (group) {
-      newItemData.group = group.groupId;
-    }
-
-    // execute async handler to customize (or cancel) adding an item
-    newItemData = this._cloneItemData(newItemData);     // convert start and end to the correct type
-    this.options.onAdd(newItemData, function (item) {
-      if (item) {
-        me.itemsData.getDataSet().add(item);
-        if (event.type == 'drop') {
-          me.setSelection([item.id]);
-        }
-        // TODO: need to trigger a redraw?
-      }
-    });
+  var xAbs;
+  var x;
+  // add item
+  if (this.options.rtl) {
+    xAbs = util.getAbsoluteRight(this.dom.frame);
+    x = xAbs - event.center.x;
+  } else {
+    xAbs = util.getAbsoluteLeft(this.dom.frame);
+    x = event.center.x - xAbs;
   }
+  // var xAbs = util.getAbsoluteLeft(this.dom.frame);
+  // var x = event.center.x - xAbs;
+  var start = this.body.util.toTime(x);
+  var scale = this.body.util.getScale();
+  var step = this.body.util.getStep();
+  var end;
+
+  var newItemData;
+  if (event.type == 'drop') {
+    newItemData = JSON.parse(event.dataTransfer.getData("text"));
+    newItemData.content = newItemData.content ? newItemData.content : 'new item';
+    newItemData.start = newItemData.start ? newItemData.start : (snap ? snap(start, scale, step) : start);
+    newItemData.type = newItemData.type || 'box';
+    newItemData[this.itemsData._fieldId] = newItemData.id || util.randomUUID();
+
+    if (newItemData.type == 'range' && !newItemData.end) {
+      end = this.body.util.toTime(x + this.props.width / 5);
+      newItemData.end = snap ? snap(end, scale, step) : end;
+    }
+  } else {
+    newItemData = {
+      start: snap ? snap(start, scale, step) : start,
+      content: 'new item'
+    };
+    newItemData[this.itemsData._fieldId] = util.randomUUID();
+
+    // when default type is a range, add a default end date to the new item
+    if (this.options.type === 'range') {
+      end = this.body.util.toTime(x + this.props.width / 5);
+      newItemData.end = snap ? snap(end, scale, step) : end;
+    }
+  }
+
+  var group = this.groupFromTarget(event);
+  if (group) {
+    newItemData.group = group.groupId;
+  }
+
+  // execute async handler to customize (or cancel) adding an item
+  newItemData = this._cloneItemData(newItemData);     // convert start and end to the correct type
+  this.options.onAdd(newItemData, function (item) {
+    if (item) {
+      me.itemsData.getDataSet().add(item);
+      if (event.type == 'drop') {
+        me.setSelection([item.id]);
+      }
+      // TODO: need to trigger a redraw?
+    }
+  });
 };
 
 /**
@@ -2075,7 +2169,7 @@ ItemSet.prototype._onMultiSelectItem = function (event) {
     if (shiftKey && this.options.multiselect) {
       // select all items between the old selection and the tapped item
       var itemGroup = this.itemsData.get(item.id).group;
-    	
+
       // when filtering get the group of the last selected item
       var lastSelectedGroup = undefined;
       if (this.options.multiselectPerGroup) {
@@ -2083,7 +2177,7 @@ ItemSet.prototype._onMultiSelectItem = function (event) {
           lastSelectedGroup = this.itemsData.get(selection[0]).group;
         }
       }
-    	
+
       // determine the selection range
       if (!this.options.multiselectPerGroup || lastSelectedGroup == undefined || lastSelectedGroup == itemGroup) {
         selection.push(item.id);

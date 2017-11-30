@@ -2,19 +2,58 @@
 
 import CircleImageBase from '../util/CircleImageBase'
 
+
+/**
+ * An image-based replacement for the default Node shape.
+ *
+ * @extends CircleImageBase
+ */
 class Image extends CircleImageBase {
+  /**
+   * @param {Object} options
+   * @param {Object} body
+   * @param {Label} labelModule
+   * @param {Image} imageObj
+   * @param {Image} imageObjAlt
+   */
   constructor (options, body, labelModule, imageObj, imageObjAlt) {
     super(options, body, labelModule);
 
     this.setImages(imageObj, imageObjAlt);
   }
 
+  /**
+   *
+   * @param {CanvasRenderingContext2D} ctx - Unused.
+   * @param {boolean} [selected]
+   * @param {boolean} [hover]
+   */
   resize(ctx, selected = this.selected, hover = this.hover) {
+    var imageAbsent = (this.imageObj.src === undefined) ||
+        (this.imageObj.width === undefined) ||
+        (this.imageObj.height === undefined);
+
+    if (imageAbsent) {
+      var side = this.options.size * 2;
+      this.width = side;
+      this.height = side;
+      return;
+    }
+
     if (this.needsRefresh(selected, hover)) {
       this._resizeImage();
     }
   }
 
+  /**
+   *
+   * @param {CanvasRenderingContext2D} ctx
+   * @param {number} x width
+   * @param {number} y height
+   * @param {boolean} selected
+   * @param {boolean} hover
+   * @param {{toArrow: boolean, toArrowScale: (allOptions.edges.arrows.to.scaleFactor|{number}|allOptions.edges.arrows.middle.scaleFactor|allOptions.edges.arrows.from.scaleFactor|Array|number), toArrowType: *, middleArrow: boolean, middleArrowScale: (number|allOptions.edges.arrows.middle.scaleFactor|{number}|Array), middleArrowType: (allOptions.edges.arrows.middle.type|{string}|string|*), fromArrow: boolean, fromArrowScale: (allOptions.edges.arrows.to.scaleFactor|{number}|allOptions.edges.arrows.middle.scaleFactor|allOptions.edges.arrows.from.scaleFactor|Array|number), fromArrowType: *, arrowStrikethrough: (*|boolean|allOptions.edges.arrowStrikethrough|{boolean}), color: undefined, inheritsColor: (string|string|string|allOptions.edges.color.inherit|{string, boolean}|Array|*), opacity: *, hidden: *, length: *, shadow: *, shadowColor: *, shadowSize: *, shadowX: *, shadowY: *, dashes: (*|boolean|Array|allOptions.edges.dashes|{boolean, array}), width: *}} values
+   */
   draw(ctx, x, y, selected, hover, values) {
     this.switchImages(selected);
     this.resize();
@@ -42,18 +81,8 @@ class Image extends CircleImageBase {
         this.height + ctx.lineWidth);
       ctx.fill();
 
-      //draw dashed border if enabled, save and restore is required for firefox not to crash on unix.
-      ctx.save();
-      // if borders are zero width, they will be drawn with width 1 by default. This prevents that
-      if (borderWidth > 0) {
-        this.enableBorderDashes(ctx, values);
-        //draw the border
-        ctx.stroke();
-        //disable dashed border for other elements
-        this.disableBorderDashes(ctx, values);
-      }
-      ctx.restore();
-
+     this.performStroke(ctx, values);
+ 
       ctx.closePath();
     }
 
@@ -64,15 +93,14 @@ class Image extends CircleImageBase {
     this.updateBoundingBox(x,y);
   }
 
-  updateBoundingBox(x,y) {
+  /**
+   *
+   * @param {number} x
+   * @param {number} y
+   */
+  updateBoundingBox(x, y) {
     this.resize();
-    this.left = x - this.width / 2;
-    this.top = y - this.height / 2;
-
-    this.boundingBox.top = this.top;
-    this.boundingBox.left = this.left;
-    this.boundingBox.right = this.left + this.width;
-    this.boundingBox.bottom = this.top + this.height;
+    this._updateBoundingBox(x, y);
 
     if (this.options.label !== undefined && this.labelModule.size.width > 0) {
       this.boundingBox.left = Math.min(this.boundingBox.left, this.labelModule.size.left);
@@ -81,6 +109,12 @@ class Image extends CircleImageBase {
     }
   }
 
+  /**
+   *
+   * @param {CanvasRenderingContext2D} ctx
+   * @param {number} angle
+   * @returns {number}
+   */
   distanceToBorder(ctx, angle) {
      return this._distanceToBorder(ctx,angle);
   }
