@@ -2340,7 +2340,6 @@ function wipTabCreate(divID, jSon){
     var values = jSon.values;
     var container = document.getElementById(divID);
 
-    //var dataset = new vis.DataSet();
     for (var i = 0; i < numberOfCharts; i++) {
         var listofgroups = [];
         var dataset = new vis.DataSet();
@@ -2398,10 +2397,36 @@ function eqpTabCreate(divID, object, listofProducts){
     $("#"+divID).html("<br><br><br>");
     var container = document.getElementById(divID);
     var values = object.values;
+
+    //~~~~~~~~~~~~~~~~~~~~~~ COLOR OF THE LINES~~~~~~~~~~~~~~~~~~~~~~~
+    // match this wit hwhat you have in d3-timeline
+    var c10 = d3.scale.category10();
+    var colorDomain = ["2MCP_01", "2MCP_02", "2MCP_03"]
+    c10.domain(colorDomain);
+    var colorCycle = {
+        "2MCP_01" : c10("2MCP_01"), 
+        "2MCP_02" : c10("2MCP_02"),
+        "2MCP_03" : c10("2MCP_03"),
+        // 'SDP_01': '#2A75A6',
+        // 'SDP_02': '#AEC6EB',
+        // 'SDP_03': '#FD7E12',
+        // 'DDP_01': '#FCB972',
+        // 'DDP_02': '#2AA12D',
+        // 'DDP_03': '#A0D993',
+        // 'DDP_04': '#8BC432',
+        // 'QDP_01': '#FF9894',
+        // 'QDP_02': '#9663C3',
+        // '2MCP_01': '#C8ADDB',
+        // '2MCP_02': '#8B5844',
+        // '3MCP_01': '#C19992',
+        // '3MCP_02': '#D87CC6',
+        // '4MCP_01': '#F9B8D3',
+        // '4MCP_02': '#7E7E7E'
+        };
+    //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     for( var i = 0; i < values.length; i++){
         var dawb;
         var dataset = new vis.DataSet();
-        var datasetSetup = new vis.DataSet();
         var groupDataSetEQP = new vis.DataSet();
         var keysss;
         for(key in values[i]){
@@ -2418,8 +2443,9 @@ function eqpTabCreate(divID, object, listofProducts){
                 content: listofProducts[x],
                 options:{
                     drawPoints: false
-                }
+                },
             }
+            groupTemp.style = "stroke:" +c10(listofProducts[x]);
             groupDataSetEQP.add(groupTemp);
  
         }
