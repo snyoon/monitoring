@@ -2340,7 +2340,6 @@ function wipTabCreate(divID, jSon){
     var values = jSon.values;
     var container = document.getElementById(divID);
 
-    //var dataset = new vis.DataSet();
     for (var i = 0; i < numberOfCharts; i++) {
         var listofgroups = [];
         var dataset = new vis.DataSet();
@@ -2401,7 +2400,6 @@ function eqpTabCreate(divID, object, listofProducts){
     for( var i = 0; i < values.length; i++){
         var dawb;
         var dataset = new vis.DataSet();
-        var datasetSetup = new vis.DataSet();
         var groupDataSetEQP = new vis.DataSet();
         var keysss;
         for(key in values[i]){
