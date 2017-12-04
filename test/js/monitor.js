@@ -125,6 +125,7 @@ var openFile = function (event) {
             var tempProduction = inputData['ProductionStatus'][i];
             TproductionStat[tempProduction.id] = tempProduction.values;
         }
+        
         var newSchedule = new scheduleObj(TscheduleName, 
             TganttData, 
             TproductInfo, 
@@ -411,10 +412,11 @@ var openFile = function (event) {
         // compare pages have explanaintiosn at definition
         chartRemoveFunction(TscheduleName);
         timelineHover(traveledTime, href11, TscheduleName);
-        ProductionStatus(TKPIs, TproductionStat, href22, TKPI);
+        //ProductionStatus(TKPIs, TproductionStat, href22, TKPI);
+        statViewPage(TproductionStat, href22);
         loadTabCreate(href33,inputData.LoadAnalysis);
-        wipTabCreate(href44,inputData.ProductionStatus[8]);
-        eqpTabCreate(href55,inputData.ProductionStatus[9], activeProducts);
+        wipTabCreate(href44,TproductionStat["WIP_level_per_product"]);
+        eqpTabCreate(href55,TproductionStat["best_EQP"], activeProducts);
         comparePage();
         for (var i = 0; i < TganttData.length; i++) {
             var tempLabel = TganttData[i]['label'];
@@ -853,248 +855,6 @@ window.onload = tableclick();
  
 }
  
-//------------------------------------------------------------------------------------------------------------
- 
-// ------------------------------------- Decision View ------------------------------------------------
-// var columns = [
-// { head: 'Decision', cl: 'tableTitle', html: ƒ('decision') },
-// { head: 'OperationId', cl: 'num', html: ƒ('operationId') },
-// { head: 'ProductType', cl: 'center', html: ƒ('productType') },
-//         // { head: 'LotQuantiy', cl: 'center', html: ƒ('lotSize') },
-//         { head: 'actionVector', cl: 'center', html: ƒ('actionvector') },
-//         { head: 'Score', cl: 'num', html: ƒ('reward', d3.format('.5f')) }
-//         ];
- 
- 
-//         function displayDecisions(d, datum){
-//             d3.selectAll('table').remove();
-//             d3.selectAll('#decisionLine').remove();
-//             var lotId = d.lotId;
-//             if(lotId.indexOf('_')>0) lotId = lotId.substring(0, lotId.indexOf('_'))
-//                 var decisionKey = d.degree + '_' + lotId
-//             var decisionsArray = decisionInfo[decisionKey]
-//             if(decisionsArray != undefined) {
-//                 var DASelection = 5;
-//                 var WBSelection = 5;
-//                 var WBSplit = 5;
- 
-//                 var DASelDecisions = [];
-//                 var DASelDecisionsDict = {};
- 
-//                 var WBSelDecisions = [];
-//                 var boorder = [
-//                 {'decision' : '---------', 'operationId' : '---------', 'productType' : '---------', 'lotSize': '-----------', 'score': ''}
-//                 ];
-//                 var WBSplitDecisions = [];
- 
-//                 if(d.degree.indexOf('WB')>-1){
-//                     for(var i = 0; i < decisionsArray.length; i++){
-//                         var tempDecision = decisionsArray[i];
-//                         if(tempDecision.decisionType == 'WB_SELECTION'){
-//                             if(WBSelDecisions.length == WBSelection) continue;
-//                             WBSelDecisions.push(tempDecision)
-//                         }
-//                         else if(tempDecision.decisionType == 'SPLIT'){
-//                             if(WBSplitDecisions.length == WBSplit) continue;
-//                             WBSplitDecisions.push(tempDecision)
-//                         }
-//                     }
-//                 }
-//                 else{
-//     //        DASelection = Math.min(DASelection, decisionsArray.length)
-//     DASelection = decisionsArray.length
-//     for(var i = 0; i < DASelection; i++){
-//         DASelDecisions.push(decisionsArray[i])
-//     }
-// }
-// var table = d3.select('#decisionViewer')
-// .append('table');
- 
- 
-// if(d.degree.indexOf('WB')>-1){
-//          // create table header
-//          table.append('thead').append('tr')
-//          .selectAll('th')
-//          .data(columns).enter()
-//          .append('th')
-//          .attr('class', ƒ('cl'))
-//          .text(ƒ('head'));
- 
-//          table.append('tbody')
-//          .selectAll('tr')
-//          .data(WBSelDecisions).enter()
-//          .append('tr')
-//          .selectAll('td')
-//          .data(function(row, i) {
-//             return columns.map(function(c) {
-//                     // compute cell values for this specific row
-//                     var cell = {};
-//                     d3.keys(c).forEach(function(k) {
-//                         cell[k] = typeof c[k] == 'function' ? c[k](row,i) : c[k];
-//                     });
-//                     return cell;
-//                 });
-//         }).enter()
-//          .append('td')
-//          .html(ƒ('html'))
-//          .attr('class', ƒ('cl'));
- 
-//          table.append('tbody')
-//          .selectAll('tr')
-//          .data(boorder).enter()
-//          .append('tr')
-//          .selectAll('td')
-//          .data(function(row, i) {
-//             return columns.map(function(c) {
-//                     // compute cell values for this specific row
-//                     var cell = {};
-//                     d3.keys(c).forEach(function(k) {
-//                         cell[k] = typeof c[k] == 'function' ? c[k](row,i) : c[k];
-//                     });
-//                     return cell;
-//                 });
-//         }).enter()
-//          .append('td')
-//          .html(ƒ('html'))
-//          .attr('class', ƒ('cl'));    
- 
-//         // create table body
-//         table.append('tbody')
-//         .selectAll('tr')
-//         .data(WBSplitDecisions).enter()
-//         .append('tr')
-//         .selectAll('td')
-//         .data(function(row, i) {
-//             return columns.map(function(c) {
-//                     // compute cell values for this specific row
-//                     var cell = {};
-//                     d3.keys(c).forEach(function(k) {
-//                         cell[k] = typeof c[k] == 'function' ? c[k](row,i) : c[k];
-//                     });
-//                     return cell;
-//                 });
-//         }).enter()
-//         .append('td')
-//         .html(ƒ('html'))
-//         .attr('class', ƒ('cl'));
-//     }
-//     else{
-//         table.append('thead').append('tr')
-//         .selectAll('th')
-//         .data(columns).enter()
-//         .append('th')
-//         .attr('class', ƒ('cl'))
-//         .text(ƒ('head'));
- 
-//         table.append('tbody')
-//         .selectAll('tr')
-//         .data(DASelDecisions).enter()
-//         .append('tr')
-//         .selectAll('td')
-//         .data(function(row, i) {
-//             return columns.map(function(c) {
-//                     // compute cell values for this specific row
-//                     var cell = {};
-//                     d3.keys(c).forEach(function(k) {
-//                         cell[k] = typeof c[k] == 'function' ? c[k](row,i) : c[k];
-//                     });
-//                     return cell;
-//                 });
-//         }).enter()
-//         .append('td')
-//         .on("mouseover", function(d) {
-//             d3.select(this).style("cursor", "pointer")
-//         })
-//         .on("mouseout", function(d) {
-//             d3.select(this).style("cursor", "default")
-//         })
-////////////////////THIS SIS THE HTING CONTRONLLLING THE FILL WHEN CLICKED DSKLFJSDL
-//         .on("click", function (d, i) {
-//             if(boolSelected == true){
-//                 var decisionLotId = d.html.substring(d.html.indexOf('-')+1, d.html.length)
-//                 var rects = d3.selectAll('.operationRect')
-//                     // 같은 랏을 두 번 선택했을 때는 다시 원래대로 돌아가게 함
-//                     if(decisionLotId.indexOf(candidatedElement) > -1){
-//                         rects.style('fill', function (d,i){
-//                             if(d.lotId.indexOf(clickedElement)>-1){
-//                                 if(d.lotId.indexOf('WIP')>-1){
-//                                     if(clickedElement.indexOf('WIP')>-1) return colorCycle[d.productGroup];
-//                                     else return 'white';
-//                                 }
-//                                 else return colorCycle[d.productGroup];
-//                             }
-//                             else return 'white'
-//                         })
-//                         candidatedElement = 'can'
-//                     }
-//                     else{
-//                         // 최초 선택의 경우 
-//                         rects.style("fill", function (d, i){
-//                             // 선택된 lot을 색칠하기 위함
-//                             if(d.lotId.indexOf(decisionLotId)>-1){
-//                                 // 지금 색칠해야 하는 lot이 WIP이라면 lot 이름을 공유하기 때문에
-//                                 // 만약, 선택된 lot이 WIP이 아니었으면 lot 이름을 공유하는 WIP들은 색칠하지 않는다
-//                                 // 만약, 선택된 lot이 WIP이면 원래대로 색칠을 해준다                            
-//                                 if(d.lotId.indexOf('WIP')>-1){
-//                                     if(decisionLotId.indexOf('WIP')>-1) return colorCycle[d.productGroup];
-//                                     else return 'white';
-//                                 }
-//                                 else return colorCycle[d.productGroup];
-//                             } 
-//                             else{
-//                                 if(d.lotId.indexOf(clickedElement) > -1) {
-//                                     if(d.lotId.indexOf('WIP')>-1){
-//                                         if(clickedElement.indexOf('WIP')>-1) return colorCycle[d.productGroup];
-//                                         else return 'white';
-//                                     }
-//                                     else return colorCycle[d.productGroup];
-//                                 }
-//                                 else return 'white';
-//                             } 
-//                         }) 
-//                         candidatedElement = decisionLotId;       
-//                     }
-//                 }
-//             })
-//         .html(ƒ('html'))
-//         .attr('class', ƒ('cl'))
-//     }
- 
-     
-//     var currentStatus =  decisionsArray[0];
-//     $('#currentStatus')
-//     .html('<strong style="font-family:Sans-serif;font-size:20px;">' +'DA WIP Level: '+ currentStatus['dawipLevel'] + ' / ' + denominator['Stocker_size']
-//        + '<br>' + '</strong>'
-//        +'<strong style="font-family:Sans-serif;font-size:20px;">' +'WB WIP Level: '+ currentStatus['wbwipLevel'] + ' / ' + denominator['Stocker_size']
-//        + '<br>' + '</strong>' 
-//        +'<strong style="font-family:Sans-serif;font-size:20px;">' +'Working DA: '+ currentStatus['workingDA'] + ' / ' + denominator['DA_resource']
-//        + '<br>' + '</strong>'
-//        +'<strong style="font-family:Sans-serif;font-size:20px;">' +'Working WB: '+ currentStatus['workingWB'] + ' / ' + denominator['WB_resource']
-//        + '<br>' + '</strong>'
-//        +'<strong style="font-family:Sans-serif;font-size:20px;">' +'투입량: '+ currentStatus['inputCount'] + ' / ' + denominator['MAX_inputcount']
-//        + '<br>' + '</strong>'
-//        +'<strong style="font-family:Sans-serif;font-size:20px;">' +'생산량: '+ currentStatus['outputCount'] + ' / ' + denominator['MAX_outputcount']
-//        + '<br>' + '</strong>'
-//        );
-//     lineHeight = chart.getHeight();
-//     gantt = d3.select('#process').select('svg')
-//     gantt.append("line")
-//     .attr('id', 'decisionLine')    
-//         .attr("x1", xScale(decisionsArray[0].decisionTime))  //<<== change your code here
-//         .attr("y1", margin.top*2)
-//         .attr("x2", xScale(decisionsArray[0].decisionTime))  //<<== and here
-//         .attr("y2", lineHeight - margin.bottom)
-//         .style("stroke-width", 2)
-//         .style("stroke", "red")
-//         .style("fill", "none");
-//     }
-//     else{
-//         $('#currentStatus')
-//         .html(' ');
-//     }
-     
-     
-// }
  
  
 function selectLots(lotId, eventId, idofchart){
@@ -2336,14 +2096,15 @@ function productOBJ(id, datime, wbtime, target, load){
 
 function wipTabCreate(divID, jSon){
     $("#"+divID).html("<br><br><br>");
-    var numberOfCharts = jSon.values.length;
+    var numberOfCharts = jSon.length;
     var values = jSon.values;
     var container = document.getElementById(divID);
 
     for (var i = 0; i < numberOfCharts; i++) {
         var listofgroups = [];
         var dataset = new vis.DataSet();
-        var currentValue = values[i];
+        var datasetSums = new vis.DataSet();
+        var currentValue = jSon[i];
         var productValue;
         var keysss;
         for(key in currentValue){
@@ -2351,12 +2112,11 @@ function wipTabCreate(divID, jSon){
             keysss= key
         }
         for (var x = 0; x < productValue.WB.length; x++) {
-            wipDataAdd(productValue.WB[x], dataset, listofgroups);
+            wipDataAdd(productValue.WB[x], dataset, listofgroups, datasetSums, "WB_Total");
         }
         for (var x = 0; x < productValue.DA.length; x++) {
-            wipDataAdd(productValue.DA[x], dataset, listofgroups);
+            wipDataAdd(productValue.DA[x], dataset, listofgroups, datasetSums, "DA_Total");
         }
-
         var options = {
             width: "100%",
             legend: true,
@@ -2367,6 +2127,7 @@ function wipTabCreate(divID, jSon){
                     }
                 }
             }};
+
         var groupDataSet = new vis.DataSet();
         for(var s = 0; s <listofgroups.length; s++){
             var groupTemp={
@@ -2375,28 +2136,69 @@ function wipTabCreate(divID, jSon){
             }
             groupDataSet.add(groupTemp);
         }
+        var groupDataSetSums = new vis.DataSet();
+
+        var tempgbtotal = {
+                id: "WB_Total",
+                content: "WB_Total",
+                style:"stroke:red",
+                options:{
+                    drawPoints: false
+                }
+            }
+        var tempgwtotal = {
+                id: "DA_Total",
+                content: "DA_Total",
+                style:"stroke:green",
+                options:{
+                    drawPoints: false
+                }
+            } 
+        groupDataSetSums.add(tempgbtotal);
+        groupDataSetSums.add(tempgwtotal);
+        var options2 = {
+            width: "100%",
+            legend: true,
+            dataAxis:{
+                left:{
+                    title:{
+                        text: keysss + " TOTAL"
+                    }
+                }
+            }};
+        //~~~~~~~~~~~ Summnation data ~~~~~~~~~~~~~~~~
+        var graph2d = new vis.Graph2d(container, datasetSums, groupDataSetSums,options2);
         var graph2d = new vis.Graph2d(container, dataset, groupDataSet, options);
-    
     }
 
 }
 
-function wipDataAdd(object, dataset, listofgroups){
+function wipDataAdd(object, dataset, listofgroups, datasetsum, sumgroup){
     var group = object.id;
-    if(!(listofgroups.includes(group))){
-        listofgroups.push(group);
-    }
-    var plots = object.plots;
-    for(var i = 0; i < plots.length; i++){
-        var time = new Date(plots[i].time);
-        dataset.add({x: time, y:plots[i].number, group: group});
+    if(group == "all"){
+        var plots = object.plots;
+        for(var i = 0; i < plots.length; i++){
+            var time = new Date(plots[i].time);
+            datasetsum.add({x: time, y:plots[i].number, group: sumgroup});
+        }
+    }else{
+        if(!(listofgroups.includes(group))){
+            listofgroups.push(group);
+        }
+        var plots = object.plots;
+        for(var i = 0; i < plots.length; i++){
+            var time = new Date(plots[i].time);
+            dataset.add({x: time, y:plots[i].number, group: group});
+        }
     }
 }
+
+
 
 function eqpTabCreate(divID, object, listofProducts){
     $("#"+divID).html("<br><br><br>");
     var container = document.getElementById(divID);
-    var values = object.values;
+    var values = object;
 
     //~~~~~~~~~~~~~~~~~~~~~~ COLOR OF THE LINES~~~~~~~~~~~~~~~~~~~~~~~
     // match this wit hwhat you have in d3-timeline
@@ -2513,5 +2315,154 @@ function eqpDataAdd(object, dataset, group){
     var time = new Date(object.time);
     dataset.add({x:time, y: object.number, group: group});
 }
+
+function statViewPage(object, divID){
+    $("#"+divID).html("<br><br><br>");
+    var container = document.getElementById(divID);
+    // WIP GRAPH
+    var wipObjectDA = object["WIPLevel"].DA;
+    var wipObjectWB = object["WIPLevel"].WB;
+    var wipDataSet = new vis.DataSet();
+    for(var k = 0; k < wipObjectDA.length; k++){
+        var time = new Date(wipObjectDA[k].time);
+        wipDataSet.add({x:time, y:wipObjectDA[k].number, group:"DA"});
+    }
+    for(var k = 0; k < wipObjectWB.length; k++){
+        var time = new Date(wipObjectWB[k].time);
+        wipDataSet.add({x:time, y:wipObjectWB[k].number, group:"WB"})
+    }
+    var wipGroupData = new vis.DataSet();
+    wipGroupData.add({
+        id: "DA",
+        content: "DA",
+        options:{
+            drawPoints: false
+        },
+        style:"stroke:green"
+    });
+    wipGroupData.add({
+        id: "WB",
+        content: "WB",
+        options:{
+            drawPoints: false
+        },
+        style:"stroke:red"
+    });
+    var wipOption = {
+            width: "100%",
+            legend: true,
+            dataAxis:{
+                left:{
+                    title:{
+                        text: "WIPLevel"
+                    }
+                }
+            }};
+    var wipGraph = new vis.Graph2d(container,wipDataSet,wipGroupData, wipOption);
+
+    //~~~~~~~~~~~ END OF WIP GRAPH~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    //~~~~~~~~~~~~~ start of 투입량 Graph~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    var inTarObj = object["InTargetCount"];
+    var inTarDataSet = new vis.DataSet();
+    var inTarGroups = new vis.DataSet();
+    for(key in inTarObj){
+        inTarGroups.add({
+            id:key,
+            content:key,
+            options:{
+                drawPoints: false
+            }
+        });
+        var to = inTarObj[key];
+        visArrayDatasetAdd(to,inTarDataSet,key);
+    }
+    var inTarOption = {
+            width: "100%",
+            legend: true,
+            dataAxis:{
+                left:{
+                    title:{
+                        text: "투입량"
+                    }
+                }
+            }};
+    var inTarGraph = new vis.Graph2d(container, inTarDataSet, inTarGroups, inTarOption);
+    //~~~~~~~~~~ END~~~~~~~~~~~~~~~~~~~~~~~~~~
+    // ~~~~~~~~~~~ START of 산출물~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    var shipCountObj = object["ShipCount"];
+    var shipCountData = new vis.DataSet();
+    var shipCountGroup = new vis.DataSet();
+    visArrayDatasetAdd(shipCountObj,shipCountData,"Ship_Count");
+    shipCountGroup.add({
+        id:"Ship_Count",
+        content:"Ship_Count",
+        options:{
+            drawPoints: false
+        }
+    });
+    var shipCountOption = {
+        legend:false,
+        dataAxis:{
+            left:{
+                title:{
+                    text:"산출물"
+                }
+            }
+        }
+    };
+    var shipCountGraph = new vis.Graph2d(container,shipCountData, shipCountGraph,shipCountOption);
+
+    // ~~~~~~~~~~~~ END OF 산출물~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    // ~~~~~~~~~~~ UTIL GRAPH START ~~~~~~~~~~~~~~~~~~~~~~~~
+    var utilObjDA = object["util"].DA;
+    var utilObjWB = object["util"].WB;
+    var utilData = new vis.DataSet();
+    var utilGroup = new vis.DataSet();
+
+    visArrayDatasetAdd(utilObjDA, utilGroup, "DA");
+    visArrayDatasetAdd(utilObjWB, utilGroup, "WB");
+
+    utilGroup.add({
+        id:"DA",
+        content:"DA",
+        options:{
+            drawPoints: false
+        },
+        style:"stroke:green"
+    });
+    utilGroup.add({
+        id:"WB",
+        content:"WB",
+        options:{
+            drawPoints: false
+        },
+        style:"stroke:red"
+    });
+
+    var utilOption = {
+        width: "100%",
+        legend: true,
+        dataAxis:{
+                left:{
+                    title:{
+                        text: "Util"
+                    }
+                }
+    }};
+    var utilGraph = new vis.Graph2d(container, utilData, utilGroup, utilOption);
+    //~~~~~~~~~~~~ END OF UTIL GRAPH~~~~~~~~~~~~~~~~~~~~~~~~
+
+}
+
+
+function visArrayDatasetAdd(array,dataset,group){
+    for(var k = 0; k < array.length; k++){
+        var time = new Date(array[k].time);
+        dataset.add({x:time, y:array[k].number, group:group});
+    }
+}
+
+
 
 

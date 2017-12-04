@@ -30,7 +30,14 @@ body {
     display: inline-block;
     
 }
-
+.groupDAtotal {
+  /*fill: red;*/
+  stroke: red;
+}
+.groupWBtotal {
+  /*fill: green;*/
+  stroke: green;
+}
 table{
     border-collapse: collapse;
 }
