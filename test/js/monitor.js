@@ -2420,8 +2420,8 @@ function statViewPage(object, divID){
     var utilData = new vis.DataSet();
     var utilGroup = new vis.DataSet();
 
-    visArrayDatasetAdd(utilObjDA, utilGroup, "DA");
-    visArrayDatasetAdd(utilObjWB, utilGroup, "WB");
+    visArrayDatasetAdd(utilObjDA, utilData, "DA");
+    visArrayDatasetAdd(utilObjWB, utilData, "WB");
 
     utilGroup.add({
         id:"DA",
