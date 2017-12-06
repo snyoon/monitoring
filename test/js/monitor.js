@@ -217,6 +217,16 @@ var openFile = function (event) {
             chartNavStatA.appendChild(document.createTextNode("Statistics View"));
             chartNavStat.appendChild(chartNavStatA);
             chartNav.appendChild(chartNavStat);
+            // KPI TAB
+            var chartNavKpi = document.createElement("li");
+            chartNavKpi.setAttribute("class", "nav");
+            var chartNavKpiA = document.createElement("a");
+            chartNavKpiA.setAttribute("data-toggle", "tab");
+            var hrefKPI = "kpi" +divID;
+            chartNavKpiA.setAttribute("href", "#" + hrefKPI);
+            chartNavKpiA.appendChild(document.createTextNode("KPI"));
+            chartNavKpi.appendChild(chartNavKpiA);
+            chartNav.appendChild(chartNavKpi);
             //Load Analysis Tab
             var chartNavLoad = document.createElement("li");
             chartNavLoad.setAttribute("class", "nav");
@@ -275,9 +285,14 @@ var openFile = function (event) {
 
             var EQPChartDive = document.createElement("div");
             EQPChartDive.setAttribute("id", href55);
-            EQPChartDive.setAttribute("class","tab-pane fade");        
+            EQPChartDive.setAttribute("class","tab-pane fade"); 
+
+            var KPIChartDive = document.createElement("div");
+            KPIChartDive.setAttribute("id", hrefKPI);
+            KPIChartDive.setAttribute("class","tab-pane fade");        
  
             chartTypesContent.appendChild(scheduleChartDive);
+            chartTypesContent.appendChild(KPIChartDive);
             chartTypesContent.appendChild(statChartDive);
             chartTypesContent.appendChild(loadChartDive);
             chartTypesContent.appendChild(wipChartDive);
@@ -341,6 +356,16 @@ var openFile = function (event) {
             chartNavStatA.appendChild(document.createTextNode("Statistics View"));
             chartNavStat.appendChild(chartNavStatA);
             chartNav.appendChild(chartNavStat);
+            // KPI TAB
+            var chartNavKpi = document.createElement("li");
+            chartNavKpi.setAttribute("class", "nav");
+            var chartNavKpiA = document.createElement("a");
+            chartNavKpiA.setAttribute("data-toggle", "tab");
+            var hrefKPI = "kpi" +divID;
+            chartNavKpiA.setAttribute("href", "#" + hrefKPI);
+            chartNavKpiA.appendChild(document.createTextNode("KPI"));
+            chartNavKpi.appendChild(chartNavKpiA);
+            chartNav.appendChild(chartNavKpi);
             //Load Analysis Tab
             var chartNavLoad = document.createElement("li");
             chartNavLoad.setAttribute("class", "nav");
@@ -399,9 +424,14 @@ var openFile = function (event) {
 
             var EQPChartDive = document.createElement("div");
             EQPChartDive.setAttribute("id", href55);
-            EQPChartDive.setAttribute("class","tab-pane fade"); 
+            EQPChartDive.setAttribute("class","tab-pane fade");
+
+            var KPIChartDive = document.createElement("div");
+            KPIChartDive.setAttribute("id", hrefKPI);
+            KPIChartDive.setAttribute("class","tab-pane fade");  
  
             chartTypesContent.appendChild(scheduleChartDive);
+            chartTypesContent.appendChild(KPIChartDive);
             chartTypesContent.appendChild(statChartDive);
             chartTypesContent.appendChild(loadChartDive);
             chartTypesContent.appendChild(wipChartDive);
@@ -413,11 +443,12 @@ var openFile = function (event) {
         chartRemoveFunction(TscheduleName);
         timelineHover(traveledTime, href11, TscheduleName);
         //ProductionStatus(TKPIs, TproductionStat, href22, TKPI);
+        kpiCreate(TKPIs, hrefKPI);
         statViewPage(TproductionStat, href22);
         loadTabCreate(href33,inputData.LoadAnalysis);
         wipTabCreate(href44,TproductionStat["WIP_level_per_product"]);
         eqpTabCreate(href55,TproductionStat["best_EQP"], activeProducts);
-        comparePage();
+        //comparePage();
         for (var i = 0; i < TganttData.length; i++) {
             var tempLabel = TganttData[i]['label'];
             var tempTimes = TganttData[i]['times']
@@ -927,7 +958,7 @@ function ProductionStatus(TKPIs, TproductionStat, href22, TKPI){
     var canvasWidth = processWidth/3.3;
     graphWidth = canvasWidth - graphMargin.left - graphMargin.right;
     graphHeight = 400 - graphMargin.top - graphMargin.bottom;
-     
+    
  
      // KPI
      var svg1 = d3.select("#"+href22).append('svg').attr('id', 'KPIText').attr('width', canvasWidth).attr('height', 400)
@@ -2167,8 +2198,9 @@ function wipTabCreate(divID, jSon){
                 }
             }};
         //~~~~~~~~~~~ Summnation data ~~~~~~~~~~~~~~~~
+
         var graph2d = new vis.Graph2d(container, datasetSums, groupDataSetSums,options2);
-        var graph2d = new vis.Graph2d(container, dataset, groupDataSet, options);
+        var graph2d = new vis.Graph2d(container, dataset, groupDataSet, options);   
     }
 
 }
@@ -2319,7 +2351,28 @@ function eqpDataAdd(object, dataset, group){
 function statViewPage(object, divID){
     $("#"+divID).html("<br><br><br>");
     var container = document.getElementById(divID);
-    // WIP GRAPH
+    // gonna make a table for the layout
+    var table = document.createElement("table");
+    var tablebody = document.createElement("tbody");
+
+    var row1 = document.createElement("tr");
+    var wipcell = document.createElement("td");
+    var intarcell = document.createElement("td");
+    row1.appendChild(wipcell);
+    row1.appendChild(intarcell);
+    var row2 = document.createElement("tr");
+    var shipcountcell = document.createElement("td");
+    var utilcell = document.createElement("td");
+    row2.appendChild(shipcountcell);
+    row2.appendChild(utilcell);
+    tablebody.appendChild(row1);
+    tablebody.appendChild(row2);
+
+    table.appendChild(tablebody);
+    container.appendChild(table);
+    table.setAttribute("border", "0");
+    //container.setAttribute("class", "statcontainer");
+    //~~~~~~~~~~~~~~~ WIP GRAPH~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     var wipObjectDA = object["WIPLevel"].DA;
     var wipObjectWB = object["WIPLevel"].WB;
     var wipDataSet = new vis.DataSet();
@@ -2348,8 +2401,11 @@ function statViewPage(object, divID){
         },
         style:"stroke:red"
     });
+    var wipGraph = new vis.Graph2d(wipcell,wipDataSet,wipGroupData);
+    var minaxWip = wipGraph.getDataRange();
     var wipOption = {
             width: "100%",
+            zoomMax: minaxWip.max.getTime() - minaxWip.min.getTime(),
             legend: true,
             dataAxis:{
                 left:{
@@ -2358,13 +2414,15 @@ function statViewPage(object, divID){
                     }
                 }
             }};
-    var wipGraph = new vis.Graph2d(container,wipDataSet,wipGroupData, wipOption);
+    wipGraph.setOptions(wipOption);
 
     //~~~~~~~~~~~ END OF WIP GRAPH~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     //~~~~~~~~~~~~~ start of 투입량 Graph~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     var inTarObj = object["InTargetCount"];
     var inTarDataSet = new vis.DataSet();
     var inTarGroups = new vis.DataSet();
+    var tarHigh = 0;
+    var tarLow = 0;
     for(key in inTarObj){
         inTarGroups.add({
             id:key,
@@ -2374,34 +2432,44 @@ function statViewPage(object, divID){
             }
         });
         var to = inTarObj[key];
-        visArrayDatasetAdd(to,inTarDataSet,key);
+        visArrayDatasetAdd(to,inTarDataSet,key, tarHigh, tarLow);
     }
-    var inTarOption = {
-            width: "100%",
-            legend: true,
-            dataAxis:{
+
+    var inTarGraph = new vis.Graph2d(intarcell, inTarDataSet, inTarGroups);
+    var minmaxTar = inTarGraph.getDataRange();
+    var intarOption = {
+        width: "100%",
+        zoomMax: minmaxTar.max.getTime() - minmaxTar.min.getTime(),
+        legend: true,
+        dataAxis:{
                 left:{
                     title:{
                         text: "투입량"
                     }
                 }
-            }};
-    var inTarGraph = new vis.Graph2d(container, inTarDataSet, inTarGroups, inTarOption);
+
+    }};
+    inTarGraph.setOptions(intarOption);
     //~~~~~~~~~~ END~~~~~~~~~~~~~~~~~~~~~~~~~~
     // ~~~~~~~~~~~ START of 산출물~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
     var shipCountObj = object["ShipCount"];
     var shipCountData = new vis.DataSet();
     var shipCountGroup = new vis.DataSet();
-    visArrayDatasetAdd(shipCountObj,shipCountData,"Ship_Count");
+    var scHigh = 0;
+    var scLow =0;
+    visArrayDatasetAdd(shipCountObj,shipCountData, "Ship_Count", scHigh, scLow);
     shipCountGroup.add({
-        id:"Ship_Count",
-        content:"Ship_Count",
-        options:{
-            drawPoints: false
-        }
-    });
+            id:"Ship_Count",
+            content:"Ship_Count",
+            options:{
+                drawPoints: false
+            }
+        });
+    var shipCountGraph = new vis.Graph2d(shipcountcell,shipCountData, shipCountGroup);
+    var minmaxSC = shipCountGraph.getDataRange();
     var shipCountOption = {
+        width: "100%",
+        zoomMax: minmaxSC.max.getTime() - minmaxSC.min.getTime(),
         legend:false,
         dataAxis:{
             left:{
@@ -2411,18 +2479,18 @@ function statViewPage(object, divID){
             }
         }
     };
-    var shipCountGraph = new vis.Graph2d(container,shipCountData, shipCountGraph,shipCountOption);
-
+    shipCountGraph.setOptions(shipCountOption);
     // ~~~~~~~~~~~~ END OF 산출물~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // ~~~~~~~~~~~ UTIL GRAPH START ~~~~~~~~~~~~~~~~~~~~~~~~
     var utilObjDA = object["util"].DA;
     var utilObjWB = object["util"].WB;
     var utilData = new vis.DataSet();
     var utilGroup = new vis.DataSet();
-
+    var utilHigh = 0;
+    var utilLow = 0;
     visArrayDatasetAdd(utilObjDA, utilData, "DA");
     visArrayDatasetAdd(utilObjWB, utilData, "WB");
-
+    
     utilGroup.add({
         id:"DA",
         content:"DA",
@@ -2440,8 +2508,11 @@ function statViewPage(object, divID){
         style:"stroke:red"
     });
 
+    var utilGraph = new vis.Graph2d(utilcell, utilData, utilGroup);
+    var minmaxutil = utilGraph.getDataRange();
     var utilOption = {
         width: "100%",
+        zoomMax: minmaxutil.max.getTime() - minmaxutil.min.getTime(),
         legend: true,
         dataAxis:{
                 left:{
@@ -2449,20 +2520,58 @@ function statViewPage(object, divID){
                         text: "Util"
                     }
                 }
-    }};
-    var utilGraph = new vis.Graph2d(container, utilData, utilGroup, utilOption);
-    //~~~~~~~~~~~~ END OF UTIL GRAPH~~~~~~~~~~~~~~~~~~~~~~~~
 
+    }};
+    utilGraph.setOptions(utilOption);
+    //~~~~~~~~~~~~ END OF UTIL GRAPH~~~~~~~~~~~~~~~~~~~~~~~~
 }
 
 
-function visArrayDatasetAdd(array,dataset,group){
+function visArrayDatasetAdd(array,dataset,group, high, low){
     for(var k = 0; k < array.length; k++){
         var time = new Date(array[k].time);
         dataset.add({x:time, y:array[k].number, group:group});
     }
 }
 
-
+function kpiCreate(array, divID){
+    $("#"+divID).html("<br><br><br>");
+    var canvasWidth = processWidth/3.3;
+    graphWidth = canvasWidth - graphMargin.left - graphMargin.right;
+    graphHeight = 400 - graphMargin.top - graphMargin.bottom;
+    
+ 
+     // KPI
+     var svg1 = d3.select("#"+divID).append('svg').attr('id', 'KPIText').attr('width', canvasWidth).attr('height', 400)
+     .append('g').attr("transform", "translate(" + graphMargin.left + "," + (graphMargin.top)+ ")");
+      
+     var fontSize = 18; 
+     svg1.append("text")
+     .attr('class', 'statusTitle')
+     .attr("x", (graphWidth / 2))             
+     .attr("y", 0 - (margin.top / 2))
+     .text("KPI");
+     var kpis = svg1.selectAll('.KPIs')
+     .data(array)
+     kpis.enter()
+     .append('g')
+     .attr('class', 'KPIs')
+     .attr("transform", function(d, i) { return "translate(0," + (i * (fontSize*1.7) +30)+ ")"; })
+     .append('text')
+     .attr('x', 12)
+     .attr('y', 3)
+     .text(function(d){
+        if(d.key == 'Stocker_size') return d.key + ": " + d.value;
+        if(d.key == 'Makespan') return d.key + ": " + (d.value/60).toFixed(1) + " (min)";
+        if(d.key == 'Total_Wiplevel') return d.key + ": " + d.value;
+        if(d.key == 'AVG_Wiplevel') return d.key + ": " + d.value.toFixed(2);
+        if(d.key == 'Waiting_Time') return 'Waiting Time / TAT : ' + d.value.toFixed(3);
+        else return d.key + ": " + d.value.toFixed(3);
+    })
+     .style('font-size', fontSize)
+      
+     kpis.exit().remove();
+ 
+}
 
 
