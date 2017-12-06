@@ -998,7 +998,7 @@ function ProductionStatus(TKPIs, TproductionStat, href22, TKPI){
     .append('g').attr("transform", "translate(" + graphMargin.left + "," + graphMargin.top+ ")");
      
     var xScale = d3.time.scale()
-    .domain([d3.min(TproductionStat['WIPLevel'], function(d){return d.time}), d3.max(TproductionStat['WIPLevel'], function(d){return d.time})])
+    .domain([d3.min(TproductionStat['WIPLevel']['da'], function(d){return d.time}), d3.max(TproductionStat['WIPLevel']['da'], function(d){return d.time})])
         .range([0, graphWidth]); // FIX
          
         var xAxis = d3.svg.axis()
@@ -1008,8 +1008,11 @@ function ProductionStatus(TKPIs, TproductionStat, href22, TKPI){
         .tickFormat(tickFormat.format)
         .tickSize(tickFormat.tickSize);
          
+    maxDAWip = d3.max(TproductionStat['WIPLevel']['da'], function(d){return d.number})
+    maxWBWip = d3.max(TproductionStat['WIPLevel']['wb'], function(d){return d.number})
+    max_y_axis = Math.max(maxDAWip,maxWBWip)
         var yScale = d3.scale.linear()
-        .domain([0, TKPI['Stocker_size']+1])
+        .domain([0, max_y_axis+1])
         .range([graphHeight, 0]);
          
         var yAxis = d3.svg.axis()
@@ -1024,15 +1027,17 @@ function ProductionStatus(TKPIs, TproductionStat, href22, TKPI){
  
  
 var horizontalLine = svg1
+
+
 .append('line')
-.attr("x1", xScale(d3.min(TproductionStat['WIPLevel'], function(d){return d.time})))
-.attr("y1", yScale(TKPI['Stocker_size']))
-.attr("x2", xScale(d3.max(TproductionStat['WIPLevel'], function(d){return d.time})))
-.attr("y2", yScale(TKPI['Stocker_size']))
+.attr("x1", xScale(d3.min(TproductionStat['WIPLevel']['da'], function(d){return d.time})))
+.attr("y1", yScale(max_y_axis))
+.attr("x2", xScale(d3.max(TproductionStat['WIPLevel']['da'], function(d){return d.time})))
+.attr("y2", yScale(max_y_axis))
 .style("stroke-width", 1)
 .style("stroke", "red")
  
-drawVerticalLine(svg1, xScale, yScale, TKPI['Stocker_size'])
+drawVerticalLine(svg1, xScale, yScale, max_y_axis)
  
 svg1.append("text")
 .attr('class', 'statusTitle')
@@ -1041,8 +1046,45 @@ svg1.append("text")
 .text("WIP Level");
  
 svg1.append('path')
+.attr('class', 'statusLine2')
+.attr("d", line(TproductionStat['WIPLevel']['da']))
+
+svg1.append('path')
 .attr('class', 'statusLine')
-.attr("d", line(TproductionStat['WIPLevel']))
+.attr("d", line(TproductionStat['WIPLevel']['wb']))
+
+    
+var dataLabel = []
+    dataLabel.push('DA WIP')
+    dataLabel.push('WB WIP')
+     
+    legend = svg1.selectAll(".legend")
+    .data(dataLabel)
+    .enter().append("g")
+    .attr("class", "legend")
+    // .attr("transform", function(d, i) { return "translate(0," + ((i * 20) + graphHeight*0.87)+ ")"; });          
+    .attr("transform", function(d, i) { return "translate(" + graphWidth * 0.83 +','+ (i * 20 + 10)  +")"; });          
+    legend.append("rect")
+    .attr("x", graphWidth - graphWidth*0.98)
+    .attr("width", 18)
+    .attr("height", 18)
+    .style("fill", function(d, i){
+        if (d.indexOf('DA') > -1){
+            return 'tomato'
+        }else{
+            return '#3366cc'
+        }
+         
+    });
+
+  legend.append("text")
+      .attr("x", graphWidth - graphWidth*0.98 + 20)
+      .attr("y", 9)
+      .attr("dy", ".35em")
+      .style("text-anchor", "front")
+      .text(function(d) { return d;})
+       
+
  
 svg1.append("g")
 .attr("class", "x axis")
@@ -1443,6 +1485,7 @@ function compareHelper(TKPIs, TproductionStat, TKPI, conatinerName, dividedW, na
      kpis.exit().remove();
  
       
+
     svg1 = d3.select("#" + conatinerName).append('br')
     
     var cotainergraphs = document.getElementById(conatinerName);
@@ -1597,10 +1640,10 @@ function compareHelper(TKPIs, TproductionStat, TKPI, conatinerName, dividedW, na
     }};
     utilGraph.setOptions(utilOption);
     //~~~~~~~~~~~~ END OF UTIL GRAPH~~~~~~~~~~~~~~~~~~~~~~~~
+
  
 }
- 
- 
+  
 function inputCorrectCheck( inputD ){
     if (typeof inputD === 'object' && inputD !== null){
         Object.keys(inputD).forEach(function(key,index){
@@ -1620,6 +1663,7 @@ function inputCorrectCheck( inputD ){
     }
 }
  
+
 function tableclick(){
     // console.log(document.getElementById('dtable'));
  
