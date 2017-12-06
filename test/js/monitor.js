@@ -217,6 +217,16 @@ var openFile = function (event) {
             chartNavStatA.appendChild(document.createTextNode("Statistics View"));
             chartNavStat.appendChild(chartNavStatA);
             chartNav.appendChild(chartNavStat);
+            // KPI TAB
+            var chartNavKpi = document.createElement("li");
+            chartNavKpi.setAttribute("class", "nav");
+            var chartNavKpiA = document.createElement("a");
+            chartNavKpiA.setAttribute("data-toggle", "tab");
+            var hrefKPI = "kpi" +divID;
+            chartNavKpiA.setAttribute("href", "#" + hrefKPI);
+            chartNavKpiA.appendChild(document.createTextNode("KPI"));
+            chartNavKpi.appendChild(chartNavKpiA);
+            chartNav.appendChild(chartNavKpi);
             //Load Analysis Tab
             var chartNavLoad = document.createElement("li");
             chartNavLoad.setAttribute("class", "nav");
@@ -275,9 +285,14 @@ var openFile = function (event) {
 
             var EQPChartDive = document.createElement("div");
             EQPChartDive.setAttribute("id", href55);
-            EQPChartDive.setAttribute("class","tab-pane fade");        
+            EQPChartDive.setAttribute("class","tab-pane fade"); 
+
+            var KPIChartDive = document.createElement("div");
+            KPIChartDive.setAttribute("id", hrefKPI);
+            KPIChartDive.setAttribute("class","tab-pane fade");        
  
             chartTypesContent.appendChild(scheduleChartDive);
+            chartTypesContent.appendChild(KPIChartDive);
             chartTypesContent.appendChild(statChartDive);
             chartTypesContent.appendChild(loadChartDive);
             chartTypesContent.appendChild(wipChartDive);
@@ -341,6 +356,16 @@ var openFile = function (event) {
             chartNavStatA.appendChild(document.createTextNode("Statistics View"));
             chartNavStat.appendChild(chartNavStatA);
             chartNav.appendChild(chartNavStat);
+            // KPI TAB
+            var chartNavKpi = document.createElement("li");
+            chartNavKpi.setAttribute("class", "nav");
+            var chartNavKpiA = document.createElement("a");
+            chartNavKpiA.setAttribute("data-toggle", "tab");
+            var hrefKPI = "kpi" +divID;
+            chartNavKpiA.setAttribute("href", "#" + hrefKPI);
+            chartNavKpiA.appendChild(document.createTextNode("KPI"));
+            chartNavKpi.appendChild(chartNavKpiA);
+            chartNav.appendChild(chartNavKpi);
             //Load Analysis Tab
             var chartNavLoad = document.createElement("li");
             chartNavLoad.setAttribute("class", "nav");
@@ -399,9 +424,14 @@ var openFile = function (event) {
 
             var EQPChartDive = document.createElement("div");
             EQPChartDive.setAttribute("id", href55);
-            EQPChartDive.setAttribute("class","tab-pane fade"); 
+            EQPChartDive.setAttribute("class","tab-pane fade");
+
+            var KPIChartDive = document.createElement("div");
+            KPIChartDive.setAttribute("id", hrefKPI);
+            KPIChartDive.setAttribute("class","tab-pane fade");  
  
             chartTypesContent.appendChild(scheduleChartDive);
+            chartTypesContent.appendChild(KPIChartDive);
             chartTypesContent.appendChild(statChartDive);
             chartTypesContent.appendChild(loadChartDive);
             chartTypesContent.appendChild(wipChartDive);
@@ -413,6 +443,7 @@ var openFile = function (event) {
         chartRemoveFunction(TscheduleName);
         timelineHover(traveledTime, href11, TscheduleName);
         //ProductionStatus(TKPIs, TproductionStat, href22, TKPI);
+        kpiCreate(TKPIs, hrefKPI);
         statViewPage(TproductionStat, href22);
         loadTabCreate(href33,inputData.LoadAnalysis);
         wipTabCreate(href44,TproductionStat["WIP_level_per_product"]);
@@ -927,7 +958,7 @@ function ProductionStatus(TKPIs, TproductionStat, href22, TKPI){
     var canvasWidth = processWidth/3.3;
     graphWidth = canvasWidth - graphMargin.left - graphMargin.right;
     graphHeight = 400 - graphMargin.top - graphMargin.bottom;
-     
+    
  
      // KPI
      var svg1 = d3.select("#"+href22).append('svg').attr('id', 'KPIText').attr('width', canvasWidth).attr('height', 400)
@@ -1411,7 +1442,7 @@ function compareHelper(TKPIs, TproductionStat, TKPI, conatinerName, dividedW, na
     var canvasWidth = processWidth/3.3;
     graphWidth = dividedW - graphMargin.left - graphMargin.right;
     graphHeight = 400 - graphMargin.top - graphMargin.bottom;
-     
+    var object = TproductionStat;
  
      // KPI
      var svg1 = d3.select("#"+conatinerName).append('svg').attr('id', 'KPIText').attr('width', dividedW).attr('height', 400)
@@ -1454,341 +1485,165 @@ function compareHelper(TKPIs, TproductionStat, TKPI, conatinerName, dividedW, na
      kpis.exit().remove();
  
       
-     svg1 = d3.select("#" + conatinerName).append('br')
-    // WIP Level
-    svg1 = d3.select("#" + conatinerName).append('svg').attr('width', dividedW).attr('height', 400)
-    .append('g').attr("transform", "translate(" + graphMargin.left + "," + graphMargin.top+ ")");
-     
-    var xScale = d3.time.scale()
-    .domain([d3.min(TproductionStat['WIPLevel']['da'], function(d){return d.time}), d3.max(TproductionStat['WIPLevel']['da'], function(d){return d.time})])
-        .range([0, graphWidth]); // FIX
-         
-        var xAxis = d3.svg.axis()
-        .scale(xScale)
-        .orient('bottom')
-        .ticks(8)
-        .tickFormat(tickFormat.format)
-        .tickSize(tickFormat.tickSize);
-         
-        var yScale = d3.scale.linear()
-        .domain([0, TKPI['Stocker_size']+1])
-        .range([graphHeight, 0]);
-         
-        var yAxis = d3.svg.axis()
-        .scale(yScale)
-        .orient('left')
-        .tickSize(2);    
-         
-        var line = d3.svg.line()
-        .x(function(d) { return xScale(d.time); })
-        .y(function(d) { return yScale(+d.number); })
-//            .inperpolate('linear') ;
- 
- 
-var horizontalLine = svg1
-.append('line')
-.attr("x1", xScale(d3.min(TproductionStat['WIPLevel']['da'], function(d){return d.time})))
-.attr("y1", yScale(TKPI['Stocker_size']))
-.attr("x2", xScale(d3.max(TproductionStat['WIPLevel']['da'], function(d){return d.time})))
-.attr("y2", yScale(TKPI['Stocker_size']))
-.style("stroke-width", 1)
-.style("stroke", "red")
- 
-drawVerticalLine(svg1, xScale, yScale, TKPI['Stocker_size'])
- 
-// svg1.append("text")
-// .attr('class', 'statusTitle')
-// .attr("x", (graphWidth / 2))             
-// .attr("y", 0 - (margin.top / 2))
-// .text("WIP Level");
- 
-// svg1.append('path')
-// .attr('class', 'statusLine')
-// .attr("d", line(TproductionStat['WIPLevel']))
- 
-// svg1.append("g")
-// .attr("class", "x axis")
-// .attr("transform", "translate(0," + graphHeight + ")")
-// .call(xAxis);
- 
-// svg1.append("g")
-// .attr("class", "y axis")
-// .call(yAxis);
-     
-//     svg1 = d3.select("#" + conatinerName).append('br')
-//      // Input Count
-//      svg1 = d3.select("#" + conatinerName).append('svg').attr('width', dividedW).attr('height', 400)
-//      .append('g').attr("transform", "translate(" + graphMargin.left + "," + graphMargin.top+ ")");
-      
-//      var xScale = d3.time.scale()
-//      .domain([d3.min(TproductionStat['InputCount'], function(d){return d.time}), d3.max(TproductionStat['InputCount'], function(d){return d.time})])
-//         .range([0, graphWidth]); // FIX
-         
-//         var xAxis = d3.svg.axis()
-//         .scale(xScale)
-//         .orient('bottom')
-//         .tickFormat(tickFormat.format)
-//         .tickSize(tickFormat.tickSize);
-         
-//         var yScale = d3.scale.linear()
-//         .domain([0, d3.max(TproductionStat['InputCount'], function(d){return d.number})])
-//         .range([graphHeight, 0]);
-         
-//         var yAxis = d3.svg.axis()
-//         .scale(yScale)
-//         .orient('left')
-//         .tickSize(2);    
-         
-//         svg1.append("text")
-//         .attr('class', 'statusTitle')
-//         .attr("x", (graphWidth / 2))             
-//         .attr("y", 0 - (margin.top / 2))
-//         .text("투입량");
-        
-//         svg1.append('path')
-//         .attr('class', 'statusLine')
-//         .attr("d", line(TproductionStat['InputCount']))
- 
-//         svg1.append('path')
-//         .attr('class', 'statusLine2')
-//         .attr("d", line(TproductionStat['InTargetCount']))
 
-        
-//         svg1.append("g")
-//         .attr("class", "x axis")
-//         .attr("transform", "translate(0," + graphHeight + ")")
-//         .call(xAxis);
- 
-//         svg1.append("g")
-//         .attr("class", "y axis")
-//         .call(yAxis);
- 
-//         var dataLabel = []
-//         dataLabel.push('In Target')
-//         dataLabel.push('투입량')
-         
-//         var legend = svg1.selectAll(".legend")
-//         .data(dataLabel)
-//         .enter().append("g")
-//         .attr("class", "legend")
-//         .attr("transform", function(d, i) { return "translate(0," + ((i * 20))+ ")"; });          
-//         legend.append("rect")
-//         .attr("x", graphWidth - graphWidth*0.98)
-//         .attr("width", 18)
-//         .attr("height", 18)
-//         .style("fill", function(d, i){ 
-//             if (d.indexOf('In') > -1){
-//                 return 'tomato'
-//             }else{
-//                 return '#3366cc'
-//             }
-             
-//         });
- 
-//       // draw legend text
-//       legend.append("text")
-//       .attr("x", graphWidth - graphWidth*0.98 + 20)
-//       .attr("y", 9)
-//       .attr("dy", ".35em")
-//       .style("text-anchor", "front")
-//       .text(function(d) { return d;})
-       
-//       drawVerticalLine(svg1, xScale, yScale, d3.max(TproductionStat['InputCount'], function(d){return d.number}))
-//     // Ship Count
-//     //THIS ONE USED TO BE STATUS_2
-//     svg1 = d3.select("#" + conatinerName).append('br')
-//     shipSvg = d3.select("#"+ conatinerName).append('svg').attr('width', dividedW).attr('height', 400)
-//     .append('g').attr("transform", "translate(" + graphMargin.left + "," + graphMargin.top+ ")");
-     
-//     shipXScale = d3.time.scale()
-//     .domain([d3.min(TproductionStat['ShipCount'], function(d){return (d.time)}), d3.max(TproductionStat['ShipCount'], function(d){return (d.time)})])
-//         .range([0, graphWidth]); // FIX
-         
-//         shipXAxis = d3.svg.axis()
-//         .scale(shipXScale)
-//         .orient('bottom')
-//         .tickFormat(tickFormat.format)
-//         .tickSize(tickFormat.tickSize);
-         
-         
-//         shipYScale = d3.scale.linear()
-//         .domain([0, d3.max(TproductionStat['ShipCount'], function(d){return d.number})])
-//         .range([graphHeight, 0]);
-         
-//         shipYAxis = d3.svg.axis()
-//         .scale(shipYScale)
-//         .orient('left')
-//         .tickSize(2);    
-         
-//         shipSvg.append("text")
-//         .attr('class', 'statusTitle')
-//         .attr("x", (graphWidth / 2))             
-//         .attr("y", 0 - (margin.top / 2))
-//         .text("산출물");
-         
-//         shipLine = d3.svg.line()
-//         .x(function(d) { return shipXScale(d.time); })
-//         .y(function(d) { return shipYScale(+d.number); })
- 
-//         shipSvg.append('path')
-//         .attr('id', 'defaultShipLine')
-//         .attr('class', 'statusLine')
-//         .attr("d", shipLine(TproductionStat['ShipCount']))
-         
-//         shipSvg.append("g")
-//         .attr("class", "x axis")
-//         .attr('id', 'shipXAxis')
-//         .attr("transform", "translate(0," + graphHeight + ")")
-//         .call(shipXAxis);
- 
-//         shipSvg.append("g")
-//         .attr("class", "y axis")
-//         .call(shipYAxis);
-//    // drawVerticalLine(shipSvg, shipXScale, shipYScale, d3.max(productionStatus['ShipCount'], function(d){return d.number}))
+    svg1 = d3.select("#" + conatinerName).append('br')
     
-//    var verticalLine = shipSvg
-//    .append('line')
-//    .attr("x1", shipXScale(86399*1000-32400000))
-//    .attr("y1", shipYScale(0))
-//    .attr("x2", shipXScale(86399*1000-32400000))
-//    .attr("y2", shipYScale(d3.max(TproductionStat['ShipCount'], function(d){return d.number})))
-//    .attr('class','dateDividerShip')
-//    .style("stroke-width", 1)
-//    .style("stroke", "gray")
-//    var verticalLine2 = shipSvg
-//    .append('line')
-//    .attr("x1", shipXScale(86399*2*1000-32400000))
-//    .attr("y1", shipYScale(0))
-//    .attr("x2", shipXScale(86399*2*1000-32400000))
-//    .attr("y2", shipYScale(d3.max(TproductionStat['ShipCount'], function(d){return d.number})))
-//    .attr('class','dateDividerShip')
-//    .style("stroke-width", 1)
-//    .style("stroke", "gray")
-//     // Util Graph 
-//     svg1 = d3.select("#" + conatinerName).append('br')
-//     svg1 = d3.select("#" + conatinerName).append('svg').attr('width', dividedW).attr('height', 400)
-//     .append('g').attr("transform", "translate(" + graphMargin.left + "," + (graphMargin.top)+ ")");
-     
-     
-//     var xScale = d3.time.scale()
-//     .domain([d3.min(TproductionStat['WB_Util'], function(d){return d.time}), d3.max(TproductionStat['WB_Util'], function(d){return d.time})])
-//         .range([0, graphWidth]); // FIX
-         
-//         var xAxis = d3.svg.axis()
-//         .scale(xScale)
-//         .orient('bottom')
-//         .tickFormat(tickFormat.format)
-//         .tickSize(tickFormat.tickSize);
-         
-//         var yScale = d3.scale.linear()
-//         .domain([0, d3.max(TproductionStat['WB_Util'], function(d){return d.number+0.02})])
-//         .range([graphHeight, 0]);
-         
-//         var yAxis = d3.svg.axis()
-//         .scale(yScale)
-//         .orient('left')
-//         .tickSize(2);    
-         
-//         svg1.append("text")
-//         .attr('class', 'statusTitle')
-//         .attr("x", (graphWidth / 2))             
-//         .attr("y", 0 - (margin.top / 2))
-//         .text("Util Graph");
-         
-//         svg1.append('path')
-//         .attr('class', 'statusLine2')
-//         .attr("d", line(TproductionStat['DA_Util']))
- 
-//         svg1.append('path')
-//         .attr('class', 'statusLine')
-//         .attr("d", line(TproductionStat['WB_Util']))
- 
-//         svg1.append("g")
-//         .attr("class", "x axis")
-//         .attr("transform", "translate(0," + graphHeight + ")")
-//         .call(xAxis);
- 
-//         svg1.append("g")
-//         .attr("class", "y axis")
-//         .call(yAxis);
-         
-//         var dataLabel = []
-//         dataLabel.push('DA Util')
-//         dataLabel.push('WB Util')
-         
-//         legend = svg1.selectAll(".legend")
-//         .data(dataLabel)
-//         .enter().append("g")
-//         .attr("class", "legend")
-//         .attr("transform", function(d, i) { return "translate(0," + ((i * 20) + graphHeight*0.87)+ ")"; });          
-//         legend.append("rect")
-//         .attr("x", graphWidth - graphWidth*0.98)
-//         .attr("width", 18)
-//         .attr("height", 18)
-//         .style("fill", function(d, i){
-//             if (d.indexOf('DA') > -1){
-//                 return 'tomato'
-//             }else{
-//                 return '#3366cc'
-//             }
-             
-//         });
- 
-//       // draw legend text
-//       legend.append("text")
-//       .attr("x", graphWidth - graphWidth*0.98 + 20)
-//       .attr("y", 9)
-//       .attr("dy", ".35em")
-//       .style("text-anchor", "front")
-//       .text(function(d) { return d;})
-       
- 
-     // Merge Count
- //    svg1 = d3.select("#status_2").append('svg').attr('width', canvasWidth).attr('height', 400)
- //               .append('g').attr("transform", "translate(" + graphMargin.left + "," + (graphMargin.top)+ ")");
-  
- //    var xScale = d3.time.scale()
- //        .domain([0, d3.max(productionStatus['MergeCount'], function(d){return d.time*1000})])
- //        .range([0, graphWidth]); // FIX
-  
- //    var xAxis = d3.svg.axis()
- //        .scale(xScale)
- //        .orient('bottom')
- //        .tickFormat(tickFormat.format)
- //        .tickSize(tickFormat.tickSize); 
-  
- //    var yScale = d3.scale.linear()
- //         .domain([0, d3.max(productionStatus['MergeCount'], function(d){return d.number})])
- //         .range([graphHeight, 0]);
-  
- //    var yAxis = d3.svg.axis()
- //        .scale(yScale)
- //        .orient('left')
- //        .tickSize(2);    
-  
- //    svg1.append("text")
- //        .attr('class', 'statusTitle')
- //        .attr("x", (graphWidth / 2))             
- //        .attr("y", 0 - (margin.top / 2))
- //        .text("Merge Count");
-  
- //    svg1.append('path')
- //        .attr('class', 'statusLine')
- //        .attr("d", line(productionStatus['MergeCount']))
-  
-    // svg1.append("g")
-    //  .attr("class", "x axis")
-    //  .attr("transform", "translate(0," + graphHeight + ")")
-    //  .call(xAxis);
- 
-    // svg1.append("g")
-    //  .attr("class", "y axis")
-    //  .call(yAxis);
- 
+    var cotainergraphs = document.getElementById(conatinerName);
+    var wipObjectDA = object["WIPLevel"].DA;
+    var wipObjectWB = object["WIPLevel"].WB;
+    var wipDataSet = new vis.DataSet();
+    for(var k = 0; k < wipObjectDA.length; k++){
+        var time = new Date(wipObjectDA[k].time);
+        wipDataSet.add({x:time, y:wipObjectDA[k].number, group:"DA"});
+    }
+    for(var k = 0; k < wipObjectWB.length; k++){
+        var time = new Date(wipObjectWB[k].time);
+        wipDataSet.add({x:time, y:wipObjectWB[k].number, group:"WB"})
+    }
+    var wipGroupData = new vis.DataSet();
+    wipGroupData.add({
+        id: "DA",
+        content: "DA",
+        options:{
+            drawPoints: false
+        },
+        style:"stroke:green"
+    });
+    wipGroupData.add({
+        id: "WB",
+        content: "WB",
+        options:{
+            drawPoints: false
+        },
+        style:"stroke:red"
+    });
+    var wipGraph = new vis.Graph2d(cotainergraphs,wipDataSet,wipGroupData);
+    var minaxWip = wipGraph.getDataRange();
+    var wipOption = {
+            width: "100%",
+            zoomMax: minaxWip.max.getTime() - minaxWip.min.getTime(),
+            legend: true,
+            dataAxis:{
+                left:{
+                    title:{
+                        text: "WIPLevel"
+                    }
+                }
+            }};
+    wipGraph.setOptions(wipOption);
+
+    //~~~~~~~~~~~ END OF WIP GRAPH~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    //~~~~~~~~~~~~~ start of 투입량 Graph~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    var inTarObj = object["InTargetCount"];
+    var inTarDataSet = new vis.DataSet();
+    var inTarGroups = new vis.DataSet();
+    var tarHigh = 0;
+    var tarLow = 0;
+    for(key in inTarObj){
+        inTarGroups.add({
+            id:key,
+            content:key,
+            options:{
+                drawPoints: false
+            }
+        });
+        var to = inTarObj[key];
+        visArrayDatasetAdd(to,inTarDataSet,key, tarHigh, tarLow);
+    }
+
+    var inTarGraph = new vis.Graph2d(cotainergraphs, inTarDataSet, inTarGroups);
+    var minmaxTar = inTarGraph.getDataRange();
+    var intarOption = {
+        width: "100%",
+        zoomMax: minmaxTar.max.getTime() - minmaxTar.min.getTime(),
+        legend: true,
+        dataAxis:{
+                left:{
+                    title:{
+                        text: "투입량"
+                    }
+                }
+
+    }};
+    inTarGraph.setOptions(intarOption);
+    //~~~~~~~~~~ END~~~~~~~~~~~~~~~~~~~~~~~~~~
+    // ~~~~~~~~~~~ START of 산출물~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    var shipCountObj = object["ShipCount"];
+    var shipCountData = new vis.DataSet();
+    var shipCountGroup = new vis.DataSet();
+    var scHigh = 0;
+    var scLow =0;
+    visArrayDatasetAdd(shipCountObj,shipCountData, "Ship_Count", scHigh, scLow);
+    shipCountGroup.add({
+            id:"Ship_Count",
+            content:"Ship_Count",
+            options:{
+                drawPoints: false
+            }
+        });
+    var shipCountGraph = new vis.Graph2d(cotainergraphs,shipCountData, shipCountGroup);
+    var minmaxSC = shipCountGraph.getDataRange();
+    var shipCountOption = {
+        width: "100%",
+        zoomMax: minmaxSC.max.getTime() - minmaxSC.min.getTime(),
+        legend:false,
+        dataAxis:{
+            left:{
+                title:{
+                    text:"산출물"
+                }
+            }
+        }
+    };
+    shipCountGraph.setOptions(shipCountOption);
+    // ~~~~~~~~~~~~ END OF 산출물~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    // ~~~~~~~~~~~ UTIL GRAPH START ~~~~~~~~~~~~~~~~~~~~~~~~
+    var utilObjDA = object["util"].DA;
+    var utilObjWB = object["util"].WB;
+    var utilData = new vis.DataSet();
+    var utilGroup = new vis.DataSet();
+    var utilHigh = 0;
+    var utilLow = 0;
+    visArrayDatasetAdd(utilObjDA, utilData, "DA");
+    visArrayDatasetAdd(utilObjWB, utilData, "WB");
+    
+    utilGroup.add({
+        id:"DA",
+        content:"DA",
+        options:{
+            drawPoints: false
+        },
+        style:"stroke:green"
+    });
+    utilGroup.add({
+        id:"WB",
+        content:"WB",
+        options:{
+            drawPoints: false
+        },
+        style:"stroke:red"
+    });
+
+    var utilGraph = new vis.Graph2d(cotainergraphs, utilData, utilGroup);
+    var minmaxutil = utilGraph.getDataRange();
+    var utilOption = {
+        width: "100%",
+        zoomMax: minmaxutil.max.getTime() - minmaxutil.min.getTime(),
+        legend: true,
+        dataAxis:{
+                left:{
+                    title:{
+                        text: "Util"
+                    }
+                }
+
+    }};
+    utilGraph.setOptions(utilOption);
+    //~~~~~~~~~~~~ END OF UTIL GRAPH~~~~~~~~~~~~~~~~~~~~~~~~
+
  
 }
- 
- 
+  
 function inputCorrectCheck( inputD ){
     if (typeof inputD === 'object' && inputD !== null){
         Object.keys(inputD).forEach(function(key,index){
@@ -1808,6 +1663,7 @@ function inputCorrectCheck( inputD ){
     }
 }
  
+
 function tableclick(){
     // console.log(document.getElementById('dtable'));
  
@@ -2210,8 +2066,9 @@ function wipTabCreate(divID, jSon){
                 }
             }};
         //~~~~~~~~~~~ Summnation data ~~~~~~~~~~~~~~~~
+
         var graph2d = new vis.Graph2d(container, datasetSums, groupDataSetSums,options2);
-        var graph2d = new vis.Graph2d(container, dataset, groupDataSet, options);
+        var graph2d = new vis.Graph2d(container, dataset, groupDataSet, options);   
     }
 
 }
@@ -2362,7 +2219,28 @@ function eqpDataAdd(object, dataset, group){
 function statViewPage(object, divID){
     $("#"+divID).html("<br><br><br>");
     var container = document.getElementById(divID);
-    // WIP GRAPH
+    // gonna make a table for the layout
+    var table = document.createElement("table");
+    var tablebody = document.createElement("tbody");
+
+    var row1 = document.createElement("tr");
+    var wipcell = document.createElement("td");
+    var intarcell = document.createElement("td");
+    row1.appendChild(wipcell);
+    row1.appendChild(intarcell);
+    var row2 = document.createElement("tr");
+    var shipcountcell = document.createElement("td");
+    var utilcell = document.createElement("td");
+    row2.appendChild(shipcountcell);
+    row2.appendChild(utilcell);
+    tablebody.appendChild(row1);
+    tablebody.appendChild(row2);
+
+    table.appendChild(tablebody);
+    container.appendChild(table);
+    table.setAttribute("border", "0");
+    //container.setAttribute("class", "statcontainer");
+    //~~~~~~~~~~~~~~~ WIP GRAPH~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     var wipObjectDA = object["WIPLevel"].DA;
     var wipObjectWB = object["WIPLevel"].WB;
     var wipDataSet = new vis.DataSet();
@@ -2391,8 +2269,11 @@ function statViewPage(object, divID){
         },
         style:"stroke:red"
     });
+    var wipGraph = new vis.Graph2d(wipcell,wipDataSet,wipGroupData);
+    var minaxWip = wipGraph.getDataRange();
     var wipOption = {
             width: "100%",
+            zoomMax: minaxWip.max.getTime() - minaxWip.min.getTime(),
             legend: true,
             dataAxis:{
                 left:{
@@ -2401,13 +2282,15 @@ function statViewPage(object, divID){
                     }
                 }
             }};
-    var wipGraph = new vis.Graph2d(container,wipDataSet,wipGroupData, wipOption);
+    wipGraph.setOptions(wipOption);
 
     //~~~~~~~~~~~ END OF WIP GRAPH~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     //~~~~~~~~~~~~~ start of 투입량 Graph~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     var inTarObj = object["InTargetCount"];
     var inTarDataSet = new vis.DataSet();
     var inTarGroups = new vis.DataSet();
+    var tarHigh = 0;
+    var tarLow = 0;
     for(key in inTarObj){
         inTarGroups.add({
             id:key,
@@ -2417,34 +2300,44 @@ function statViewPage(object, divID){
             }
         });
         var to = inTarObj[key];
-        visArrayDatasetAdd(to,inTarDataSet,key);
+        visArrayDatasetAdd(to,inTarDataSet,key, tarHigh, tarLow);
     }
-    var inTarOption = {
-            width: "100%",
-            legend: true,
-            dataAxis:{
+
+    var inTarGraph = new vis.Graph2d(intarcell, inTarDataSet, inTarGroups);
+    var minmaxTar = inTarGraph.getDataRange();
+    var intarOption = {
+        width: "100%",
+        zoomMax: minmaxTar.max.getTime() - minmaxTar.min.getTime(),
+        legend: true,
+        dataAxis:{
                 left:{
                     title:{
                         text: "투입량"
                     }
                 }
-            }};
-    var inTarGraph = new vis.Graph2d(container, inTarDataSet, inTarGroups, inTarOption);
+
+    }};
+    inTarGraph.setOptions(intarOption);
     //~~~~~~~~~~ END~~~~~~~~~~~~~~~~~~~~~~~~~~
     // ~~~~~~~~~~~ START of 산출물~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
     var shipCountObj = object["ShipCount"];
     var shipCountData = new vis.DataSet();
     var shipCountGroup = new vis.DataSet();
-    visArrayDatasetAdd(shipCountObj,shipCountData,"Ship_Count");
+    var scHigh = 0;
+    var scLow =0;
+    visArrayDatasetAdd(shipCountObj,shipCountData, "Ship_Count", scHigh, scLow);
     shipCountGroup.add({
-        id:"Ship_Count",
-        content:"Ship_Count",
-        options:{
-            drawPoints: false
-        }
-    });
+            id:"Ship_Count",
+            content:"Ship_Count",
+            options:{
+                drawPoints: false
+            }
+        });
+    var shipCountGraph = new vis.Graph2d(shipcountcell,shipCountData, shipCountGroup);
+    var minmaxSC = shipCountGraph.getDataRange();
     var shipCountOption = {
+        width: "100%",
+        zoomMax: minmaxSC.max.getTime() - minmaxSC.min.getTime(),
         legend:false,
         dataAxis:{
             left:{
@@ -2454,18 +2347,18 @@ function statViewPage(object, divID){
             }
         }
     };
-    var shipCountGraph = new vis.Graph2d(container,shipCountData, shipCountGraph,shipCountOption);
-
+    shipCountGraph.setOptions(shipCountOption);
     // ~~~~~~~~~~~~ END OF 산출물~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     // ~~~~~~~~~~~ UTIL GRAPH START ~~~~~~~~~~~~~~~~~~~~~~~~
     var utilObjDA = object["util"].DA;
     var utilObjWB = object["util"].WB;
     var utilData = new vis.DataSet();
     var utilGroup = new vis.DataSet();
-
+    var utilHigh = 0;
+    var utilLow = 0;
     visArrayDatasetAdd(utilObjDA, utilData, "DA");
     visArrayDatasetAdd(utilObjWB, utilData, "WB");
-
+    
     utilGroup.add({
         id:"DA",
         content:"DA",
@@ -2483,8 +2376,11 @@ function statViewPage(object, divID){
         style:"stroke:red"
     });
 
+    var utilGraph = new vis.Graph2d(utilcell, utilData, utilGroup);
+    var minmaxutil = utilGraph.getDataRange();
     var utilOption = {
         width: "100%",
+        zoomMax: minmaxutil.max.getTime() - minmaxutil.min.getTime(),
         legend: true,
         dataAxis:{
                 left:{
@@ -2492,20 +2388,58 @@ function statViewPage(object, divID){
                         text: "Util"
                     }
                 }
-    }};
-    var utilGraph = new vis.Graph2d(container, utilData, utilGroup, utilOption);
-    //~~~~~~~~~~~~ END OF UTIL GRAPH~~~~~~~~~~~~~~~~~~~~~~~~
 
+    }};
+    utilGraph.setOptions(utilOption);
+    //~~~~~~~~~~~~ END OF UTIL GRAPH~~~~~~~~~~~~~~~~~~~~~~~~
 }
 
 
-function visArrayDatasetAdd(array,dataset,group){
+function visArrayDatasetAdd(array,dataset,group, high, low){
     for(var k = 0; k < array.length; k++){
         var time = new Date(array[k].time);
         dataset.add({x:time, y:array[k].number, group:group});
     }
 }
 
-
+function kpiCreate(array, divID){
+    $("#"+divID).html("<br><br><br>");
+    var canvasWidth = processWidth/3.3;
+    graphWidth = canvasWidth - graphMargin.left - graphMargin.right;
+    graphHeight = 400 - graphMargin.top - graphMargin.bottom;
+    
+ 
+     // KPI
+     var svg1 = d3.select("#"+divID).append('svg').attr('id', 'KPIText').attr('width', canvasWidth).attr('height', 400)
+     .append('g').attr("transform", "translate(" + graphMargin.left + "," + (graphMargin.top)+ ")");
+      
+     var fontSize = 18; 
+     svg1.append("text")
+     .attr('class', 'statusTitle')
+     .attr("x", (graphWidth / 2))             
+     .attr("y", 0 - (margin.top / 2))
+     .text("KPI");
+     var kpis = svg1.selectAll('.KPIs')
+     .data(array)
+     kpis.enter()
+     .append('g')
+     .attr('class', 'KPIs')
+     .attr("transform", function(d, i) { return "translate(0," + (i * (fontSize*1.7) +30)+ ")"; })
+     .append('text')
+     .attr('x', 12)
+     .attr('y', 3)
+     .text(function(d){
+        if(d.key == 'Stocker_size') return d.key + ": " + d.value;
+        if(d.key == 'Makespan') return d.key + ": " + (d.value/60).toFixed(1) + " (min)";
+        if(d.key == 'Total_Wiplevel') return d.key + ": " + d.value;
+        if(d.key == 'AVG_Wiplevel') return d.key + ": " + d.value.toFixed(2);
+        if(d.key == 'Waiting_Time') return 'Waiting Time / TAT : ' + d.value.toFixed(3);
+        else return d.key + ": " + d.value.toFixed(3);
+    })
+     .style('font-size', fontSize)
+      
+     kpis.exit().remove();
+ 
+}
 
 
