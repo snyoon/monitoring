@@ -17,9 +17,9 @@
  *
  * Version: 1.0
  *
- * @param {number} start     The start value
- * @param {number} end     The end value
- * @param {number} step    Optional. Step size. Must be a positive value.
+ * @param {Number} start     The start value
+ * @param {Number} end     The end value
+ * @param {Number} step    Optional. Step size. Must be a positive value.
  * @param {boolean} prettyStep Optional. If true, the step size is rounded
  *               To a pretty step size (like 1, 2, 5, 10, 20, 50, ...)
  */
@@ -33,16 +33,13 @@ function StepNumber(start, end, step, prettyStep) {
 
   this._current = 0;
   this.setRange(start, end, step, prettyStep);
-}
+};
 
 
 /**
  * Check for input values, to prevent disasters from happening
  *
  * Source: http://stackoverflow.com/a/1830844
- *
- * @param {string} n
- * @returns {boolean}
  */
 StepNumber.prototype.isNumeric = function(n) {
   return !isNaN(parseFloat(n)) && isFinite(n);
@@ -52,9 +49,9 @@ StepNumber.prototype.isNumeric = function(n) {
 /**
  * Set a new range: start, end and step.
  *
- * @param {number} start     The start value
- * @param {number} end     The end value
- * @param {number} step    Optional. Step size. Must be a positive value.
+ * @param {Number} start     The start value
+ * @param {Number} end     The end value
+ * @param {Number} step    Optional. Step size. Must be a positive value.
  * @param {boolean} prettyStep Optional. If true, the step size is rounded
  *               To a pretty step size (like 1, 2, 5, 10, 20, 50, ...)
  */
@@ -77,7 +74,7 @@ StepNumber.prototype.setRange = function(start, end, step, prettyStep) {
 
 /**
  * Set a new step size
- * @param {number} step    New step size. Must be a positive value
+ * @param {Number} step    New step size. Must be a positive value
  * @param {boolean} prettyStep Optional. If true, the provided step is rounded
  *               to a pretty step size (like 1, 2, 5, 10, 20, 50, ...)
  */
@@ -98,8 +95,8 @@ StepNumber.prototype.setStep = function(step, prettyStep) {
  * Calculate a nice step size, closest to the desired step size.
  * Returns a value in one of the ranges 1*10^n, 2*10^n, or 5*10^n, where n is an
  * integer Number. For example 1, 2, 5, 10, 20, 50, etc...
- * @param {number}  step  Desired step size
- * @return {number}     Nice step size
+ * @param {Number}  step  Desired step size
+ * @return {Number}     Nice step size
  */
 StepNumber.calculatePrettyStep = function (step) {
   var log10 = function (x) {return Math.log(x) / Math.LN10;};
@@ -124,7 +121,7 @@ StepNumber.calculatePrettyStep = function (step) {
 
 /**
  * returns the current value of the step
- * @return {number} current value
+ * @return {Number} current value
  */
 StepNumber.prototype.getCurrent = function () {
   return parseFloat(this._current.toPrecision(this.precision));
@@ -132,7 +129,7 @@ StepNumber.prototype.getCurrent = function () {
 
 /**
  * returns the current step size
- * @return {number} current step size
+ * @return {Number} current step size
  */
 StepNumber.prototype.getStep = function () {
   return this._step;
@@ -146,8 +143,6 @@ StepNumber.prototype.getStep = function () {
  *
  * Parameters checkFirst is optional, default false.
  * If set to true, move the current value one step if smaller than start.
- *
- * @param {boolean} [checkFirst=false]
  */
 StepNumber.prototype.start = function(checkFirst) {
   if (checkFirst === undefined) {

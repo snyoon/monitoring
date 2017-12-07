@@ -11,7 +11,7 @@ var util = require('../util');
  * the interactive contents of the element can be used. When clicked outside
  * the element, the elements mode is changed to inactive.
  * @param {Element} container
- * @constructor Activator
+ * @constructor
  */
 function Activator(container) {
   this.active = false;
@@ -125,7 +125,7 @@ Activator.prototype.deactivate = function () {
 
 /**
  * Handle a tap event: activate the container
- * @param {Event}  event   The event
+ * @param event
  * @private
  */
 Activator.prototype._onTapOverlay = function (event) {

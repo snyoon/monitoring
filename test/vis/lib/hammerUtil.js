@@ -1,3 +1,5 @@
+var Hammer = require('./module/hammer');
+
 /**
  * Register a touch event, taking place before a gesture
  * @param {Hammer} hammer       A hammer instance
@@ -17,7 +19,6 @@ exports.onTouch = function (hammer, callback) {
  * Register a release event, taking place after a gesture
  * @param {Hammer} hammer       A hammer instance
  * @param {function} callback   Callback, called as callback(event)
- * @returns {*}
  */
 exports.onRelease = function (hammer, callback) {
   callback.inputHandler = function (event) {

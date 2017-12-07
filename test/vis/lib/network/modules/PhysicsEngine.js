@@ -6,17 +6,11 @@ var HierarchicalSpringSolver = require('./components/physics/HierarchicalSpringS
 var CentralGravitySolver = require('./components/physics/CentralGravitySolver').default;
 var ForceAtlas2BasedRepulsionSolver = require('./components/physics/FA2BasedRepulsionSolver').default;
 var ForceAtlas2BasedCentralGravitySolver = require('./components/physics/FA2BasedCentralGravitySolver').default;
+
 var util = require('../../util');
-var EndPoints = require('./components/edges/util/EndPoints').default; // for debugging with _drawForces()
 
 
-/**
- * The physics engine
- */
 class PhysicsEngine {
-  /**
-   * @param {Object} body
-   */
   constructor(body) {
     this.body = body;
     this.physicsBody = {physicsNodeIndices:[], physicsEdgeIndices:[], forces: {}, velocities: {}};
@@ -97,9 +91,6 @@ class PhysicsEngine {
     this.bindEventListeners();
   }
 
-  /**
-   * Binds event listeners
-   */
   bindEventListeners() {
     this.body.emitter.on('initPhysics',     () => {this.initPhysics();});
     this.body.emitter.on('_layoutFailed',   () => {this.layoutFailed = true;});
@@ -121,8 +112,9 @@ class PhysicsEngine {
       this.stopSimulation(false);
       this.body.emitter.off();
     });
+    // this event will trigger a rebuilding of the cache everything. Used when nodes or edges have been added or removed.
     this.body.emitter.on("_dataChanged", () => {
-      // Nodes and/or edges have been added or removed, update shortcut lists.
+      // update shortcut lists
       this.updatePhysicsData();
     });
 
@@ -133,7 +125,7 @@ class PhysicsEngine {
 
   /**
    * set the physics options
-   * @param {Object} options
+   * @param options
    */
   setOptions(options) {
     if (options !== undefined) {
@@ -141,11 +133,6 @@ class PhysicsEngine {
         this.options.enabled = false;
         this.physicsEnabled = false;
         this.stopSimulation();
-      }
-      else if (options === true) {
-        this.options.enabled = true;
-        this.physicsEnabled = true;
-        this.startSimulation();
       }
       else {
         this.physicsEnabled = true;
@@ -250,7 +237,6 @@ class PhysicsEngine {
 
   /**
    * Stop the simulation, force stabilization.
-   * @param {boolean} [emit=true]
    */
   stopSimulation(emit = true) {
     this.stabilized = true;
@@ -293,8 +279,6 @@ class PhysicsEngine {
 
   /**
    * trigger the stabilized event.
-   *
-   * @param {number} [amountOfIterations=this.stabilizationIterations]
    * @private
    */
   _emitStabilized(amountOfIterations = this.stabilizationIterations) {
@@ -307,94 +291,84 @@ class PhysicsEngine {
     }
   }
 
-
-  /**
-   * Calculate the forces for one physics iteration and move the nodes.
-   * @private
-   */
-  physicsStep() {
-    this.gravitySolver.solve();
-    this.nodesSolver.solve();
-    this.edgesSolver.solve();
-    this.moveNodes();
-  }
-
-
-  /**
-   * Make dynamic adjustments to the timestep, based on current state.
-   *
-   * Helper function for physicsTick().
-   * @private
-   */
-  adjustTimeStep() {
-    const factor = 1.2;  // Factor for increasing the timestep on success.
-
-    // we compare the two steps. if it is acceptable we double the step.
-    if (this._evaluateStepQuality() === true) {
-      this.timestep = factor * this.timestep;
-    }
-    else {
-      // if not, we decrease the step to a minimum of the options timestep.
-      // if the decreased timestep is smaller than the options step, we do not reset the counter
-      // we assume that the options timestep is stable enough.
-      if (this.timestep/factor < this.options.timestep) {
-        this.timestep = this.options.timestep;
-      }
-      else {
-        // if the timestep was larger than 2 times the option one we check the adaptivity again to ensure
-        // that large instabilities do not form.
-        this.adaptiveCounter = -1; // check again next iteration
-        this.timestep = Math.max(this.options.timestep, this.timestep/factor);
-      }
-    }
-  }
-
-
   /**
    * A single simulation step (or 'tick') in the physics simulation
    *
    * @private
    */
   physicsTick() {
-    this._startStabilizing();  // this ensures that there is no start event when the network is already stable.
-    if (this.stabilized === true) return;
+    // this is here to ensure that there is no start event when the network is already stable.
+    if (this.startedStabilization === false) {
+      this.body.emitter.emit('startStabilizing');
+      this.startedStabilization = true;
+    }
 
-    // adaptivity means the timestep adapts to the situation, only applicable for stabilization
-    if (this.adaptiveTimestep === true && this.adaptiveTimestepEnabled === true) {
-      // timestep remains stable for "interval" iterations.
-      let doAdaptive = (this.adaptiveCounter % this.adaptiveInterval === 0);
+    if (this.stabilized === false) {
+      // adaptivity means the timestep adapts to the situation, only applicable for stabilization
+      if (this.adaptiveTimestep === true && this.adaptiveTimestepEnabled === true) {
+        // this is the factor for increasing the timestep on success.
+        let factor = 1.2;
 
-      if (doAdaptive) {
-        // first the big step and revert.
-        this.timestep = 2 * this.timestep;
-        this.physicsStep();
-        this.revert();  // saves the reference state
+        // we assume the adaptive interval is
+        if (this.adaptiveCounter % this.adaptiveInterval === 0) { // we leave the timestep stable for "interval" iterations.
+          // first the big step and revert. Revert saves the reference state.
+          this.timestep = 2 * this.timestep;
+          this.calculateForces();
+          this.moveNodes();
+          this.revert();
 
-        // now the normal step. Since this is the last step, it is the more stable one and we will take this.
-        this.timestep = 0.5 * this.timestep;
+          // now the normal step. Since this is the last step, it is the more stable one and we will take this.
+          this.timestep = 0.5 * this.timestep;
 
-        // since it's half the step, we do it twice.
-        this.physicsStep();
-        this.physicsStep();
+          // since it's half the step, we do it twice.
+          this.calculateForces();
+          this.moveNodes();
+          this.calculateForces();
+          this.moveNodes();
 
-        this.adjustTimeStep();
+          // we compare the two steps. if it is acceptable we double the step.
+          if (this._evaluateStepQuality() === true) {
+            this.timestep = factor * this.timestep;
+          }
+          else {
+            // if not, we decrease the step to a minimum of the options timestep.
+            // if the decreased timestep is smaller than the options step, we do not reset the counter
+            // we assume that the options timestep is stable enough.
+            if (this.timestep/factor < this.options.timestep) {
+              this.timestep = this.options.timestep;
+            }
+            else {
+              // if the timestep was larger than 2 times the option one we check the adaptivity again to ensure
+              // that large instabilities do not form.
+              this.adaptiveCounter = -1; // check again next iteration
+              this.timestep = Math.max(this.options.timestep, this.timestep/factor);
+            }
+          }
+        }
+        else {
+          // normal step, keeping timestep constant
+          this.calculateForces();
+          this.moveNodes();
+        }
+
+        // increment the counter
+        this.adaptiveCounter += 1;
       }
       else {
-        this.physicsStep();  // normal step, keeping timestep constant
+        // case for the static timestep, we reset it to the one in options and take a normal step.
+        this.timestep = this.options.timestep;
+        this.calculateForces();
+        this.moveNodes();
       }
 
-      this.adaptiveCounter += 1;
-    }
-    else {
-      // case for the static timestep, we reset it to the one in options and take a normal step.
-      this.timestep = this.options.timestep;
-      this.physicsStep();
-    }
+      // determine if the network has stabilzied
+      if (this.stabilized === true) {
+        this.revert();
+      }
 
-    if (this.stabilized === true) this.revert();
-    this.stabilizationIterations++;
+      this.stabilizationIterations++;
+    }
   }
-
 
   /**
    * Nodes and edges can have the physics toggles on or off. A collection of indices is created here so we can skip the check all the time.
@@ -476,9 +450,6 @@ class PhysicsEngine {
 
   /**
    * This compares the reference state to the current state
-   *
-   * @returns {boolean}
-   * @private
    */
   _evaluateStepQuality() {
     let dx, dy, dpos;
@@ -503,9 +474,11 @@ class PhysicsEngine {
 
   /**
    * move the nodes one timestep and check if they are stabilized
+   * @returns {boolean}
    */
   moveNodes() {
     var nodeIndices = this.physicsBody.physicsNodeIndices;
+    var maxVelocity = this.options.maxVelocity ? this.options.maxVelocity : 1e9;
     var maxNodeVelocity = 0;
     var averageNodeVelocity = 0;
 
@@ -514,9 +487,9 @@ class PhysicsEngine {
 
     for (let i = 0; i < nodeIndices.length; i++) {
       let nodeId = nodeIndices[i];
-      let nodeVelocity = this._performStep(nodeId);
+      let nodeVelocity = this._performStep(nodeId, maxVelocity);
       // stabilized is true if stabilized is true and velocity is smaller than vmin --> all nodes must be stabilized
-      maxNodeVelocity = Math.max(maxNodeVelocity, nodeVelocity);
+      maxNodeVelocity = Math.max(maxNodeVelocity,nodeVelocity);
       averageNodeVelocity += nodeVelocity;
     }
 
@@ -527,71 +500,65 @@ class PhysicsEngine {
 
 
   /**
-   * Calculate new velocity for a coordinate direction
-   *
-   * @param {number} v  velocity for current coordinate
-   * @param {number} f  regular force for current coordinate
-   * @param {number} m  mass of current node
-   * @returns {number} new velocity for current coordinate
-   * @private
-   */
-  calculateComponentVelocity(v,f, m) {
-    let df = this.modelOptions.damping * v;   // damping force
-    let a  = (f - df) / m;    // acceleration
-
-    v += a * this.timestep;
-
-    // Put a limit on the velocities if it is really high
-    let maxV = this.options.maxVelocity || 1e9;
-    if (Math.abs(v) > maxV) {
-      v = ((v > 0) ? maxV: -maxV);
-    }
-
-    return v;
-  }
-
-
-  /**
    * Perform the actual step
    *
-   * @param {Node.id} nodeId
-   * @returns {number} the new velocity of given node
+   * @param nodeId
+   * @param maxVelocity
+   * @returns {number}
    * @private
    */
-  _performStep(nodeId) {
+  _performStep(nodeId,maxVelocity) {
     let node = this.body.nodes[nodeId];
-    let force = this.physicsBody.forces[nodeId];
-    let velocity = this.physicsBody.velocities[nodeId];
+    let timestep = this.timestep;
+    let forces = this.physicsBody.forces;
+    let velocities = this.physicsBody.velocities;
 
     // store the state so we can revert
-    this.previousStates[nodeId] = {x:node.x, y:node.y, vx:velocity.x, vy:velocity.y};
+    this.previousStates[nodeId] = {x:node.x, y:node.y, vx:velocities[nodeId].x, vy:velocities[nodeId].y};
 
     if (node.options.fixed.x === false) {
-      velocity.x = this.calculateComponentVelocity(velocity.x, force.x, node.options.mass);
-      node.x += velocity.x * this.timestep;
+      let dx   = this.modelOptions.damping * velocities[nodeId].x;   // damping force
+      let ax   = (forces[nodeId].x - dx) / node.options.mass;        // acceleration
+      velocities[nodeId].x += ax * timestep;                         // velocity
+      velocities[nodeId].x = (Math.abs(velocities[nodeId].x) > maxVelocity) ? ((velocities[nodeId].x > 0) ? maxVelocity : -maxVelocity) : velocities[nodeId].x;
+      node.x   += velocities[nodeId].x * timestep;                    // position
     }
     else {
-      force.x = 0;
-      velocity.x = 0;
+      forces[nodeId].x = 0;
+      velocities[nodeId].x = 0;
     }
 
     if (node.options.fixed.y === false) {
-      velocity.y = this.calculateComponentVelocity(velocity.y, force.y, node.options.mass);
-      node.y += velocity.y * this.timestep;
+      let dy   = this.modelOptions.damping * velocities[nodeId].y;    // damping force
+      let ay   = (forces[nodeId].y - dy) / node.options.mass;         // acceleration
+      velocities[nodeId].y += ay * timestep;                          // velocity
+      velocities[nodeId].y = (Math.abs(velocities[nodeId].y) > maxVelocity) ? ((velocities[nodeId].y > 0) ? maxVelocity : -maxVelocity) : velocities[nodeId].y;
+      node.y   += velocities[nodeId].y * timestep;                     // position
     }
     else {
-      force.y = 0;
-      velocity.y = 0;
+      forces[nodeId].y = 0;
+      velocities[nodeId].y = 0;
     }
 
-    let totalVelocity = Math.sqrt(Math.pow(velocity.x,2) + Math.pow(velocity.y,2));
+    let totalVelocity = Math.sqrt(Math.pow(velocities[nodeId].x,2) + Math.pow(velocities[nodeId].y,2));
     return totalVelocity;
   }
 
 
   /**
-   * When initializing and stabilizing, we can freeze nodes with a predefined position.
-   * This greatly speeds up stabilization because only the supportnodes for the smoothCurves have to settle.
+   * calculate the forces for one physics iteration.
+   */
+  calculateForces() {
+    this.gravitySolver.solve();
+    this.nodesSolver.solve();
+    this.edgesSolver.solve();
+  }
+
+
+
+  /**
+   * When initializing and stabilizing, we can freeze nodes with a predefined position. This greatly speeds up stabilization
+   * because only the supportnodes for the smoothCurves have to settle.
    *
    * @private
    */
@@ -600,15 +567,13 @@ class PhysicsEngine {
     for (var id in nodes) {
       if (nodes.hasOwnProperty(id)) {
         if (nodes[id].x && nodes[id].y) {
-          let fixed = nodes[id].options.fixed;
-          this.freezeCache[id] = {x:fixed.x, y:fixed.y};
-          fixed.x = true;
-          fixed.y = true;
+          this.freezeCache[id] = {x:nodes[id].options.fixed.x,y:nodes[id].options.fixed.y};
+          nodes[id].options.fixed.x = true;
+          nodes[id].options.fixed.y = true;
         }
       }
     }
   }
-
 
   /**
    * Unfreezes the nodes that have been frozen by _freezeDefinedNodes.
@@ -630,13 +595,11 @@ class PhysicsEngine {
 
   /**
    * Find a stable position for all nodes
-   *
-   * @param {number} [iterations=this.options.stabilization.iterations]
    */
   stabilize(iterations = this.options.stabilization.iterations) {
     if (typeof iterations !== 'number') {
+      console.log('The stabilize method needs a numeric amount of iterations. Switching to default: ', this.options.stabilization.iterations);
       iterations = this.options.stabilization.iterations;
-      console.log('The stabilize method needs a numeric amount of iterations. Switching to default: ', iterations);
     }
 
     if (this.physicsBody.physicsNodeIndices.length === 0) {
@@ -650,7 +613,10 @@ class PhysicsEngine {
     // this sets the width of all nodes initially which could be required for the avoidOverlap
     this.body.emitter.emit("_resizeNodes");
 
-    this.stopSimulation();   // stop the render loop
+    // stop the render loop
+    this.stopSimulation();
+
+    // set stabilze to false
     this.stabilized = false;
 
     // block redraw requests
@@ -668,47 +634,24 @@ class PhysicsEngine {
 
 
   /**
-   * If not already stabilizing, start it and emit a start event.
-   *
-   * @returns {boolean} true if stabilization started with this call
-   * @private
-   */
-  _startStabilizing() {
-    if (this.startedStabilization === true) return false;
-
-    this.body.emitter.emit('startStabilizing');
-    this.startedStabilization = true;
-    return true;
-  }
-
-
-  /**
    * One batch of stabilization
    * @private
    */
   _stabilizationBatch() {
-    var running = () => (this.stabilized === false && this.stabilizationIterations < this.targetIterations);
-
-    var sendProgress = () => {
-      this.body.emitter.emit('stabilizationProgress', {
-        iterations: this.stabilizationIterations,
-        total: this.targetIterations
-      });
-    };
-
-    if (this._startStabilizing()) {
-      sendProgress();  // Ensure that there is at least one start event.
+    // this is here to ensure that there is at least one start event.
+    if (this.startedStabilization === false) {
+      this.body.emitter.emit('startStabilizing');
+      this.startedStabilization = true;
     }
 
     var count = 0;
-    while (running() && count < this.options.stabilization.updateInterval) {
+    while (this.stabilized === false && count < this.options.stabilization.updateInterval && this.stabilizationIterations < this.targetIterations) {
       this.physicsTick();
       count++;
     }
 
-    sendProgress();
-
-    if (running()) {
+    if (this.stabilized === false && this.stabilizationIterations < this.targetIterations) {
+      this.body.emitter.emit('stabilizationProgress', {iterations: this.stabilizationIterations, total: this.targetIterations});
       setTimeout(this._stabilizationBatch.bind(this),0);
     }
     else {
@@ -745,22 +688,10 @@ class PhysicsEngine {
   }
 
 
-  //---------------------------  DEBUGGING BELOW  ---------------------------//
-
-
-  /**
-   * Debug function that display arrows for the forces currently active in the network.
-   *
-   * Use this when debugging only.
-   *
-   * @param {CanvasRenderingContext2D} ctx
-   * @private
-   */
   _drawForces(ctx) {
     for (var i = 0; i < this.physicsBody.physicsNodeIndices.length; i++) {
-      let index = this.physicsBody.physicsNodeIndices[i];
-      let node = this.body.nodes[index];
-      let force = this.physicsBody.forces[index];
+      let node = this.body.nodes[this.physicsBody.physicsNodeIndices[i]];
+      let force = this.physicsBody.forces[this.physicsBody.physicsNodeIndices[i]];
       let factor = 20;
       let colorFactor = 0.03;
       let forceSize = Math.sqrt(Math.pow(force.x,2) + Math.pow(force.x,2));
@@ -770,25 +701,20 @@ class PhysicsEngine {
 
       let color = util.HSVToHex((180 - Math.min(1,Math.max(0,colorFactor*forceSize))*180) / 360,1,1);
 
-      let point = {
-        x: node.x + factor*force.x,
-        y: node.y + factor*force.y
-      };
-
       ctx.lineWidth = size;
       ctx.strokeStyle = color;
       ctx.beginPath();
       ctx.moveTo(node.x,node.y);
-      ctx.lineTo(point.x, point.y);
+      ctx.lineTo(node.x+factor*force.x, node.y+factor*force.y);
       ctx.stroke();
 
       let angle = Math.atan2(force.y, force.x);
       ctx.fillStyle = color;
-      EndPoints.draw(ctx, {type: 'arrow', point: point, angle: angle, length: arrowSize});
+      ctx.arrowEndpoint(node.x + factor*force.x + Math.cos(angle)*arrowSize, node.y + factor*force.y+Math.sin(angle)*arrowSize, angle, arrowSize);
       ctx.fill();
-
     }
   }
+
 }
 
 export default PhysicsEngine;

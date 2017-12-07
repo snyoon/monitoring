@@ -113,12 +113,12 @@
           addNode: function (data, callback) {
             // filling in the popup DOM elements
             document.getElementById('node-operation').innerHTML = "Add Node";
-            editNode(data, clearNodePopUp, callback);
+            editNode(data, callback);
           },
           editNode: function (data, callback) {
             // filling in the popup DOM elements
             document.getElementById('node-operation').innerHTML = "Edit Node";
-            editNode(data, cancelNodeEdit, callback);
+            editNode(data, callback);
           },
           addEdge: function (data, callback) {
             if (data.from == data.to) {
@@ -142,14 +142,13 @@
       network = new vis.Network(container, data, options);
     }
 
-    function editNode(data, cancelAction, callback) {
+    function editNode(data, callback) {
       document.getElementById('node-label').value = data.label;
       document.getElementById('node-saveButton').onclick = saveNodeData.bind(this, data, callback);
-      document.getElementById('node-cancelButton').onclick = cancelAction.bind(this, callback);
+      document.getElementById('node-cancelButton').onclick = clearNodePopUp.bind();
       document.getElementById('node-popUp').style.display = 'block';
     }
 
-    // Callback passed as parameter is ignored
     function clearNodePopUp() {
       document.getElementById('node-saveButton').onclick = null;
       document.getElementById('node-cancelButton').onclick = null;

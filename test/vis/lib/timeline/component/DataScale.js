@@ -1,15 +1,7 @@
 /**
- *
- * @param {number} start
- * @param {number} end
- * @param {boolean} autoScaleStart
- * @param {boolean} autoScaleEnd
- * @param {number} containerHeight
- * @param {number} majorCharHeight
- * @param {boolean} zeroAlign
- * @param {function} formattingFunction
- * @constructor DataScale
+ * Created by ludo on 25-1-16.
  */
+
 function DataScale(start, end, autoScaleStart, autoScaleEnd, containerHeight, majorCharHeight, zeroAlign = false, formattingFunction=false) {
   this.majorSteps = [1, 2, 5, 10];
   this.minorSteps = [0.25, 0.5, 1, 2];
@@ -175,6 +167,7 @@ DataScale.prototype.followScale = function (other) {
   }
 
   //Get masters stats:
+  var lines = other.getLines();
   var otherZero = other.convertValue(0);
   var otherStep = other.getStep() * other.scale;
 

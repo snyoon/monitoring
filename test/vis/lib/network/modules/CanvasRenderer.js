@@ -1,58 +1,13 @@
-/**
- * Initializes window.requestAnimationFrame() to a usable form.
- *
- * Specifically, set up this method for the case of running on node.js with jsdom enabled.
- *
- * NOTES:
- *
- * * On node.js, when calling this directly outside of this class, `window` is not defined.
- *   This happens even if jsdom is used.
- * * For node.js + jsdom, `window` is available at the moment the constructor is called.
- *   For this reason, the called is placed within the constructor.
- * * Even then, `window.requestAnimationFrame()` is not defined, so it still needs to be added.
- * * During unit testing, it happens that the window object is reset during execution, causing
- *   a runtime error due to missing `requestAnimationFrame()`. This needs to be compensated for,
- *   see `_requestNextFrame()`.
- * * Since this is a global object, it may affect other modules besides `Network`. With normal
- *   usage, this does not cause any problems. During unit testing, errors may occur. These have
- *   been compensated for, see comment block in _requestNextFrame().
- *
- * @private
- */
-function _initRequestAnimationFrame() {
-  var func;
-
-  if (window !== undefined) {
-    func = window.requestAnimationFrame
-        || window.mozRequestAnimationFrame
-        || window.webkitRequestAnimationFrame
-        || window.msRequestAnimationFrame;
-  }
-
-  if (func === undefined) {
-    // window or method not present, setting mock requestAnimationFrame
-    window.requestAnimationFrame =
-     function(callback) {
-       //console.log("Called mock requestAnimationFrame");
-       callback();
-     }
-  } else {
-     window.requestAnimationFrame = func;
-  }
+if (typeof window !== 'undefined') {
+  window.requestAnimationFrame = window.requestAnimationFrame || window.mozRequestAnimationFrame ||
+  window.webkitRequestAnimationFrame || window.msRequestAnimationFrame;
 }
 
 let util = require('../../util');
 
-/**
- * The canvas renderer
- */
+
 class CanvasRenderer {
-  /**
-   * @param {Object} body
-   * @param {Canvas} canvas
-   */
   constructor(body, canvas) {
-    _initRequestAnimationFrame();
     this.body = body;
     this.canvas = canvas;
 
@@ -61,6 +16,7 @@ class CanvasRenderer {
     this.requiresTimeout = true;
     this.renderingActive = false;
     this.renderRequests = 0;
+    this.pixelRatio = undefined;
     this.allowRedraw = true;
 
     this.dragging = false;
@@ -75,9 +31,6 @@ class CanvasRenderer {
     this.bindEventListeners();
   }
 
-  /**
-   * Binds event listeners
-   */
   bindEventListeners() {
     this.body.emitter.on("dragStart", () => { this.dragging = true; });
     this.body.emitter.on("dragEnd", () => { this.dragging = false; });
@@ -108,17 +61,13 @@ class CanvasRenderer {
         clearTimeout(this.renderTimer);
       }
       else {
-        window.cancelAnimationFrame(this.renderTimer);
+        cancelAnimationFrame(this.renderTimer);
       }
       this.body.emitter.off();
     });
 
   }
 
-  /**
-   *
-   * @param {Object} options
-   */
   setOptions(options) {
     if (options !== undefined) {
       let fields = ['hideEdgesOnDrag','hideNodesOnDrag'];
@@ -126,64 +75,19 @@ class CanvasRenderer {
     }
   }
 
-
-  /**
-   * Prepare the drawing of the next frame.
-   *
-   * Calls the callback when the next frame can or will be drawn.
-   *
-   * @param {function} callback
-   * @param {number} delay - timeout case only, wait this number of milliseconds
-   * @returns {function|undefined}
-   * @private
-   */
-  _requestNextFrame(callback, delay) { 
-    // During unit testing, it happens that the mock window object is reset while
-    // the next frame is still pending. Then, either 'window' is not present, or
-    // 'requestAnimationFrame()' is not present because it is not defined on the
-    // mock window object.
-    //
-    // As a consequence, unrelated unit tests may appear to fail, even if the problem
-    // described happens in the current unit test.
-    //
-    // This is not something that will happen in normal operation, but we still need
-    // to take it into account.
-    //
-    if (typeof window === 'undefined') return;  // Doing `if (window === undefined)` does not work here!
-
-    let timer;
-
-    var myWindow = window;  // Grab a reference to reduce the possibility that 'window' is reset
-                            // while running this method.
-
-    if (this.requiresTimeout === true) {
-      // wait given number of milliseconds and perform the animation step function
-      timer = myWindow.setTimeout(callback, delay);
-    } else {
-      if (myWindow.requestAnimationFrame) {
-        timer = myWindow.requestAnimationFrame(callback);
-      }
-    }
-
-    return timer;
-  }
-
-  /**
-   *
-   * @private
-   */
   _startRendering() {
     if (this.renderingActive === true) {
       if (this.renderTimer === undefined) {
-        this.renderTimer = this._requestNextFrame(this._renderStep.bind(this), this.simulationInterval);
+        if (this.requiresTimeout === true) {
+          this.renderTimer = window.setTimeout(this._renderStep.bind(this), this.simulationInterval); // wait this.renderTimeStep milliseconds and perform the animation step function
+        }
+        else {
+          this.renderTimer = window.requestAnimationFrame(this._renderStep.bind(this)); // wait this.renderTimeStep milliseconds and perform the animation step function
+        }
       }
     }
   }
 
-  /**
-   *
-   * @private
-   */
   _renderStep() {
     if (this.renderingActive === true) {
       // reset the renderTimer so a new scheduled animation step can be set
@@ -214,35 +118,40 @@ class CanvasRenderer {
 
   /**
    * Redraw the network with the current data
+   * @param hidden | used to get the first estimate of the node sizes. only the nodes are drawn after which they are quickly drawn over.
    * @private
    */
   _requestRedraw() {
     if (this.redrawRequested !== true && this.renderingActive === false && this.allowRedraw === true) {
       this.redrawRequested = true;
-      this._requestNextFrame(() => {this._redraw(false);}, 0);
+      if (this.requiresTimeout === true) {
+        window.setTimeout(() => {this._redraw(false);}, 0);
+      }
+      else {
+        window.requestAnimationFrame(() => {this._redraw(false);});
+      }
     }
   }
 
-  /**
-   * Redraw the network with the current data
-   * @param {boolean} [hidden=false] | Used to get the first estimate of the node sizes.
-   *                                   Only the nodes are drawn after which they are quickly drawn over.
-   * @private
-   */
   _redraw(hidden = false) {
     if (this.allowRedraw === true) {
       this.body.emitter.emit("initRedraw");
 
       this.redrawRequested = false;
+      let ctx = this.canvas.frame.canvas.getContext('2d');
 
       // when the container div was hidden, this fixes it back up!
       if (this.canvas.frame.canvas.width === 0 || this.canvas.frame.canvas.height === 0) {
         this.canvas.setSize();
       }
 
-      this.canvas.setTransform();
+      this.pixelRatio = (window.devicePixelRatio || 1) / (ctx.webkitBackingStorePixelRatio ||
+        ctx.mozBackingStorePixelRatio ||
+        ctx.msBackingStorePixelRatio ||
+        ctx.oBackingStorePixelRatio ||
+        ctx.backingStorePixelRatio || 1);
 
-      let ctx = this.canvas.getContext();
+      ctx.setTransform(this.pixelRatio, 0, 0, this.pixelRatio, 0, 0);
 
       // clear the canvas
       let w = this.canvas.frame.canvas.clientWidth;
@@ -289,14 +198,21 @@ class CanvasRenderer {
 
   /**
    * Redraw all nodes
-   *
+   * The 2d context of a HTML canvas can be retrieved by canvas.getContext('2d');
    * @param {CanvasRenderingContext2D}   ctx
-   * @param {boolean} [alwaysShow]
+   * @param {Boolean} [alwaysShow]
    * @private
    */
   _resizeNodes() {
-    this.canvas.setTransform();
-    let ctx = this.canvas.getContext();
+    let ctx = this.canvas.frame.canvas.getContext('2d');
+    if (this.pixelRatio === undefined) {
+      this.pixelRatio = (window.devicePixelRatio || 1) / (ctx.webkitBackingStorePixelRatio ||
+        ctx.mozBackingStorePixelRatio ||
+        ctx.msBackingStorePixelRatio ||
+        ctx.oBackingStorePixelRatio ||
+        ctx.backingStorePixelRatio || 1);
+    }
+    ctx.setTransform(this.pixelRatio, 0, 0, this.pixelRatio, 0, 0);
     ctx.save();
     ctx.translate(this.body.view.translation.x, this.body.view.translation.y);
     ctx.scale(this.body.view.scale, this.body.view.scale);
@@ -319,9 +235,9 @@ class CanvasRenderer {
 
   /**
    * Redraw all nodes
-   *
-   * @param {CanvasRenderingContext2D} ctx  2D context of a HTML canvas
-   * @param {boolean} [alwaysShow]
+   * The 2d context of a HTML canvas can be retrieved by canvas.getContext('2d');
+   * @param {CanvasRenderingContext2D}   ctx
+   * @param {Boolean} [alwaysShow]
    * @private
    */
   _drawNodes(ctx, alwaysShow = false) {
@@ -367,7 +283,8 @@ class CanvasRenderer {
 
   /**
    * Redraw all edges
-   * @param {CanvasRenderingContext2D} ctx  2D context of a HTML canvas
+   * The 2d context of a HTML canvas can be retrieved by canvas.getContext('2d');
+   * @param {CanvasRenderingContext2D}   ctx
    * @private
    */
   _drawEdges(ctx) {
@@ -405,6 +322,7 @@ class CanvasRenderer {
       this.requiresTimeout = true;
     }
   }
+
 }
 
 export default CanvasRenderer;

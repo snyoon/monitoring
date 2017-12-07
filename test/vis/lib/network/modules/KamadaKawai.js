@@ -11,11 +11,6 @@ import FloydWarshall from "./components/algorithms/FloydWarshall.js"
  * Possible optimizations in the distance calculation can be implemented.
  */
 class KamadaKawai {
-  /**
-   * @param {Object} body
-   * @param {number} edgeLength
-   * @param {number} edgeStrength
-   */
   constructor(body, edgeLength, edgeStrength) {
     this.body = body;
     this.springLength = edgeLength;
@@ -25,7 +20,7 @@ class KamadaKawai {
 
   /**
    * Not sure if needed but can be used to update the spring length and spring constant
-   * @param {Object} options
+   * @param options
    */
   setOptions(options) {
     if (options) {
@@ -41,9 +36,8 @@ class KamadaKawai {
 
   /**
    * Position the system
-   * @param {Array.<Node>} nodesArray
-   * @param {Array.<vis.Edge>} edgesArray
-   * @param {boolean} [ignoreClusters=false]
+   * @param nodesArray
+   * @param edgesArray
    */
   solve(nodesArray, edgesArray, ignoreClusters = false) {
     // get distance matrix
@@ -83,8 +77,7 @@ class KamadaKawai {
 
   /**
    * get the node with the highest energy
-   * @param {boolean} ignoreClusters
-   * @returns {number[]}
+   * @returns {*[]}
    * @private
    */
   _getHighestEnergyNode(ignoreClusters) {
@@ -113,8 +106,8 @@ class KamadaKawai {
 
   /**
    * calculate the energy of a single node
-   * @param {Node.id} m
-   * @returns {number[]}
+   * @param m
+   * @returns {*[]}
    * @private
    */
   _getEnergy(m) {
@@ -126,9 +119,9 @@ class KamadaKawai {
   /**
    * move the node based on it's energy
    * the dx and dy are calculated from the linear system proposed by Kamada and Kawai
-   * @param {number} m
-   * @param {number} dE_dx
-   * @param {number} dE_dy
+   * @param m
+   * @param dE_dx
+   * @param dE_dy
    * @private
    */
   _moveNode(m, dE_dx, dE_dy) {
@@ -174,7 +167,7 @@ class KamadaKawai {
 
   /**
    * Create the L matrix: edge length times shortest path
-   * @param {Object} D_matrix
+   * @param D_matrix
    * @private
    */
   _createL_matrix(D_matrix) {
@@ -193,7 +186,7 @@ class KamadaKawai {
 
   /**
    * Create the K matrix: spring constants times shortest path
-   * @param {Object} D_matrix
+   * @param D_matrix
    * @private
    */
   _createK_matrix(D_matrix) {
@@ -247,12 +240,7 @@ class KamadaKawai {
     }
   }
 
-  /**
-   * Update method, just doing single column (rows are auto-updated) (update all sums)
-   *
-   * @param {number} m
-   * @private
-   */
+  //Update method, just doing single column (rows are auto-updated) (update all sums)
   _updateE_matrix(m) {
     let nodesArray = this.body.nodeIndices;
     let nodes = this.body.nodes;

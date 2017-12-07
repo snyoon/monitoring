@@ -1,4 +1,5 @@
 var util = require('../../util');
+var DOMutil = require('../../DOMutil');
 var Bars = require('./graph2d_types/bar');
 var Lines = require('./graph2d_types/line');
 var Points = require('./graph2d_types/points');
@@ -11,7 +12,7 @@ var Points = require('./graph2d_types/points');
  * @param {array} groupsUsingDefaultStyles  | this array has one entree.
  *                                            It is passed as an array so it is passed by reference.
  *                                            It enumerates through the default styles
- * @constructor GraphGroup
+ * @constructor
  */
 function GraphGroup(group, groupId, options, groupsUsingDefaultStyles) {
   this.id = groupId;
@@ -48,11 +49,11 @@ GraphGroup.prototype.setItems = function (items) {
 
 GraphGroup.prototype.getItems = function () {
   return this.itemsData;
-};
+}
 
 /**
  * this is used for barcharts and shading, this way, we only have to calculate it once.
- * @param {number} pos
+ * @param pos
  */
 GraphGroup.prototype.setZeroPosition = function (pos) {
   this.zeroPosition = pos;
@@ -60,7 +61,7 @@ GraphGroup.prototype.setZeroPosition = function (pos) {
 
 /**
  * set the options of the graph group over the default options.
- * @param {Object} options
+ * @param options
  */
 GraphGroup.prototype.setOptions = function (options) {
   if (options !== undefined) {
@@ -100,7 +101,7 @@ GraphGroup.prototype.setOptions = function (options) {
 
 /**
  * this updates the current group class with the latest group dataset entree, used in _updateGroup in linegraph
- * @param {vis.Group} group
+ * @param group
  */
 GraphGroup.prototype.update = function (group) {
   this.group = group;
@@ -114,12 +115,9 @@ GraphGroup.prototype.update = function (group) {
 /**
  * return the legend entree for this group.
  *
- * @param {number} iconWidth
- * @param {number} iconHeight
- * @param {{svg: (*|Element), svgElements: Object, options: Object, groups: Array.<Object>}} framework
- * @param {number} x
- * @param {number} y
- * @returns {{icon: (*|Element), label: (*|string), orientation: *}}
+ * @param iconWidth
+ * @param iconHeight
+ * @returns {{icon: HTMLElement, label: (group.content|*|string), orientation: (.options.yAxisOrientation|*)}}
  */
 GraphGroup.prototype.getLegend = function (iconWidth, iconHeight, framework, x, y) {
   if (framework == undefined || framework == null) {

@@ -76,10 +76,10 @@ let allOptions = {
   moment: {'function': 'function'},
   groupOrder: {string, 'function': 'function'},
   groupEditable: {
-    add: { 'boolean': bool, 'undefined': 'undefined'},
-    remove: { 'boolean': bool, 'undefined': 'undefined'},
-    order: { 'boolean': bool, 'undefined': 'undefined'},
-    __type__: { 'boolean': bool, object}
+	 add: { 'boolean': bool, 'undefined': 'undefined'},
+	 remove: { 'boolean': bool, 'undefined': 'undefined'},
+	 order: { 'boolean': bool, 'undefined': 'undefined'},
+	 __type__: { 'boolean': bool, object}
   },
   groupOrderSwap: {'function': 'function'},
   height: {string, number},
@@ -89,12 +89,7 @@ let allOptions = {
     repeat: {string},
     __type__: {object, array}
   },
-  itemsAlwaysDraggable: {
-    item: { 'boolean': bool, 'undefined': 'undefined'},
-    range: { 'boolean': bool, 'undefined': 'undefined'},
-    __type__: { 'boolean': bool, object}
-  },
-  limitSize: {'boolean': bool},
+  itemsAlwaysDraggable: { 'boolean': bool},
   locale:{string},
   locales:{
     __any__: {any},
@@ -118,7 +113,6 @@ let allOptions = {
   multiselect: { 'boolean': bool},
   multiselectPerGroup: { 'boolean': bool},
   onAdd: {'function': 'function'},
-  onDropObjectOnItem: {'function': 'function'},
   onUpdate: {'function': 'function'},
   onMove: {'function': 'function'},
   onMoving: {'function': 'function'},
@@ -126,7 +120,6 @@ let allOptions = {
   onAddGroup: {'function': 'function'},
   onMoveGroup: {'function': 'function'},
   onRemoveGroup: {'function': 'function'},
-  onInitialDrawComplete: {'function': 'function'},
   order: {'function': 'function'},
   orientation: {
     axis: {string,'undefined': 'undefined'},

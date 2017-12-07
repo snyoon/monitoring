@@ -1,27 +1,10 @@
 import NodeBase from '../util/NodeBase'
 
-/**
- * Base class for constructing Node/Cluster Shapes.
- *
- * @extends NodeBase
- */
 class ShapeBase extends NodeBase {
-  /**
-   * @param {Object} options
-   * @param {Object} body
-   * @param {Label} labelModule
-   */
   constructor(options, body, labelModule) {
     super(options, body, labelModule)
   }
 
-  /**
-   *
-   * @param {CanvasRenderingContext2D} ctx
-   * @param {boolean} [selected]
-   * @param {boolean} [hover]
-   * @param {Object} [values={size: this.options.size}]
-   */
   resize(ctx, selected = this.selected, hover = this.hover, values = { size: this.options.size }) {
     if (this.needsRefresh(selected, hover)) {
       this.labelModule.getTextSize(ctx, selected, hover);
@@ -32,26 +15,37 @@ class ShapeBase extends NodeBase {
     }
   }
 
-  /**
-   *
-   * @param {CanvasRenderingContext2D} ctx
-   * @param {string} shape
-   * @param {number} sizeMultiplier - Unused! TODO: Remove next major release
-   * @param {number} x
-   * @param {number} y
-   * @param {boolean} selected
-   * @param {boolean} hover
-   * @param {{toArrow: boolean, toArrowScale: (allOptions.edges.arrows.to.scaleFactor|{number}|allOptions.edges.arrows.middle.scaleFactor|allOptions.edges.arrows.from.scaleFactor|Array|number), toArrowType: *, middleArrow: boolean, middleArrowScale: (number|allOptions.edges.arrows.middle.scaleFactor|{number}|Array), middleArrowType: (allOptions.edges.arrows.middle.type|{string}|string|*), fromArrow: boolean, fromArrowScale: (allOptions.edges.arrows.to.scaleFactor|{number}|allOptions.edges.arrows.middle.scaleFactor|allOptions.edges.arrows.from.scaleFactor|Array|number), fromArrowType: *, arrowStrikethrough: (*|boolean|allOptions.edges.arrowStrikethrough|{boolean}), color: undefined, inheritsColor: (string|string|string|allOptions.edges.color.inherit|{string, boolean}|Array|*), opacity: *, hidden: *, length: *, shadow: *, shadowColor: *, shadowSize: *, shadowX: *, shadowY: *, dashes: (*|boolean|Array|allOptions.edges.dashes|{boolean, array}), width: *}} values
-   * @private
-   */
   _drawShape(ctx, shape, sizeMultiplier, x, y, selected, hover, values) {
     this.resize(ctx, selected, hover, values);
+
     this.left = x - this.width / 2;
     this.top = y - this.height / 2;
 
-    this.initContextForDraw(ctx, values);
+    var borderWidth = values.borderWidth / this.body.view.scale;
+    ctx.lineWidth = Math.min(this.width, borderWidth);
+
+    ctx.strokeStyle = values.borderColor;
+    ctx.fillStyle = values.color;
     ctx[shape](x, y, values.size);
-    this.performFill(ctx, values);
+
+    // draw shadow if enabled
+    this.enableShadow(ctx, values);
+    // draw the background
+    ctx.fill();
+    // disable shadows for other elements.
+    this.disableShadow(ctx, values);
+
+    //draw dashed border if enabled, save and restore is required for firefox not to crash on unix.
+    ctx.save();
+    // if borders are zero width, they will be drawn with width 1 by default. This prevents that
+    if (borderWidth > 0) {
+      this.enableBorderDashes(ctx, values);
+      //draw the border
+      ctx.stroke();
+      //disable dashed border for other elements
+      this.disableBorderDashes(ctx, values);
+    }
+    ctx.restore();
 
     if (this.options.label !== undefined) {
       // Need to call following here in order to ensure value for `this.labelModule.size.height`
@@ -63,12 +57,7 @@ class ShapeBase extends NodeBase {
     this.updateBoundingBox(x,y);
   }
 
-  /**
-   *
-   * @param {number} x
-   * @param {number} y
-   */
-  updateBoundingBox(x, y) {
+  updateBoundingBox(x,y) {
     this.boundingBox.top = y - this.options.size;
     this.boundingBox.left = x - this.options.size;
     this.boundingBox.right = x + this.options.size;
@@ -80,6 +69,9 @@ class ShapeBase extends NodeBase {
       this.boundingBox.bottom = Math.max(this.boundingBox.bottom, this.boundingBox.bottom + this.labelModule.size.height);
     }
   }
+
+
+
 }
 
 export default ShapeBase;

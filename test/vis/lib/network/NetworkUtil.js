@@ -1,21 +1,9 @@
 let util = require("../util");
-
-/**
- * Utility Class
- */
 class NetworkUtil {
-  /**
-   * @ignore
-   */
   constructor() {}
 
   /**
    * Find the center position of the network considering the bounding boxes
-   *
-   * @param {Array.<Node>} allNodes
-   * @param {Array.<Node>} [specificNodes=[]]
-   * @returns {{minX: number, maxX: number, minY: number, maxY: number}}
-   * @static
    */
   static getRange(allNodes, specificNodes = []) {
     var minY = 1e9, maxY = -1e9, minX = 1e9, maxX = -1e9, node;
@@ -45,11 +33,6 @@ class NetworkUtil {
 
   /**
    * Find the center position of the network
-   *
-   * @param {Array.<Node>} allNodes
-   * @param {Array.<Node>} [specificNodes=[]]
-   * @returns {{minX: number, maxX: number, minY: number, maxY: number}}
-   * @static
    */
   static getRangeCore(allNodes, specificNodes = []) {
     var minY = 1e9, maxY = -1e9, minX = 1e9, maxX = -1e9, node;
@@ -81,7 +64,6 @@ class NetworkUtil {
   /**
    * @param {object} range = {minX: minX, maxX: maxX, minY: minY, maxY: maxY};
    * @returns {{x: number, y: number}}
-   * @static
    */
   static findCenter(range) {
     return {x: (0.5 * (range.maxX + range.minX)),
@@ -91,10 +73,9 @@ class NetworkUtil {
 
   /**
    * This returns a clone of the options or options of the edge or node to be used for construction of new edges or check functions for new nodes.
-   * @param {vis.Item} item
-   * @param {'node'|undefined} type
+   * @param item
+   * @param type
    * @returns {{}}
-   * @static
    */
   static cloneOptions(item, type) {
     let clonedOptions = {};

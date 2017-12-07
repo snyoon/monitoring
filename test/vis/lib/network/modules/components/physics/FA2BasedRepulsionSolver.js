@@ -1,14 +1,6 @@
 import BarnesHutSolver from "./BarnesHutSolver"
 
-/**
- * @extends BarnesHutSolver
- */
 class ForceAtlas2BasedRepulsionSolver extends BarnesHutSolver {
-  /**
-   * @param {Object} body
-   * @param {{physicsNodeIndices: Array, physicsEdgeIndices: Array, forces: {}, velocities: {}}} physicsBody
-   * @param {Object} options
-   */
   constructor(body, physicsBody, options) {
     super(body, physicsBody, options);
   }
@@ -16,11 +8,11 @@ class ForceAtlas2BasedRepulsionSolver extends BarnesHutSolver {
   /**
    * Calculate the forces based on the distance.
    *
-   * @param {number} distance
-   * @param {number} dx
-   * @param {number} dy
-   * @param {Node} node
-   * @param {Object} parentBranch
+   * @param distance
+   * @param dx
+   * @param dy
+   * @param node
+   * @param parentBranch
    * @private
    */
   _calculateForces(distance, dx, dy, node, parentBranch) {

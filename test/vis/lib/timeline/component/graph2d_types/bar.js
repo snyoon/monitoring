@@ -1,17 +1,13 @@
 var DOMutil = require('../../../DOMutil');
 var Points = require('./points');
 
-/**
- *
- * @param {vis.GraphGroup.id} groupId
- * @param {Object} options   // TODO: Describe options
- * @constructor Bargraph
- */
-function Bargraph(groupId, options) {  // eslint-disable-line no-unused-vars
+function Bargraph(groupId, options) {
 }
 
 Bargraph.drawIcon = function (group, x, y, iconWidth, iconHeight, framework) {
   var fillHeight = iconHeight * 0.5;
+  var path, fillPath;
+
   var outline = DOMutil.getSVGElement("rect", framework.svgElements, framework.svg);
   outline.setAttributeNS(null, "x", x);
   outline.setAttributeNS(null, "y", y - fillHeight);
@@ -40,14 +36,14 @@ Bargraph.drawIcon = function (group, x, y, iconWidth, iconHeight, framework) {
     DOMutil.drawPoint(x + 0.5 * barWidth + offset, y + fillHeight - bar1Height - 1, groupTemplate, framework.svgElements, framework.svg);
     DOMutil.drawPoint(x + 1.5 * barWidth + offset + 2, y + fillHeight - bar2Height - 1, groupTemplate, framework.svgElements, framework.svg);
   }
-};
+
+}
 
 /**
  * draw a bar graph
  *
- * @param {Array.<vis.GraphGroup.id>} groupIds
- * @param {Object} processedGroupData
- * @param {{svg: Object, svgElements: Array.<Object>, options: Object, groups: Array.<vis.Group>}} framework
+ * @param groupIds
+ * @param processedGroupData
  */
 Bargraph.draw = function (groupIds, processedGroupData, framework) {
   var combinedData = [];
@@ -112,6 +108,7 @@ Bargraph.draw = function (groupIds, processedGroupData, framework) {
     }
     else {
       var nextKey = i + (intersections[key].amount - intersections[key].resolved);
+      var prevKey = i - (intersections[key].resolved + 1);
       if (nextKey < combinedData.length) {
         coreDistance = Math.abs(combinedData[nextKey].screen_x - key);
       }
@@ -167,8 +164,8 @@ Bargraph.draw = function (groupIds, processedGroupData, framework) {
 
 /**
  * Fill the intersections object with counters of how many datapoints share the same x coordinates
- * @param {Object} intersections
- * @param {Array.<Object>} combinedData
+ * @param intersections
+ * @param combinedData
  * @private
  */
 Bargraph._getDataIntersections = function (intersections, combinedData) {
@@ -199,10 +196,10 @@ Bargraph._getDataIntersections = function (intersections, combinedData) {
 /**
  * Get the width and offset for bargraphs based on the coredistance between datapoints
  *
- * @param {number} coreDistance
- * @param {vis.Group} group
- * @param {number} minWidth
- * @returns {{width: number, offset: number}}
+ * @param coreDistance
+ * @param group
+ * @param minWidth
+ * @returns {{width: Number, offset: Number}}
  * @private
  */
 Bargraph._getSafeDrawData = function (coreDistance, group, minWidth) {
@@ -251,7 +248,7 @@ Bargraph.getStackedYRange = function (combinedData, groupRanges, groupIds, group
     groupRanges[groupLabel].yAxisOrientation = orientation;
     groupIds.push(groupLabel);
   }
-};
+}
 
 Bargraph._getStackedYRange = function (intersections, combinedData) {
   var key;

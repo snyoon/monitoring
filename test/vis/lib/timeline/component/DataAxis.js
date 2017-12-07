@@ -4,13 +4,11 @@ var Component = require('./Component');
 var DataScale = require('./DataScale');
 /**
  * A horizontal time axis
- * @param {Object} body
  * @param {Object} [options]        See DataAxis.setOptions for the available
  *                                  options.
- * @param {SVGElement} svg
- * @param {vis.LineGraph.options} linegraphOptions
  * @constructor DataAxis
  * @extends Component
+ * @param body
  */
 function DataAxis(body, options, svg, linegraphOptions) {
   this.id = util.randomUUID();
@@ -247,8 +245,9 @@ DataAxis.prototype.hide = function () {
 
 /**
  * Set a range (start and end)
- * @param {number} start
- * @param {number} end
+ * @param end
+ * @param start
+ * @param end
  */
 DataAxis.prototype.setRange = function (start, end) {
   this.range.start = start;
@@ -343,8 +342,6 @@ DataAxis.prototype.redraw = function () {
 
 /**
  * Repaint major and minor text labels and vertical grid lines
- *
- * @returns {boolean}
  * @private
  */
 DataAxis.prototype._redrawLabels = function () {
@@ -451,13 +448,12 @@ DataAxis.prototype.screenToValue = function (x) {
 
 /**
  * Create a label for the axis at position x
- *
- * @param {number} y
- * @param {string} text
- * @param {'top'|'right'|'bottom'|'left'} orientation
- * @param {string} className
- * @param {number} characterHeight
  * @private
+ * @param y
+ * @param text
+ * @param orientation
+ * @param className
+ * @param characterHeight
  */
 DataAxis.prototype._redrawLabel = function (y, text, orientation, className, characterHeight) {
   // reuse redundant label
@@ -485,11 +481,11 @@ DataAxis.prototype._redrawLabel = function (y, text, orientation, className, cha
 
 /**
  * Create a minor line for the axis at position y
- * @param {number} y
- * @param {'top'|'right'|'bottom'|'left'} orientation
- * @param {string} className
- * @param {number} offset
- * @param {number} width
+ * @param y
+ * @param orientation
+ * @param className
+ * @param offset
+ * @param width
  */
 DataAxis.prototype._redrawLine = function (y, orientation, className, offset, width) {
   if (this.master === true) {
@@ -512,7 +508,7 @@ DataAxis.prototype._redrawLine = function (y, orientation, className, offset, wi
 /**
  * Create a title for the axis
  * @private
- * @param {'top'|'right'|'bottom'|'left'} orientation
+ * @param orientation
  */
 DataAxis.prototype._redrawTitle = function (orientation) {
   DOMutil.prepareElements(this.DOMelements.title);

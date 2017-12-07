@@ -1,11 +1,11 @@
+var util = require('../../util');
 var Group = require('./Group');
 
 /**
  * @constructor BackgroundGroup
- * @param {number | string} groupId
+ * @param {Number | String} groupId
  * @param {Object} data
  * @param {ItemSet} itemSet
- * @extends Group
  */
 function BackgroundGroup (groupId, data, itemSet) {
   Group.call(this, groupId, data, itemSet);
@@ -25,7 +25,7 @@ BackgroundGroup.prototype = Object.create(Group.prototype);
  * @param {boolean} [forceRestack=false]  Force restacking of all items
  * @return {boolean} Returns true if the group is resized
  */
-BackgroundGroup.prototype.redraw = function(range, margin, forceRestack) {  // eslint-disable-line no-unused-vars
+BackgroundGroup.prototype.redraw = function(range, margin, forceRestack) {
   var resized = false;
 
   this.visibleItems = this._updateItemsInRange(this.orderedItems, this.visibleItems, range);

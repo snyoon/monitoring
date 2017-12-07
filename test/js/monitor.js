@@ -523,6 +523,7 @@ function chartRemoveFunction(link){
         $(this).parent().parent().remove(); //remove li of tab
         $('#listOfCharts a:last').tab('show'); // Select first tab
         $(tabContentId).remove(); //remove respective tab content
+ 
     });
 }
  
@@ -749,6 +750,7 @@ function addZero(i) {
  
  
 function displayAttribute(d, datum, divID, scheduleName){
+    console.log(decisionInfo);
     var decisionInfo = alldecisionInfo[scheduleName];
     var productInfo = allProductInfo[scheduleName];
     var denominator = allDenominator[scheduleName];
@@ -1760,7 +1762,7 @@ function tableclick(){
  //                }
  //            })
 }
- 
+
  //NEW CODE
 // creates the statistics table and links it to the statistics tab
 // divID: id of the div that it should be under in HTML DOC
@@ -1781,6 +1783,7 @@ function loadTabCreate(divID, LAjsonobj){
     var LoadObject = LAjsonobj.LoadInfo;
     var div = document.getElementById(divID);
     var listofProducts = [];
+
     //~~~~~~~~~~~~~~~~~~~~~~~~ making the productobjs~~~~~~~~~~~~~~~~~~~~~~~~~~~
     for(var i =0; i<filteredProductarray.length; i++){
         var tempid = filteredProductarray[i].productId;
@@ -1788,6 +1791,7 @@ function loadTabCreate(divID, LAjsonobj){
         listofProducts.push(tempPO);
     }
     listofProducts.sort(function(a,b) {return (a.id > b.id) ? 1 : ((b.id > a.id) ? -1 : 0);} ); 
+    console.log(listofProducts);
     var table = document.createElement("table");
     //~~~~~~~~~~~~~Creating the table~~~~~~~~~~~~~~~~~~~~~~
 
@@ -1796,7 +1800,6 @@ function loadTabCreate(divID, LAjsonobj){
     var header1cell = rowHeader.insertCell(0);
     header1cell.setAttribute("colspan", 4);
     header1cell.innerHTML= "Product Info";
- 
     var numbOfDays = listofProducts[0].target.length;
     var numbOfDaysLoad = listofProducts[0].load.DA.length;
  
@@ -2331,7 +2334,6 @@ function statViewPage(object, divID){
     var wipGraph = new vis.Graph2d(wipcell,wipDataSet,wipGroupData);
     var minaxWip = wipGraph.getDataRange();
     var wipOption = {
-            width: "100%",
             zoomMax: minaxWip.max.getTime() - minaxWip.min.getTime(),
             legend: true,
             dataAxis:{
@@ -2342,6 +2344,7 @@ function statViewPage(object, divID){
                 }
             }};
     wipGraph.setOptions(wipOption);
+
 
     //~~~~~~~~~~~ END OF WIP GRAPH~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     //~~~~~~~~~~~~~ start of 투입량 Graph~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -2366,7 +2369,6 @@ function statViewPage(object, divID){
     var inTarGraph = new vis.Graph2d(intarcell, inTarDataSet, inTarGroups);
     var minmaxTar = inTarGraph.getDataRange();
     var intarOption = {
-        width: "100%",
         zoomMax: minmaxTar.max.getTime() - minmaxTar.min.getTime(),
         legend: true,
         dataAxis:{
@@ -2397,7 +2399,6 @@ function statViewPage(object, divID){
     var shipCountGraph = new vis.Graph2d(shipcountcell,shipCountData, shipCountGroup);
     var minmaxSC = shipCountGraph.getDataRange();
     var shipCountOption = {
-        width: "100%",
         zoomMax: minmaxSC.max.getTime() - minmaxSC.min.getTime(),
         legend:false,
         dataAxis:{
@@ -2442,7 +2443,6 @@ function statViewPage(object, divID){
     var utilGraph = new vis.Graph2d(utilcell, utilData, utilGroup);
     var minmaxutil = utilGraph.getDataRange();
     var utilOption = {
-        width: "100%",
         zoomMax: minmaxutil.max.getTime() - minmaxutil.min.getTime(),
         legend: true,
         dataAxis:{
@@ -2617,7 +2617,6 @@ function indivObjectHandler(object, data, decision, schedulename, listofGroups){
             //decisionKey = decisionKey + idnum;
             decisionKey = times[i].eventId;
         }
-        console.log(decisionKey);
         if((ed + sd ) != (2 * ed)){
          data.add({id: decisionKey, text: times[i].productId, start: sd, end: ed,
              group: objectlabel, subgroup: objectlabel, className: classID, content: lotIdID});
@@ -2631,3 +2630,4 @@ function indivObjectHandler(object, data, decision, schedulename, listofGroups){
     }
 
 }
+

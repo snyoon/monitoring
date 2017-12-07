@@ -1,5 +1,3 @@
-/* eslint-disable require-jsdoc */
-
 var _rng;
 
 var globalVar = typeof window !== 'undefined'

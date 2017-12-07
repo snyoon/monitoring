@@ -8,11 +8,9 @@ let util = require('../../util');
  * This function is executed once when a Network object is created. The frame
  * contains a canvas, and this canvas contains all objects like the axis and
  * nodes.
+ * @private
  */
 class Canvas {
-  /**
-   * @param {Object} body
-   */
   constructor(body) {
     this.body = body;
     this.pixelRatio = 1;
@@ -33,9 +31,6 @@ class Canvas {
     this.bindEventListeners();
   }
 
-  /**
-   * Binds event listeners
-   */
   bindEventListeners() {
     // bind the events
     this.body.emitter.once("resize", (obj) => {
@@ -52,11 +47,10 @@ class Canvas {
       this.hammer.destroy();
       this._cleanUp();
     });
+
+
   }
 
-  /**
-   * @param {Object} options
-   */
   setOptions(options) {
     if (options !== undefined) {
       let fields = ['width','height','autoResize'];
@@ -77,9 +71,6 @@ class Canvas {
     }
   }
 
-  /**
-   * @private
-   */
   _cleanUp() {
     // automatically adapt to a changing size of the browser.
     if (this.resizeTimer !== undefined) {
@@ -89,9 +80,6 @@ class Canvas {
     this.resizeFunction = undefined;
   }
 
-  /**
-   * @private
-   */
   _onResize() {
     this.setSize();
     this.body.emitter.emit("_redraw");
@@ -99,8 +87,6 @@ class Canvas {
 
   /**
    * Get and store the cameraState
-   *
-   * @param {number} [pixelRatio=this.pixelRatio]
    * @private
    */
   _getCameraState(pixelRatio = this.pixelRatio) {
@@ -156,12 +142,6 @@ class Canvas {
     }
   }
 
-  /**
-   *
-   * @param {number|string} value
-   * @returns {string}
-   * @private
-   */
   _prepareValue(value) {
     if (typeof value === 'number') {
       return value + 'px';
@@ -208,8 +188,9 @@ class Canvas {
       this.frame.canvas.appendChild(noCanvas);
     }
     else {
-      this._setPixelRatio();
-      this.setTransform();
+      let ctx = this.frame.canvas.getContext("2d");
+      this._setPixelRatio(ctx);
+      this.frame.canvas.getContext("2d").setTransform(this.pixelRatio, 0, 0, this.pixelRatio, 0, 0);
     }
 
     // add the frame to the container element
@@ -266,7 +247,6 @@ class Canvas {
    *                         or '50%')
    * @param {string} height  Height in pixels or percentage  (for example '400px'
    *                         or '30%')
-   * @returns {boolean}
    */
   setSize(width = this.options.width, height = this.options.height) {
     width = this._prepareValue(width);
@@ -277,19 +257,9 @@ class Canvas {
     let oldHeight = this.frame.canvas.height;
 
     // update the pixel ratio
-    //
-    // NOTE: Comment in following is rather inconsistent; this is the ONLY place in the code
-    //       where it is assumed that the pixel ratio could change at runtime.
-    //       The only way I can think of this happening is a rotating screen or tablet; but then
-    //       there should be a mechanism for reloading the data (TODO: check if this is present).
-    //
-    //       If the assumption is true (i.e. pixel ratio can change at runtime), then *all* usage
-    //       of pixel ratio must be overhauled for this.
-    //
-    //       For the time being, I will humor the assumption here, and in the rest of the code assume it is
-    //       constant.
+    let ctx = this.frame.canvas.getContext("2d");
     let previousRatio = this.pixelRatio; // we cache this because the camera state storage needs the old value
-    this._setPixelRatio();
+    this._setPixelRatio(ctx);
 
     if (width != this.options.width || height != this.options.height || this.frame.style.width != width || this.frame.style.height != height) {
       this._getCameraState(previousRatio);
@@ -351,62 +321,18 @@ class Canvas {
     // set initialized so the get and set camera will work from now on.
     this.initialized = true;
     return emitEvent;
-  }
+  };
+
 
   /**
-   *
-   * @returns {CanvasRenderingContext2D}
-   */
-  getContext() {
-    return this.frame.canvas.getContext("2d");
-  }
-
-  /**
-   * Determine the pixel ratio for various browsers.
-   *
-   * @returns {number}
    * @private
    */
-  _determinePixelRatio() {
-    let ctx = this.getContext();
-    if (ctx === undefined) {
-     throw new Error("Could not get canvax context");
-    }
-
-    var numerator = 1;
-    if(typeof window !== 'undefined') {  // (window !== undefined) doesn't work here!
-      // Protection during unit tests, where 'window' can be missing
-      numerator = (window.devicePixelRatio || 1);
-    }
-
-    var denominator = (ctx.webkitBackingStorePixelRatio ||
+  _setPixelRatio(ctx) {
+    this.pixelRatio = (window.devicePixelRatio || 1) / (ctx.webkitBackingStorePixelRatio ||
       ctx.mozBackingStorePixelRatio ||
       ctx.msBackingStorePixelRatio  ||
       ctx.oBackingStorePixelRatio   ||
       ctx.backingStorePixelRatio    || 1);
-
-    return numerator / denominator;
-  }
-
-  /**
-   * Lazy determination of pixel ratio.
-   *
-   * @private
-   */
-  _setPixelRatio() {
-    this.pixelRatio = this._determinePixelRatio();
-  }
-
-  /**
-   * Set the transform in the contained context, based on its pixelRatio
-   */
-  setTransform() {
-    let ctx = this.getContext();
-    if (ctx === undefined) {
-     throw new Error("Could not get canvax context");
-    }
-
-    ctx.setTransform(this.pixelRatio, 0, 0, this.pixelRatio, 0, 0);
   }
 
 
@@ -456,8 +382,10 @@ class Canvas {
 
 
   /**
-   * @param {point} pos
-   * @returns {point}
+   *
+   * @param {object} pos   = {x: number, y: number}
+   * @returns {{x: number, y: number}}
+   * @constructor
    */
   canvasToDOM (pos) {
     return {x: this._XconvertCanvasToDOM(pos.x), y: this._YconvertCanvasToDOM(pos.y)};
@@ -465,8 +393,9 @@ class Canvas {
 
   /**
    *
-   * @param {point} pos
-   * @returns {point}
+   * @param {object} pos   = {x: number, y: number}
+   * @returns {{x: number, y: number}}
+   * @constructor
    */
   DOMtoCanvas (pos) {
     return {x: this._XconvertDOMtoCanvas(pos.x), y: this._YconvertDOMtoCanvas(pos.y)};

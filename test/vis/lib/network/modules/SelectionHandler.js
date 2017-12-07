@@ -3,14 +3,7 @@ var Edge = require('./components/Edge').default;
 
 let util = require('../../util');
 
-/**
- * The handler for selections
- */
 class SelectionHandler {
-  /**
-   * @param {Object} body
-   * @param {Canvas} canvas
-   */
   constructor(body, canvas) {
     this.body = body;
     this.canvas = canvas;
@@ -32,10 +25,6 @@ class SelectionHandler {
   }
 
 
-  /**
-   *
-   * @param {Object} [options]
-   */
   setOptions(options) {
     if (options !== undefined) {
       let fields = ['multiselect','hoverConnectedEdges','selectable','selectConnectedEdges'];
@@ -47,8 +36,8 @@ class SelectionHandler {
   /**
    * handles the selection part of the tap;
    *
-   * @param {{x: number, y: number}} pointer
-   * @returns {boolean}
+   * @param {Object} pointer
+   * @private
    */
   selectOnPoint(pointer) {
     let selected = false;
@@ -66,11 +55,6 @@ class SelectionHandler {
     return selected;
   }
 
-  /**
-   *
-   * @param {{x: number, y: number}} pointer
-   * @returns {boolean}
-   */
   selectAdditionalOnPoint(pointer) {
     let selectionChanged = false;
     if (this.options.selectable === true) {
@@ -91,72 +75,26 @@ class SelectionHandler {
     return selectionChanged;
   }
 
-
-  /**
-   * Create an object containing the standard fields for an event.
-   *
-   * @param {Event} event
-   * @param {{x: number, y: number}} pointer Object with the x and y screen coordinates of the mouse
-   * @returns {{}}
-   * @private
-   */
-  _initBaseEvent(event, pointer) {
-    let properties = {};
-
+  _generateClickEvent(eventType, event, pointer, oldSelection, emptySelection = false) {
+    let properties;
+    if (emptySelection === true) {
+      properties = {nodes:[], edges:[]};
+    }
+    else {
+      properties = this.getSelection();
+    }
     properties['pointer'] = {
       DOM: {x: pointer.x, y: pointer.y},
       canvas: this.canvas.DOMtoCanvas(pointer)
     };
     properties['event'] = event;
 
-    return properties;
-  }
-
-
-  /**
-   * Generate an event which the user can catch.
-   *
-   * This adds some extra data to the event with respect to cursor position and
-   * selected nodes and edges.
-   *
-   * @param {string} eventType                          Name of event to send
-   * @param {Event}  event
-   * @param {{x: number, y: number}} pointer            Object with the x and y screen coordinates of the mouse
-   * @param {Object|undefined} oldSelection             If present, selection state before event occured
-   * @param {boolean|undefined} [emptySelection=false]  Indicate if selection data should be passed
-   */
-  _generateClickEvent(eventType, event, pointer, oldSelection, emptySelection = false) {
-    let properties = this._initBaseEvent(event, pointer);
-
-    if (emptySelection === true) {
-      properties.nodes = [];
-      properties.edges = [];
-    }
-    else {
-      let tmp = this.getSelection();
-      properties.nodes = tmp.nodes;
-      properties.edges = tmp.edges;
-    }
-
     if (oldSelection !== undefined) {
       properties['previousSelection'] = oldSelection;
     }
-
-    if (eventType == 'click') {
-      // For the time being, restrict this functionality to
-      // just the click event.
-      properties.items = this.getClickedItems(pointer);
-    }
-
     this.body.emitter.emit(eventType, properties);
   }
 
-  /**
-   *
-   * @param {Object} obj
-   * @param {boolean} [highlightEdges=this.options.selectConnectedEdges]
-   * @returns {boolean}
-   */
   selectObject(obj, highlightEdges = this.options.selectConnectedEdges) {
     if (obj !== undefined) {
       if (obj instanceof Node) {
@@ -171,10 +109,6 @@ class SelectionHandler {
     return false;
   }
 
-  /**
-   *
-   * @param {Object} obj
-   */
   deselectObject(obj) {
     if (obj.isSelected() === true) {
       obj.selected = false;
@@ -187,7 +121,7 @@ class SelectionHandler {
   /**
    * retrieve all nodes overlapping with given object
    * @param {Object} object  An object with parameters left, top, right, bottom
-   * @return {number[]}   An array with id's of the overlapping nodes
+   * @return {Number[]}   An array with id's of the overlapping nodes
    * @private
    */
   _getAllNodesOverlappingWith(object) {
@@ -206,7 +140,7 @@ class SelectionHandler {
   /**
    * Return a position object in canvasspace from a single point in screenspace
    *
-   * @param {{x: number, y: number}} pointer
+   * @param pointer
    * @returns {{left: number, top: number, right: number, bottom: number}}
    * @private
    */
@@ -224,8 +158,7 @@ class SelectionHandler {
   /**
    * Get the top node at the passed point (like a click)
    *
-   * @param {{x: number, y: number}} pointer
-   * @param {boolean} [returnNode=true]
+   * @param {{x: Number, y: Number}} pointer
    * @return {Node | undefined} node
    */
   getNodeAt(pointer, returnNode = true) {
@@ -251,7 +184,7 @@ class SelectionHandler {
   /**
    * retrieve all edges overlapping with given object, selector is around center
    * @param {Object} object  An object with parameters left, top, right, bottom
-   * @param {number[]} overlappingEdges An array with id's of the overlapping nodes
+   * @return {Number[]}   An array with id's of the overlapping nodes
    * @private
    */
   _getEdgesOverlappingWith(object, overlappingEdges) {
@@ -268,7 +201,7 @@ class SelectionHandler {
   /**
    * retrieve all nodes overlapping with given object
    * @param {Object} object  An object with parameters left, top, right, bottom
-   * @return {number[]}   An array with id's of the overlapping nodes
+   * @return {Number[]}   An array with id's of the overlapping nodes
    * @private
    */
   _getAllEdgesOverlappingWith(object) {
@@ -281,8 +214,7 @@ class SelectionHandler {
   /**
    * Get the edges nearest to the passed point (like a click)
    *
-   * @param {{x: number, y: number}} pointer
-   * @param {boolean} [returnEdge=true]
+   * @param {{x: Number, y: Number}} pointer
    * @return {Edge | undefined} node
    */
   getEdgeAt(pointer, returnEdge = true) {
@@ -323,7 +255,7 @@ class SelectionHandler {
   /**
    * Add object to the selection array.
    *
-   * @param {Object} obj
+   * @param obj
    * @private
    */
   _addToSelection(obj) {
@@ -338,7 +270,7 @@ class SelectionHandler {
   /**
    * Add object to the selection array.
    *
-   * @param {Object} obj
+   * @param obj
    * @private
    */
   _addToHover(obj) {
@@ -554,79 +486,38 @@ class SelectionHandler {
 
 
   /**
-   * Remove the highlight from a node or edge, in response to mouse movement
+   * This is called when someone clicks on a node. either select or deselect it.
+   * If there is an existing selection and we don't want to append to it, clear the existing selection
    *
-   * @param {Event}  event
-   * @param {{x: number, y: number}} pointer object with the x and y screen coordinates of the mouse
-   * @param {Node|vis.Edge} object
+   * @param {Node || Edge} object
    * @private
    */
-  emitBlurEvent(event, pointer, object) {
-    let properties = this._initBaseEvent(event, pointer);
-
+  blurObject(object) {
     if (object.hover === true) {
       object.hover = false;
       if (object instanceof Node) {
-        properties.node = object.id;
-        this.body.emitter.emit("blurNode", properties);
+        this.body.emitter.emit("blurNode", {node: object.id});
       }
       else {
-        properties.edge = object.id;
-        this.body.emitter.emit("blurEdge", properties);
+        this.body.emitter.emit("blurEdge", {edge: object.id});
       }
     }
   }
 
-
   /**
-   * Create the highlight for a node or edge, in response to mouse movement
+   * This is called when someone clicks on a node. either select or deselect it.
+   * If there is an existing selection and we don't want to append to it, clear the existing selection
    *
-   * @param {Event}  event
-   * @param {{x: number, y: number}} pointer object with the x and y screen coordinates of the mouse
-   * @param {Node|vis.Edge} object
-   * @returns {boolean} hoverChanged
+   * @param {Node || Edge} object
    * @private
    */
-  emitHoverEvent(event, pointer, object) {
-    let properties   = this._initBaseEvent(event, pointer);
-    let hoverChanged = false;
-
-    if (object.hover === false) {
-      object.hover = true;
-      this._addToHover(object);
-      hoverChanged = true;
-      if (object instanceof Node) {
-        properties.node = object.id;
-        this.body.emitter.emit("hoverNode", properties);
-      }
-      else {
-        properties.edge = object.id;
-        this.body.emitter.emit("hoverEdge", properties);
-      }
-    }
-
-    return hoverChanged;
-  }
-
-
-  /**
-   * Perform actions in response to a mouse movement.
-   *
-   * @param {Event}  event
-   * @param {{x: number, y: number}} pointer | object with the x and y screen coordinates of the mouse
-   */
-  hoverObject(event, pointer) {
-    let object = this.getNodeAt(pointer);
-    if (object === undefined) {
-      object = this.getEdgeAt(pointer);
-    }
-
+  hoverObject(object) {
     let hoverChanged = false;
     // remove all node hover highlights
     for (let nodeId in this.hoverObj.nodes) {
       if (this.hoverObj.nodes.hasOwnProperty(nodeId)) {
         if (object === undefined || (object instanceof Node && object.id != nodeId) || object instanceof Edge) {
-          this.emitBlurEvent(event, pointer, this.hoverObj.nodes[nodeId]);
+          this.blurObject(this.hoverObj.nodes[nodeId]);
           delete this.hoverObj.nodes[nodeId];
           hoverChanged = true;
         }
@@ -637,7 +528,7 @@ class SelectionHandler {
     for (let edgeId in this.hoverObj.edges) {
       if (this.hoverObj.edges.hasOwnProperty(edgeId)) {
         // if the hover has been changed here it means that the node has been hovered over or off
-        // we then do not use the emitBlurEvent method here.
+        // we then do not use the blurObject method here.
         if (hoverChanged === true) {
           this.hoverObj.edges[edgeId].hover = false;
           delete this.hoverObj.edges[edgeId];
@@ -645,7 +536,7 @@ class SelectionHandler {
         // if the blur remains the same and the object is undefined (mouse off) or another
         // edge has been hovered, or another node has been hovered we blur the edge.
         else if (object === undefined || (object instanceof Edge && object.id != edgeId) || (object instanceof Node && !object.hover)) {
-          this.emitBlurEvent(event, pointer, this.hoverObj.edges[edgeId]);
+          this.blurObject(this.hoverObj.edges[edgeId]);
           delete this.hoverObj.edges[edgeId];
           hoverChanged = true;
         }
@@ -653,7 +544,17 @@ class SelectionHandler {
     }
 
     if (object !== undefined) {
-      hoverChanged = hoverChanged || this.emitHoverEvent(event, pointer, object);
+      if (object.hover === false) {
+        object.hover = true;
+        this._addToHover(object);
+        hoverChanged = true;
+        if (object instanceof Node) {
+          this.body.emitter.emit("hoverNode", {node: object.id});
+        }
+        else {
+          this.body.emitter.emit("hoverEdge", {edge: object.id});
+        }
+      }
       if (object instanceof Node && this.options.hoverConnectedEdges === true) {
         this._hoverConnectedEdges(object);
       }
@@ -670,7 +571,7 @@ class SelectionHandler {
   /**
    *
    * retrieve the currently selected objects
-   * @return {{nodes: Array.<string>, edges: Array.<string>}} selection
+   * @return {{nodes: Array.<String>, edges: Array.<String>}} selection
    */
   getSelection() {
     let nodeIds = this.getSelectedNodes();
@@ -681,7 +582,7 @@ class SelectionHandler {
   /**
    *
    * retrieve the currently selected nodes
-   * @return {string[]} selection    An array with the ids of the
+   * @return {String[]} selection    An array with the ids of the
    *                                            selected nodes.
    */
   getSelectedNodes() {
@@ -716,7 +617,7 @@ class SelectionHandler {
 
   /**
    * Updates the current selection
-   * @param {{nodes: Array.<string>, edges: Array.<string>}} selection
+   * @param {{nodes: Array.<String>, edges: Array.<String>}} Selection
    * @param {Object} options                                 Options
    */
   setSelection(selection, options = {}) {
@@ -758,7 +659,7 @@ class SelectionHandler {
 
   /**
    * select zero or more nodes with the option to highlight edges
-   * @param {number[] | string[]} selection     An array with the ids of the
+   * @param {Number[] | String[]} selection     An array with the ids of the
    *                                            selected nodes.
    * @param {boolean} [highlightEdges]
    */
@@ -772,7 +673,7 @@ class SelectionHandler {
 
   /**
    * select zero or more edges
-   * @param {number[] | string[]} selection     An array with the ids of the
+   * @param {Number[] | String[]} selection     An array with the ids of the
    *                                            selected nodes.
    */
   selectEdges(selection) {
@@ -801,57 +702,6 @@ class SelectionHandler {
         }
       }
     }
-  }
-
-
-  /**
-   * Determine all the visual elements clicked which are on the given point.
-   *
-   * All elements are returned; this includes nodes, edges and their labels.
-   * The order returned is from highest to lowest, i.e. element 0 of the return
-   * value is the topmost item clicked on.
-   *
-   * The return value consists of an array of the following possible elements:
-   *
-   * - `{nodeId:number}`             - node with given id clicked on
-   * - `{nodeId:number, labelId:0}`  - label of node with given id clicked on
-   * - `{edgeId:number}`             - edge with given id clicked on
-   * - `{edge:number, labelId:0}`    - label of edge with given id clicked on
-   *
-   * ## NOTES
-   *
-   * - Currently, there is only one label associated with a node or an edge,
-   *   but this is expected to change somewhere in the future.
-   * - Since there is no z-indexing yet, it is not really possible to set the nodes and
-   *   edges in the correct order. For the time being, nodes come first.
-   *
-   * @param {point} pointer  mouse position in screen coordinates
-   * @returns {Array.<nodeClickItem|nodeLabelClickItem|edgeClickItem|edgeLabelClickItem>}
-   * @private
-   */ 
-  getClickedItems(pointer) {
-    let point = this.canvas.DOMtoCanvas(pointer);
-    var items = [];
-
-    // Note reverse order; we want the topmost clicked items to be first in the array
-    // Also note that selected nodes are disregarded here; these normally display on top
-    let nodeIndices = this.body.nodeIndices;
-    let nodes = this.body.nodes;
-    for (let i = nodeIndices.length - 1; i >= 0; i--) {
-      let node = nodes[nodeIndices[i]];
-      let ret = node.getItemsOnPoint(point);
-      items.push.apply(items, ret); // Append the return value to the running list.
-    }
-
-    let edgeIndices = this.body.edgeIndices;
-    let edges = this.body.edges;
-    for (let i = edgeIndices.length - 1; i >= 0; i--) {
-      let edge = edges[edgeIndices[i]];
-      let ret = edge.getItemsOnPoint(point);
-      items.push.apply(items, ret); // Append the return value to the running list.
-    }
-
-    return items;
   }
 }
 

@@ -124,10 +124,7 @@ CurrentTime.prototype.redraw = function() {
 CurrentTime.prototype.start = function() {
   var me = this;
 
-    /**
-     *  Updates the current time.
-     */
-    function update () {
+  function update () {
     me.stop();
 
     // determine interval to refresh
@@ -159,7 +156,7 @@ CurrentTime.prototype.stop = function() {
 /**
  * Set a current time. This can be used for example to ensure that a client's
  * time is synchronized with a shared server time.
- * @param {Date | string | number} time     A Date, unix timestamp, or
+ * @param {Date | String | Number} time     A Date, unix timestamp, or
  *                                          ISO date string.
  */
 CurrentTime.prototype.setCurrentTime = function(time) {

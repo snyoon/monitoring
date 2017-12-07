@@ -143,23 +143,22 @@ DataView.prototype.refresh = function () {
  *
  * Where:
  *
- * {number | string} id         The id of an item
- * {number[] | string{}} ids    An array with ids of items
+ * {Number | String} id         The id of an item
+ * {Number[] | String{}} ids    An array with ids of items
  * {Object} options             An Object with options. Available options:
- *                              {string} [type] Type of data to be returned. Can
+ *                              {String} [type] Type of data to be returned. Can
  *                                              be 'DataTable' or 'Array' (default)
- *                              {Object.<string, string>} [convert]
- *                              {string[]} [fields] field names to be returned
+ *                              {Object.<String, String>} [convert]
+ *                              {String[]} [fields] field names to be returned
  *                              {function} [filter] filter items
- *                              {string | function} [order] Order the items by
+ *                              {String | function} [order] Order the items by
  *                                  a field name or custom sort function.
  * {Array | DataTable} [data]   If provided, items will be appended to this
  *                              array or table. Required in case of Google
  *                              DataTable.
- * @param {Array} args
- * @return {DataSet|DataView}
+ * @param args
  */
-DataView.prototype.get = function (args) {  // eslint-disable-line no-unused-vars
+DataView.prototype.get = function (args) {
   var me = this;
 
   // parse the arguments
@@ -202,9 +201,9 @@ DataView.prototype.get = function (args) {  // eslint-disable-line no-unused-var
  * Get ids of all items or from a filtered set of items.
  * @param {Object} [options]    An Object with options. Available options:
  *                              {function} [filter] filter items
- *                              {string | function} [order] Order the items by
+ *                              {String | function} [order] Order the items by
  *                                  a field name or custom sort function.
- * @return {Array.<string|number>} ids
+ * @return {Array} ids
  */
 DataView.prototype.getIds = function (options) {
   var ids;
@@ -243,10 +242,10 @@ DataView.prototype.getIds = function (options) {
  * Map every item in the dataset.
  * @param {function} callback
  * @param {Object} [options]    Available options:
- *                              {Object.<string, string>} [type]
- *                              {string[]} [fields] filter fields
+ *                              {Object.<String, String>} [type]
+ *                              {String[]} [fields] filter fields
  *                              {function} [filter] filter items
- *                              {string | function} [order] Order the items by
+ *                              {String | function} [order] Order the items by
  *                                  a field name or custom sort function.
  * @return {Object[]} mappedItems
  */
@@ -299,9 +298,9 @@ DataView.prototype.getDataSet = function () {
  * Event listener. Will propagate all events from the connected data set to
  * the subscribers of the DataView, but will filter the items and only trigger
  * when there are changes in the filtered data set.
- * @param {string} event
+ * @param {String} event
  * @param {Object | null} params
- * @param {string} senderId
+ * @param {String} senderId
  * @private
  */
 DataView.prototype._onEvent = function (event, params, senderId) {

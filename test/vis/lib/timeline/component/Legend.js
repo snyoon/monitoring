@@ -4,13 +4,6 @@ var Component = require('./Component');
 
 /**
  * Legend for Graph2d
- *
- * @param {vis.Graph2d.body} body
- * @param {vis.Graph2d.options} options
- * @param {number} side
- * @param {vis.LineGraph.options} linegraphOptions
- * @constructor Legend
- * @extends Component
  */
 function Legend(body, options, side, linegraphOptions) {
   this.body = body;
@@ -27,10 +20,10 @@ function Legend(body, options, side, linegraphOptions) {
       visible: true,
       position: 'top-right' // top/bottom - left,center,right
     }
-  };
+  }
 
   this.side = side;
-  this.options = util.extend({}, this.defaultOptions);
+  this.options = util.extend({},this.defaultOptions);
   this.linegraphOptions = linegraphOptions;
 
   this.svgElements = {};
@@ -106,6 +99,7 @@ Legend.prototype.hide = function() {
 
 /**
  * Show the component in the DOM (when not already visible).
+ * @return {Boolean} changed
  */
 Legend.prototype.show = function() {
   // show frame containing the items
@@ -179,8 +173,8 @@ Legend.prototype.redraw = function() {
     }
 
     var content = '';
-    for (i = 0; i < groupArray.length; i++) {
-      groupId = groupArray[i];
+    for (var i = 0; i < groupArray.length; i++) {
+      var groupId = groupArray[i];
       if (this.groups[groupId].visible == true && (this.linegraphOptions.visibility[groupId] === undefined || this.linegraphOptions.visibility[groupId] == true)) {
         content += this.groups[groupId].content + '<br />';
       }

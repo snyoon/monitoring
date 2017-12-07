@@ -64,10 +64,7 @@ Item.prototype.setData = function(data) {
   if (groupChanged && this.parent != null) {
     this.parent.itemSet._moveToGroup(this, data.group);
   }
-  
-  if (this.parent) {
-    this.parent.stackDirty = true;
-  }
+  this.parent.stackDirty = true;
   
   var subGroupChanged = data.subgroup != undefined && this.data.subgroup != data.subgroup;
   if (subGroupChanged && this.parent != null) {
@@ -99,10 +96,10 @@ Item.prototype.setParent = function(parent) {
 
 /**
  * Check whether this item is visible inside given range
- * @param {vis.Range} range with a timestamp for start and end
+ * @returns {{start: Number, end: Number}} range with a timestamp for start and end
  * @returns {boolean} True if visible
  */
-Item.prototype.isVisible = function(range) {  // eslint-disable-line no-unused-vars
+Item.prototype.isVisible = function(range) {
   return false;
 };
 
@@ -172,13 +169,8 @@ Item.prototype._repaintDragCenter = function () {
     });
 
     if (this.dom.box) {
-      if (this.dom.dragLeft) {
-        this.dom.box.insertBefore(dragCenter, this.dom.dragLeft);
-      }
-      else {
-        this.dom.box.appendChild(dragCenter);
-      }
-    }
+      this.dom.box.appendChild(dragCenter);
+    } 
     else if (this.dom.point) {
       this.dom.point.appendChild(dragCenter);
     }
@@ -247,6 +239,9 @@ Item.prototype._repaintOnItemUpdateTimeTooltip = function (anchor) {
                  this.data.editable !== false;
 
   if (this.selected && editable && !this.dom.onItemUpdateTimeTooltip) {
+    // create and show tooltip
+    var me = this;
+
     var onItemUpdateTimeTooltip = document.createElement('div');
 
     onItemUpdateTimeTooltip.className = 'vis-onUpdateTime-tooltip';
@@ -321,7 +316,6 @@ Item.prototype._repaintOnItemUpdateTimeTooltip = function (anchor) {
  */
 Item.prototype._updateContents = function (element) {
   var content;
-  var changed;
   var templateFunction;
   var itemVisibleFrameContent;
   var visibleFrameTemplateFunction; 
@@ -341,7 +335,7 @@ Item.prototype._updateContents = function (element) {
     if ((itemVisibleFrameContent instanceof Object) && !(itemVisibleFrameContent instanceof Element)) {
       visibleFrameTemplateFunction(itemData, itemVisibleFrameContentElement)
     } else {
-       changed = this._contentToString(this.itemVisibleFrameContent) !== this._contentToString(itemVisibleFrameContent);
+       var changed = this._contentToString(this.itemVisibleFrameContent) !== this._contentToString(itemVisibleFrameContent);
        if (changed) {
         // only replace the content when changed
         if (itemVisibleFrameContent instanceof Element) {
@@ -372,7 +366,7 @@ Item.prototype._updateContents = function (element) {
   if ((content instanceof Object) && !(content instanceof Element)) {
     templateFunction(itemData, element)
   } else {
-    changed = this._contentToString(this.content) !== this._contentToString(content);
+    var changed = this._contentToString(this.content) !== this._contentToString(content);
     if (changed) {
       // only replace the content when changed
       if (content instanceof Element) {
@@ -427,7 +421,7 @@ Item.prototype._updateContents = function (element) {
 
 /**
  * Update custom styles of the element
- * @param {Element} element
+ * @param element
  * @private
  */
 Item.prototype._updateStyle = function(element) {
@@ -471,7 +465,7 @@ Item.prototype._updateEditStatus = function() {
     } else if(typeof this.options.editable === 'object') {
         this.editable = {};
         util.selectiveExtend(['updateTime', 'updateGroup', 'remove'], this.editable, this.options.editable);
-    }
+    };
   }
   // Item data overrides, except if options.editable.overrideItems is set.
   if (!this.options || !(this.options.editable) || (this.options.editable.overrideItems !== true)) {

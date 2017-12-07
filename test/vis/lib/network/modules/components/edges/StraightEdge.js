@@ -1,16 +1,6 @@
 import EdgeBase from './util/EdgeBase'
 
-/**
- * A Straight Edge.
- *
- * @extends EdgeBase
- */
 class StraightEdge extends EdgeBase {
-  /**
-   * @param {Object} options
-   * @param {Object} body
-   * @param {Label} labelModule
-   */
   constructor(options, body, labelModule) {
     super(options, body, labelModule);
   }
@@ -18,7 +8,6 @@ class StraightEdge extends EdgeBase {
   /**
    * Draw a line between two nodes
    * @param {CanvasRenderingContext2D} ctx
-   * @param {{toArrow: boolean, toArrowScale: (allOptions.edges.arrows.to.scaleFactor|{number}|allOptions.edges.arrows.middle.scaleFactor|allOptions.edges.arrows.from.scaleFactor|Array|number), toArrowType: *, middleArrow: boolean, middleArrowScale: (number|allOptions.edges.arrows.middle.scaleFactor|{number}|Array), middleArrowType: (allOptions.edges.arrows.middle.type|{string}|string|*), fromArrow: boolean, fromArrowScale: (allOptions.edges.arrows.to.scaleFactor|{number}|allOptions.edges.arrows.middle.scaleFactor|allOptions.edges.arrows.from.scaleFactor|Array|number), fromArrowType: *, arrowStrikethrough: (*|boolean|allOptions.edges.arrowStrikethrough|{boolean}), color: undefined, inheritsColor: (string|string|string|allOptions.edges.color.inherit|{string, boolean}|Array|*), opacity: *, hidden: *, length: *, shadow: *, shadowColor: *, shadowSize: *, shadowX: *, shadowY: *, dashes: (*|boolean|Array|allOptions.edges.dashes|{boolean, array}), width: *}} values
    * @private
    */
   _line(ctx, values) {
@@ -32,18 +21,14 @@ class StraightEdge extends EdgeBase {
     this.disableShadow(ctx, values);
   }
 
-  /**
-   *
-   * @returns {undefined}
-   */
   getViaNode() {
     return undefined;
   }
 
   /**
    * Combined function of pointOnLine and pointOnBezier. This gives the coordinates of a point on the line at a certain percentage of the way
-   *
-   * @param {number} percentage
+   * @param percentage
+   * @param via
    * @returns {{x: number, y: number}}
    * @private
    */
@@ -54,13 +39,6 @@ class StraightEdge extends EdgeBase {
     }
   }
 
-  /**
-   *
-   * @param {Node} nearNode
-   * @param {CanvasRenderingContext2D} ctx
-   * @returns {{x: number, y: number}}
-   * @private
-   */
   _findBorderPosition(nearNode, ctx) {
     let node1 = this.to;
     let node2 = this.from;
@@ -83,17 +61,6 @@ class StraightEdge extends EdgeBase {
     return borderPos;
   }
 
-  /**
-   *
-   * @param {number} x1
-   * @param {number} y1
-   * @param {number} x2
-   * @param {number} y2
-   * @param {number} x3
-   * @param {number} y3
-   * @returns {number}
-   * @private
-   */
   _getDistanceToEdge(x1, y1, x2, y2, x3, y3) { // x3,y3 is the point
     return this._getDistanceToLine(x1, y1, x2, y2, x3, y3);
   }

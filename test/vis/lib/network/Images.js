@@ -1,30 +1,22 @@
 import CachedImage from './CachedImage';
 
-/**
- * This callback is a callback that accepts an Image.
- * @callback ImageCallback
- * @param {Image} image
- */
 
 /**
+ * @class Images
  * This class loads images and keeps them stored.
- *
- * @param {ImageCallback} callback
  */
 class Images {
-  /**
-   * @param {ImageCallback} callback
-   */
-  constructor(callback){
+    constructor(callback){
         this.images = {};
         this.imageBroken = {};
         this.callback = callback;
     }
     
+    
     /**
      * @param {string} url                      The original Url that failed to load, if the broken image is successfully loaded it will be added to the cache using this Url as the key so that subsequent requests for this Url will return the broken image
      * @param {string} brokenUrl                Url the broken image to try and load
-     * @param {Image} imageToLoadBrokenUrlOn   The image object
+     * @return {Image} imageToLoadBrokenUrlOn   The image object
      */    
     _tryloadBrokenUrl (url, brokenUrl, imageToLoadBrokenUrlOn) {
         //If these parameters aren't specified then exit the function because nothing constructive can be done
@@ -44,12 +36,10 @@ class Images {
         imageToLoadBrokenUrlOn.image.src = brokenUrl;
     }
     
-  /**
-   *
-   * @param {vis.Image} imageToRedrawWith
-   * @private
-   */
-  _redrawWithImage (imageToRedrawWith) {
+    /**
+     * @return {Image} imageToRedrawWith The images that will be passed to the callback when it is invoked
+     */    
+    _redrawWithImage (imageToRedrawWith) {
         if (this.callback) {
             this.callback(imageToRedrawWith);
         }
@@ -60,7 +50,7 @@ class Images {
      * @param {string} brokenUrl    Url of an image to use if the url image is not found
      * @return {Image} img          The image object
      */     
-    load (url, brokenUrl) {
+    load (url, brokenUrl, id) {
         //Try and get the image from the cache, if successful then return the cached image   
         var cachedImage = this.images[url]; 
         if (cachedImage) return cachedImage;
@@ -85,7 +75,7 @@ class Images {
             console.error("Could not load image:", url);
             //Try and load the image specified by the brokenUrl using
             this._tryloadBrokenUrl(url, brokenUrl, img);
-        };
+        }
         
         //Set the source of the image to the url, this is what actually kicks off the loading of the image
         img.image.src = url;
@@ -95,13 +85,13 @@ class Images {
     }
 
 
-  /**
-   * IE11 fix -- thanks dponch!
-   *
-   * Local helper function
-   * @param {vis.Image} imageToCache
-   * @private
-   */
+    /**
+     * IE11 fix -- thanks dponch!
+     *
+     * Local helper function
+     *
+     * @private
+     */
     _fixImageCoordinates(imageToCache) {
         if (imageToCache.width === 0) {
             document.body.appendChild(imageToCache);

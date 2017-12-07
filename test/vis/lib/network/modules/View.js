@@ -2,14 +2,7 @@ let util = require('../../util');
 
 var NetworkUtil = require('../NetworkUtil').default;
 
-/**
- * The view
- */
 class View {
-  /**
-   * @param {Object} body
-   * @param {Canvas} canvas
-   */
   constructor(body, canvas) {
     this.body = body;
     this.canvas = canvas;
@@ -32,10 +25,7 @@ class View {
     this.body.emitter.on("unlockNode",          this.releaseNode.bind(this));
   }
 
-  /**
-   *
-   * @param {Object} [options={}]
-   */
+
   setOptions(options = {}) {
     this.options = options;
   }
@@ -43,8 +33,8 @@ class View {
 
   /**
    * This function zooms out to fit all data on screen based on amount of nodes
-   * @param {Object} [options={{nodes=Array}}]
-   * @param {boolean} [initialZoom=false]  | zoom based on fitted formula or range, true = fitted, default = false;
+   * @param {Object} Options
+   * @param {Boolean} [initialZoom]  | zoom based on fitted formula or range, true = fitted, default = false;
    */
   fit(options = {nodes:[]}, initialZoom = false) {
     let range;
@@ -109,8 +99,8 @@ class View {
   /**
    * Center a node in view.
    *
-   * @param {number} nodeId
-   * @param {number} [options]
+   * @param {Number} nodeId
+   * @param {Number} [options]
    */
   focus(nodeId, options = {}) {
     if (this.body.nodes[nodeId] !== undefined) {
@@ -127,10 +117,10 @@ class View {
 
   /**
    *
-   * @param {Object} options  |  options.offset   = {x:number, y:number}   // offset from the center in DOM pixels
-   *                          |  options.scale    = number                 // scale to move to
-   *                          |  options.position = {x:number, y:number}   // position to move to
-   *                          |  options.animation = {duration:number, easingFunction:String} || Boolean   // position to move to
+   * @param {Object} options  |  options.offset   = {x:Number, y:Number}   // offset from the center in DOM pixels
+   *                          |  options.scale    = Number                 // scale to move to
+   *                          |  options.position = {x:Number, y:Number}   // position to move to
+   *                          |  options.animation = {duration:Number, easingFunction:String} || Boolean   // position to move to
    */
   moveTo(options) {
     if (options === undefined) {
@@ -153,10 +143,10 @@ class View {
 
   /**
    *
-   * @param {Object} options  |  options.offset   = {x:number, y:number}   // offset from the center in DOM pixels
-   *                          |  options.time     = number                 // animation time in milliseconds
-   *                          |  options.scale    = number                 // scale to animate to
-   *                          |  options.position = {x:number, y:number}   // position to animate to
+   * @param {Object} options  |  options.offset   = {x:Number, y:Number}   // offset from the center in DOM pixels
+   *                          |  options.time     = Number                 // animation time in milliseconds
+   *                          |  options.scale    = Number                 // scale to animate to
+   *                          |  options.position = {x:Number, y:Number}   // position to animate to
    *                          |  options.easingFunction = String           // linear, easeInQuad, easeOutQuad, easeInOutQuad,
    *                                                                       // easeInCubic, easeOutCubic, easeInOutCubic,
    *                                                                       // easeInQuart, easeOutQuart, easeInOutQuart,
@@ -240,9 +230,6 @@ class View {
     this.body.view.translation = targetTranslation;
   }
 
-  /**
-   * Resets state of a locked on Node
-   */
   releaseNode() {
     if (this.lockedOnNodeId !== undefined && this.viewFunction !== undefined) {
       this.body.emitter.off("initRedraw", this.viewFunction);
@@ -252,7 +239,8 @@ class View {
   }
 
   /**
-   * @param {boolean} [finished=false]
+   *
+   * @param easingTime
    * @private
    */
   _transitionRedraw(finished = false) {
@@ -277,21 +265,13 @@ class View {
       }
       this.body.emitter.emit("animationFinished");
     }
-  }
+  };
 
 
-  /**
-   *
-   * @returns {number}
-   */
   getScale() {
     return this.body.view.scale;
   }
 
-  /**
-   *
-   * @returns {{x: number, y: number}}
-   */
   getViewPosition() {
     return this.canvas.DOMtoCanvas({x: 0.5 * this.canvas.frame.canvas.clientWidth, y: 0.5 * this.canvas.frame.canvas.clientHeight});
   }

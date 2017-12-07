@@ -1,22 +1,10 @@
-/**
- * Hierarchical Repulsion Solver
- */
 class HierarchicalRepulsionSolver {
-  /**
-   * @param {Object} body
-   * @param {{physicsNodeIndices: Array, physicsEdgeIndices: Array, forces: {}, velocities: {}}} physicsBody
-   * @param {Object} options
-   */
   constructor(body, physicsBody, options) {
     this.body = body;
     this.physicsBody = physicsBody;
     this.setOptions(options);
   }
 
-  /**
-   *
-   * @param {Object} options
-   */
   setOptions(options) {
     this.options = options;
   }

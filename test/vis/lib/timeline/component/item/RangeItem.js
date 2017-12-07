@@ -1,3 +1,4 @@
+var Hammer = require('../../../module/hammer');
 var Item = require('./Item');
 
 /**
@@ -37,8 +38,7 @@ RangeItem.prototype.baseClassName = 'vis-item vis-range';
 
 /**
  * Check whether this item is visible inside given range
- *
- * @param {vis.Range} range with a timestamp for start and end
+ * @returns {{start: Number, end: Number}} range with a timestamp for start and end
  * @returns {boolean} True if visible
  */
 RangeItem.prototype.isVisible = function(range) {
@@ -46,54 +46,55 @@ RangeItem.prototype.isVisible = function(range) {
   return (this.data.start < range.end) && (this.data.end > range.start);
 };
 
-RangeItem.prototype._createDomElement = function() {
-  if (!this.dom) {
+/**
+ * Repaint the item
+ */
+RangeItem.prototype.redraw = function() {
+  var dom = this.dom;
+  if (!dom) {
     // create DOM
     this.dom = {};
+    dom = this.dom;
 
       // background box
-    this.dom.box = document.createElement('div');
+    dom.box = document.createElement('div');
     // className is updated in redraw()
 
     // frame box (to prevent the item contents from overflowing)
-    this.dom.frame = document.createElement('div');
-    this.dom.frame.className = 'vis-item-overflow';
-    this.dom.box.appendChild(this.dom.frame);
+    dom.frame = document.createElement('div');
+    dom.frame.className = 'vis-item-overflow';
+    dom.box.appendChild(dom.frame);
   
     // visible frame box (showing the frame that is always visible)
-    this.dom.visibleFrame = document.createElement('div');
-    this.dom.visibleFrame.className = 'vis-item-visible-frame';
-    this.dom.box.appendChild(this.dom.visibleFrame);
+    dom.visibleFrame = document.createElement('div');
+    dom.visibleFrame.className = 'vis-item-visible-frame';
+    dom.box.appendChild(dom.visibleFrame);
 
     // contents box
-    this.dom.content = document.createElement('div');
-    this.dom.content.className = 'vis-item-content';
-    this.dom.frame.appendChild(this.dom.content);
+    dom.content = document.createElement('div');
+    dom.content.className = 'vis-item-content';
+    dom.frame.appendChild(dom.content);
 
     // attach this item as attribute
-    this.dom.box['timeline-item'] = this;
+    dom.box['timeline-item'] = this;
 
     this.dirty = true;
   }
 
-}
-
-RangeItem.prototype._appendDomElement = function() {
+  // append DOM to parent DOM
   if (!this.parent) {
     throw new Error('Cannot redraw item: no parent attached');
   }
-  if (!this.dom.box.parentNode) {
+  if (!dom.box.parentNode) {
     var foreground = this.parent.dom.foreground;
     if (!foreground) {
       throw new Error('Cannot redraw item: parent has no foreground container element');
     }
-    foreground.appendChild(this.dom.box);
+    foreground.appendChild(dom.box);
   }
   this.displayed = true;
-}
 
-RangeItem.prototype._updateDirtyDomComponents = function() {
-  // update dirty DOM. An item is marked dirty when:
+  // Update DOM when item is marked dirty. An item is marked dirty when:
   // - the item is not yet rendered
   // - the item's data is changed
   // - the item is selected/deselected
@@ -108,84 +109,27 @@ RangeItem.prototype._updateDirtyDomComponents = function() {
     var className = (this.data.className ? (' ' + this.data.className) : '') +
         (this.selected ? ' vis-selected' : '') + 
         (editable ? ' vis-editable' : ' vis-readonly');
-    this.dom.box.className = this.baseClassName + className;
+    dom.box.className = this.baseClassName + className;
 
+    // determine from css whether this box has overflow
+    this.overflow = window.getComputedStyle(dom.frame).overflow !== 'hidden';
+
+    // recalculate size
     // turn off max-width to be able to calculate the real width
     // this causes an extra browser repaint/reflow, but so be it
     this.dom.content.style.maxWidth = 'none';
+    this.props.content.width = this.dom.content.offsetWidth;
+    this.height = this.dom.box.offsetHeight;
+    this.dom.content.style.maxWidth = '';
+
+    this.dirty = false;
   }
-}
 
-RangeItem.prototype._getDomComponentsSizes = function() {
-  // determine from css whether this box has overflow
-  this.overflow = window.getComputedStyle(this.dom.frame).overflow !== 'hidden';
-  return {
-    content: {
-      width: this.dom.content.offsetWidth,
-    },
-    box: {
-      height: this.dom.box.offsetHeight
-    }
-  }
-}
-
-RangeItem.prototype._updateDomComponentsSizes = function(sizes) {
-  this.props.content.width = sizes.content.width;
-  this.height = sizes.box.height;
-  this.dom.content.style.maxWidth = '';
-  this.dirty = false;
-}
-
-RangeItem.prototype._repaintDomAdditionals = function() {
-  this._repaintOnItemUpdateTimeTooltip(this.dom.box);
-  this._repaintDeleteButton(this.dom.box);
+  this._repaintOnItemUpdateTimeTooltip(dom.box);
+  this._repaintDeleteButton(dom.box);
   this._repaintDragCenter();
   this._repaintDragLeft();
   this._repaintDragRight();
-}
-
-/**
- * Repaint the item
- * @param {boolean} [returnQueue=false]  return the queue
- * @return {boolean} the redraw queue if returnQueue=true
- */
-RangeItem.prototype.redraw = function(returnQueue) {
-  var sizes;
-  var queue = [
-    // create item DOM
-    this._createDomElement.bind(this),
-
-    // append DOM to parent DOM
-    this._appendDomElement.bind(this),
-
-    // update dirty DOM 
-    this._updateDirtyDomComponents.bind(this),
-
-    (function() {
-      if (this.dirty) {
-        sizes = this._getDomComponentsSizes.bind(this)();
-      }
-    }).bind(this),
-
-    (function() {
-      if (this.dirty) {
-        this._updateDomComponentsSizes.bind(this)(sizes);
-      }
-    }).bind(this),
-
-    // repaint DOM additionals
-    this._repaintDomAdditionals.bind(this)
-  ];
-
-  if (returnQueue) {
-    return queue;
-  } else {
-    var result;
-    queue.forEach(function (fn) {
-      result = fn();
-    });
-    return result;
-  }
 };
 
 /**
@@ -200,6 +144,7 @@ RangeItem.prototype.show = function() {
 
 /**
  * Hide the item from the DOM (when visible)
+ * @return {Boolean} changed
  */
 RangeItem.prototype.hide = function() {
   if (this.displayed) {
@@ -226,13 +171,11 @@ RangeItem.prototype.repositionX = function(limitSize) {
   var parentWidth = this.parent.width;
   var start = this.conversion.toScreen(this.data.start);
   var end = this.conversion.toScreen(this.data.end);
-  var align = this.data.align === undefined ? this.options.align : this.data.align;
   var contentStartPosition;
   var contentWidth;
 
   // limit the width of the range, as browsers cannot draw very wide divs
-  // unless limitSize: false is explicitly set in item data
-  if (this.data.limitSize !== false && (limitSize === undefined || limitSize === true)) {
+  if (limitSize === undefined || limitSize === true) {
     if (start < -parentWidth) {
       start = -parentWidth;
     }
@@ -274,7 +217,7 @@ RangeItem.prototype.repositionX = function(limitSize) {
   }
   this.dom.box.style.width = boxWidth + 'px';
 
-  switch (align) {
+  switch (this.options.align) {
     case 'left':
       if (this.options.rtl) {
         this.dom.content.style.right = '0';
@@ -348,7 +291,7 @@ RangeItem.prototype.repositionY = function() {
  * @protected
  */
 RangeItem.prototype._repaintDragLeft = function () {
-  if ((this.selected || this.options.itemsAlwaysDraggable.range) && this.options.editable.updateTime && !this.dom.dragLeft) {
+  if (this.selected && this.options.editable.updateTime && !this.dom.dragLeft) {
     // create and show drag area
     var dragLeft = document.createElement('div');
     dragLeft.className = 'vis-drag-left';
@@ -357,7 +300,7 @@ RangeItem.prototype._repaintDragLeft = function () {
     this.dom.box.appendChild(dragLeft);
     this.dom.dragLeft = dragLeft;
   }
-  else if (!this.selected && !this.options.itemsAlwaysDraggable.range && this.dom.dragLeft) {
+  else if (!this.selected && this.dom.dragLeft) {
     // delete drag area
     if (this.dom.dragLeft.parentNode) {
       this.dom.dragLeft.parentNode.removeChild(this.dom.dragLeft);
@@ -371,7 +314,7 @@ RangeItem.prototype._repaintDragLeft = function () {
  * @protected
  */
 RangeItem.prototype._repaintDragRight = function () {
-  if ((this.selected || this.options.itemsAlwaysDraggable.range) && this.options.editable.updateTime && !this.dom.dragRight) {
+  if (this.selected && this.options.editable.updateTime && !this.dom.dragRight) {
     // create and show drag area
     var dragRight = document.createElement('div');
     dragRight.className = 'vis-drag-right';
@@ -380,7 +323,7 @@ RangeItem.prototype._repaintDragRight = function () {
     this.dom.box.appendChild(dragRight);
     this.dom.dragRight = dragRight;
   }
-  else if (!this.selected && !this.options.itemsAlwaysDraggable.range && this.dom.dragRight) {
+  else if (!this.selected && this.dom.dragRight) {
     // delete drag area
     if (this.dom.dragRight.parentNode) {
       this.dom.dragRight.parentNode.removeChild(this.dom.dragRight);

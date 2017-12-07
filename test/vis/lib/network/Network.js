@@ -3,6 +3,8 @@ require('./shapes');
 
 let Emitter = require('emitter-component');
 let util = require('../util');
+let DataSet = require('../DataSet');
+let DataView = require('../DataView');
 let dotparser = require('./dotparser');
 let gephiParser = require('./gephiParser');
 let Activator = require('../shared/Activator');
@@ -29,6 +31,7 @@ var KamadaKawai = require("./modules/KamadaKawai.js").default;
 
 
 /**
+ * @constructor Network
  * Create a network visualization, displaying nodes and edges.
  *
  * @param {Element} container   The DOM element in which the Network will
@@ -37,7 +40,6 @@ var KamadaKawai = require("./modules/KamadaKawai.js").default;
  *                              {Array} nodes
  *                              {Array} edges
  * @param {Object} options      Options
- * @constructor Network
  */
 function Network(container, data, options) {
   if (!(this instanceof Network)) {
@@ -53,27 +55,13 @@ function Network(container, data, options) {
   };
   util.extend(this.options, this.defaultOptions);
 
-  /**
-   * Containers for nodes and edges.
-   *
-   * 'edges' and 'nodes' contain the full definitions of all the network elements.
-   * 'nodeIndices' and 'edgeIndices' contain the id's of the active elements.
-   *
-   * The distinction is important, because a defined node need not be active, i.e.
-   * visible on the canvas. This happens in particular when clusters are defined, in
-   * that case there will be nodes and edges not displayed.
-   * The bottom line is that all code with actions related to visibility, *must* use
-   * 'nodeIndices' and 'edgeIndices', not 'nodes' and 'edges' directly.
-   */
+  // containers for nodes and edges
   this.body = {
     container: container,
-
-    // See comment above for following fields
     nodes: {},
     nodeIndices: [],
     edges: {},
     edgeIndices: [],
-
     emitter: {
       on:   this.on.bind(this),
       off:  this.off.bind(this),
@@ -245,12 +233,7 @@ Network.prototype.setOptions = function (options) {
 
 
 /**
- * Update the visible nodes and edges list with the most recent node state.
- *
- * Visible nodes are stored in this.body.nodeIndices.
- * Visible edges are stored in this.body.edgeIndices.
- * A node or edges is visible if it is not hidden or clustered.
- *
+ * Update the this.body.nodeIndices with the most recent node index list
  * @private
  */
 Network.prototype._updateVisibleIndices = function () {
@@ -261,7 +244,7 @@ Network.prototype._updateVisibleIndices = function () {
 
   for (let nodeId in nodes) {
     if (nodes.hasOwnProperty(nodeId)) {
-      if (!this.clustering._isClusteredNode(nodeId) && nodes[nodeId].options.hidden === false) {
+      if (nodes[nodeId].options.hidden === false) {
         this.body.nodeIndices.push(nodes[nodeId].id);
       }
     }
@@ -269,23 +252,8 @@ Network.prototype._updateVisibleIndices = function () {
 
   for (let edgeId in edges) {
     if (edges.hasOwnProperty(edgeId)) {
-      let edge = edges[edgeId];
-
-      // It can happen that this is executed *after* a node edge has been removed,
-      // but *before* the edge itself has been removed. Taking this into account.
-      let fromNode = nodes[edge.fromId];
-      let toNode   = nodes[edge.toId];
-      let edgeNodesPresent = (fromNode !== undefined) && (toNode !== undefined);
-
-      let isVisible =
-          !this.clustering._isClusteredEdge(edgeId)
-        && edge.options.hidden === false
-        && edgeNodesPresent
-        && fromNode.options.hidden === false  // Also hidden if any of its connecting nodes are hidden
-        && toNode.options.hidden === false;   // idem
-
-      if (isVisible) {
-        this.body.edgeIndices.push(edge.id);
+      if (edges[edgeId].options.hidden === false) {
+        this.body.edgeIndices.push(edges[edgeId].id);
       }
     }
   }
@@ -296,19 +264,18 @@ Network.prototype._updateVisibleIndices = function () {
  * Bind all events
  */
 Network.prototype.bindEventListeners = function () {
-  // This event will trigger a rebuilding of the cache everything.
-  // Used when nodes or edges have been added or removed.
+  // this event will trigger a rebuilding of the cache everything. Used when nodes or edges have been added or removed.
   this.body.emitter.on("_dataChanged", () => {
-    this.edgesHandler._updateState();
+    // update shortcut lists
+    this._updateVisibleIndices();
+    this.body.emitter.emit("_requestRedraw");
+    // call the dataUpdated event because the only difference between the two is the updating of the indices
     this.body.emitter.emit("_dataUpdated");
   });
 
   // this is called when options of EXISTING nodes or edges have changed.
   this.body.emitter.on("_dataUpdated", () => {
-    // Order important in following block
-    this.clustering._updateState();
-    this._updateVisibleIndices();
-
+    // update values
     this._updateValueRange(this.body.nodes);
     this._updateValueRange(this.body.edges);
     // start simulation (can be called safely, even if already running)
@@ -403,12 +370,9 @@ Network.prototype.destroy = function () {
   delete this.images;
 
   for (var nodeId in this.body.nodes) {
-    if (!this.body.nodes.hasOwnProperty(nodeId)) continue;
     delete this.body.nodes[nodeId];
   }
-
   for (var edgeId in this.body.edges) {
-    if (!this.body.edges.hasOwnProperty(edgeId)) continue;
     delete this.body.edges[edgeId];
   }
 

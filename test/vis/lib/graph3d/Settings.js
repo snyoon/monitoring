@@ -107,9 +107,6 @@ var DEFAULTS = undefined;
  * Check if given hash is empty.
  *
  * Source: http://stackoverflow.com/a/679937
- *
- * @param {object} obj
- * @returns {boolean}
  */
 function isEmpty(obj) {
   for(var prop in obj) {
@@ -125,9 +122,6 @@ function isEmpty(obj) {
  * Make first letter of parameter upper case.
  *
  * Source: http://stackoverflow.com/a/1026087
- *
- * @param {string} str
- * @returns {string}
  */
 function capitalize(str) {
   if (str === undefined || str === "" || typeof str != "string") {
@@ -140,10 +134,6 @@ function capitalize(str) {
 
 /**
  * Add a prefix to a field name, taking style guide into account
- *
- * @param {string} prefix
- * @param {string} fieldName
- * @returns {string}
  */
 function prefixFieldName(prefix, fieldName) {
   if (prefix === undefined || prefix === "") {
@@ -165,16 +155,14 @@ function prefixFieldName(prefix, fieldName) {
  * 
  * Only the fields mentioned in array 'fields' will be handled.
  *
- * @param {object} src
- * @param {object} dst
- * @param {array<string>} fields array with names of fields to copy
- * @param {string} [prefix] prefix to use for the target fields.
+ * @param fields array with names of fields to copy
+ * @param prefix optional; prefix to use for the target fields.
  */
 function forceCopy(src, dst, fields, prefix) {
   var srcKey;
   var dstKey;
 
-  for (var i = 0; i < fields.length; ++i) {
+  for (var i in fields) {
     srcKey  = fields[i];
     dstKey  = prefixFieldName(prefix, srcKey);
 
@@ -189,16 +177,14 @@ function forceCopy(src, dst, fields, prefix) {
  * Only the fields mentioned in array 'fields' will be copied over,
  * and only if these are actually defined.
  *
- * @param {object} src
- * @param {object} dst
- * @param {array<string>} fields array with names of fields to copy
- * @param {string} [prefix] prefix to use for the target fields.
+ * @param fields array with names of fields to copy
+ * @param prefix optional; prefix to use for the target fields.
  */
 function safeCopy(src, dst, fields, prefix) {
   var srcKey;
   var dstKey;
 
-  for (var i = 0; i < fields.length; ++i) {
+  for (var i in fields) {
     srcKey  = fields[i];
     if (src[srcKey] === undefined) continue;
 
@@ -217,8 +203,6 @@ function safeCopy(src, dst, fields, prefix) {
  * further handling.
  *
  * For now, dst is assumed to be a Graph3d instance.
- * @param {object} src
- * @param {object} dst
  */
 function setDefaults(src, dst) {
   if (src === undefined || isEmpty(src)) {
@@ -246,11 +230,7 @@ function setDefaults(src, dst) {
   dst.eye = new Point3d(0, 0, -1);  // TODO: set eye.z about 3/4 of the width of the window?
 }
 
-/**
- *
- * @param {object} options
- * @param {object} dst
- */
+
 function setOptions(options, dst) {
   if (options === undefined) {
     return;
@@ -275,9 +255,6 @@ function setOptions(options, dst) {
  * Special handling for certain parameters
  *
  * 'Special' here means: setting requires more than a simple copy
- *
- * @param {object} src
- * @param {object} dst
  */
 function setSpecialSettings(src, dst) {
   if (src.backgroundColor !== undefined) {
@@ -309,9 +286,6 @@ function setSpecialSettings(src, dst) {
  *
  * This depends on the value of the style fields, so it must be called
  * after the style field has been initialized.
- *
- * @param {boolean} showLegend
- * @param {object} dst
  */
 function setShowLegend(showLegend, dst) {
   if (showLegend === undefined) {
@@ -336,7 +310,7 @@ function setShowLegend(showLegend, dst) {
 /**
  * Retrieve the style index from given styleName
  * @param {string} styleName  Style name such as 'dot', 'grid', 'dot-line'
- * @return {number} styleNumber Enumeration value representing the style, or -1
+ * @return {Number} styleNumber Enumeration value representing the style, or -1
  *                when not found
  */
 function getStyleNumberByName(styleName) {
@@ -353,8 +327,7 @@ function getStyleNumberByName(styleName) {
 /**
  * Check if given number is a valid style number.
  *
- * @param {string | number} style
- * @return {boolean} true if valid, false otherwise
+ * @return true if valid, false otherwise
  */
 function checkStyleNumber(style) {
   var valid = false;
@@ -369,11 +342,7 @@ function checkStyleNumber(style) {
   return valid;
 }
 
-/**
- *
- * @param {string | number} style
- * @param {Object} dst
- */
+
 function setStyle(style, dst) {
   if (style === undefined) {
     return;   // Nothing to do
@@ -403,7 +372,6 @@ function setStyle(style, dst) {
 /**
  * Set the background styling for the graph
  * @param {string | {fill: string, stroke: string, strokeWidth: string}} backgroundColor
- * @param {Object} dst
  */
 function setBackgroundColor(backgroundColor, dst) {
   var fill = 'white';
@@ -430,11 +398,7 @@ function setBackgroundColor(backgroundColor, dst) {
   dst.frame.style.borderStyle = 'solid';
 }
 
-/**
- *
- * @param {string | Object} dataColor
- * @param {Object} dst
- */
+
 function setDataColor(dataColor, dst) {
   if (dataColor === undefined) {
     return;    // Nothing to do
@@ -461,11 +425,7 @@ function setDataColor(dataColor, dst) {
   }
 }
 
-/**
- *
- * @param {Object} cameraPosition
- * @param {Object} dst
- */
+
 function setCameraPosition(cameraPosition, dst) {
   var camPos = cameraPosition;
   if (camPos === undefined) {

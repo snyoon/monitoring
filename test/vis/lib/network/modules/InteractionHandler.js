@@ -1,17 +1,9 @@
 let util = require('../../util');
+
 var NavigationHandler = require('./components/NavigationHandler').default;
 var Popup = require('./../../shared/Popup').default;
 
-
-/**
- * Handler for interactions
- */
 class InteractionHandler {
-  /**
-   * @param {Object} body
-   * @param {Canvas} canvas
-   * @param {SelectionHandler} selectionHandler
-   */
   constructor(body, canvas, selectionHandler) {
     this.body = body;
     this.canvas = canvas;
@@ -60,9 +52,6 @@ class InteractionHandler {
     this.bindEventListeners()
   }
 
-  /**
-   * Binds event listeners
-   */
   bindEventListeners() {
     this.body.emitter.on('destroy', () => {
       clearTimeout(this.popupTimer);
@@ -70,10 +59,6 @@ class InteractionHandler {
     })
   }
 
-  /**
-   *
-   * @param {Object} options
-   */
   setOptions(options) {
     if (options !== undefined) {
       // extend all but the values in fields
@@ -97,8 +82,8 @@ class InteractionHandler {
 
   /**
    * Get the pointer location from a touch location
-   * @param {{x: number, y: number}} touch
-   * @return {{x: number, y: number}} pointer
+   * @param {{x: Number, y: Number}} touch
+   * @return {{x: Number, y: Number}} pointer
    * @private
    */
   getPointer(touch) {
@@ -111,7 +96,7 @@ class InteractionHandler {
 
   /**
    * On start of a touch gesture, store the pointer
-   * @param {Event}  event   The event
+   * @param event
    * @private
    */
   onTouch(event) {
@@ -124,10 +109,8 @@ class InteractionHandler {
     }
   }
 
-
   /**
    * handle tap/click event: select/unselect a node
-   * @param {Event} event
    * @private
    */
   onTap(event) {
@@ -142,7 +125,6 @@ class InteractionHandler {
 
   /**
    * handle doubletap event
-   * @param {Event} event
    * @private
    */
   onDoubleTap(event) {
@@ -151,9 +133,9 @@ class InteractionHandler {
   }
 
 
+
   /**
    * handle long tap event: multi select nodes
-   * @param {Event} event
    * @private
    */
   onHold(event) {
@@ -170,7 +152,6 @@ class InteractionHandler {
   /**
    * handle the release of the screen
    *
-   * @param {Event} event
    * @private
    */
   onRelease(event) {
@@ -182,10 +163,6 @@ class InteractionHandler {
     }
   }
 
-  /**
-   *
-   * @param {Event} event
-   */
   onContext(event) {
     let pointer = this.getPointer({x:event.clientX, y:event.clientY});
     this.selectionHandler._generateClickEvent('oncontext', event, pointer);
@@ -193,54 +170,60 @@ class InteractionHandler {
 
 
   /**
-   * Select and deselect nodes depending current selection change.
    *
-   * For changing nodes, select/deselect events are fired.
-   *
-   * NOTE: For a given edge, if one connecting node is deselected and with the same
-   *       click the other node is selected, no events for the edge will fire.
-   *       It was selected and it will remain selected.
-   *
-   * TODO: This is all SelectionHandler calls; the method should be moved to there.
-   *
-   * @param {{x: number, y: number}} pointer
-   * @param {Event} event
-   * @param {boolean} [add=false]
+   * @param pointer
+   * @param add
    */
   checkSelectionChanges(pointer, event, add = false) {
+    let previouslySelectedEdgeCount = this.selectionHandler._getSelectedEdgeCount();
+    let previouslySelectedNodeCount = this.selectionHandler._getSelectedNodeCount();
     let previousSelection = this.selectionHandler.getSelection();
-    let selected = false;
+    let selected;
     if (add === true) {
       selected = this.selectionHandler.selectAdditionalOnPoint(pointer);
     }
     else {
       selected = this.selectionHandler.selectOnPoint(pointer);
     }
+    let selectedEdgesCount = this.selectionHandler._getSelectedEdgeCount();
+    let selectedNodesCount = this.selectionHandler._getSelectedNodeCount();
     let currentSelection = this.selectionHandler.getSelection();
 
-    // See NOTE in method comment for the reason to do it like this
-    let deselectedItems = this._determineDifference(previousSelection, currentSelection);
-    let selectedItems   = this._determineDifference(currentSelection , previousSelection);
+    let {nodesChanged, edgesChanged} = this._determineIfDifferent(previousSelection, currentSelection);
+    let nodeSelected = false;
 
-    if (deselectedItems.edges.length > 0) {
-      this.selectionHandler._generateClickEvent('deselectEdge', event, pointer, previousSelection);
+    if (selectedNodesCount - previouslySelectedNodeCount > 0) { // node was selected
+      this.selectionHandler._generateClickEvent('selectNode', event, pointer);
+      selected = true;
+      nodeSelected = true;
+    }
+    else if (nodesChanged === true && selectedNodesCount > 0) {
+      this.selectionHandler._generateClickEvent('deselectNode', event, pointer, previousSelection);
+      this.selectionHandler._generateClickEvent('selectNode', event, pointer);
+      nodeSelected = true;
       selected = true;
     }
-
-    if (deselectedItems.nodes.length > 0) {
+    else if (selectedNodesCount - previouslySelectedNodeCount < 0) { // node was deselected
       this.selectionHandler._generateClickEvent('deselectNode', event, pointer, previousSelection);
       selected = true;
     }
 
-    if (selectedItems.nodes.length > 0) {
-      this.selectionHandler._generateClickEvent('selectNode', event, pointer);
-      selected = true;
-    }
 
-    if (selectedItems.edges.length > 0) {
+    // handle the selected edges
+    if (selectedEdgesCount - previouslySelectedEdgeCount > 0 && nodeSelected === false) { // edge was selected
       this.selectionHandler._generateClickEvent('selectEdge', event, pointer);
       selected = true;
     }
+    else if (selectedEdgesCount > 0 && edgesChanged === true) {
+      this.selectionHandler._generateClickEvent('deselectEdge', event, pointer, previousSelection);
+      this.selectionHandler._generateClickEvent('selectEdge', event, pointer);
+      selected = true;
+    }
+    else if (selectedEdgesCount - previouslySelectedEdgeCount < 0) { // edge was deselected
+      this.selectionHandler._generateClickEvent('deselectEdge', event, pointer, previousSelection);
+      selected = true;
+    }
+
 
     // fire the select event if anything has been selected or deselected
     if (selected === true) { // select or unselect
@@ -250,31 +233,38 @@ class InteractionHandler {
 
 
   /**
-   * Remove all node and edge id's from the first set that are present in the second one.
-   *
-   * @param {{nodes: Array.<Node>, edges: Array.<vis.Edge>}} firstSet
-   * @param {{nodes: Array.<Node>, edges: Array.<vis.Edge>}} secondSet
-   * @returns {{nodes: Array.<Node>, edges: Array.<vis.Edge>}}
+   * This function checks if the nodes and edges previously selected have changed.
+   * @param previousSelection
+   * @param currentSelection
+   * @returns {{nodesChanged: boolean, edgesChanged: boolean}}
    * @private
    */
-  _determineDifference(firstSet, secondSet) {
-    let arrayDiff = function(firstArr, secondArr) {
-      let result = [];
+  _determineIfDifferent(previousSelection,currentSelection) {
+    let nodesChanged = false;
+    let edgesChanged = false;
 
-      for (let i = 0; i < firstArr.length; i++) {
-        let value = firstArr[i];
-        if (secondArr.indexOf(value) === -1) {
-          result.push(value);
-        }
+    for (let i = 0; i < previousSelection.nodes.length; i++) {
+      if (currentSelection.nodes.indexOf(previousSelection.nodes[i]) === -1) {
+        nodesChanged = true;
       }
+    }
+    for (let i = 0; i < currentSelection.nodes.length; i++) {
+      if (previousSelection.nodes.indexOf(previousSelection.nodes[i]) === -1) {
+        nodesChanged = true;
+      }
+    }
+    for (let i = 0; i < previousSelection.edges.length; i++) {
+      if (currentSelection.edges.indexOf(previousSelection.edges[i]) === -1) {
+        edgesChanged = true;
+      }
+    }
+    for (let i = 0; i < currentSelection.edges.length; i++) {
+      if (previousSelection.edges.indexOf(previousSelection.edges[i]) === -1) {
+        edgesChanged = true;
+      }
+    }
 
-      return result;
-    };
-
-    return {
-      nodes: arrayDiff(firstSet.nodes, secondSet.nodes),
-      edges: arrayDiff(firstSet.edges, secondSet.edges)
-    };
+    return {nodesChanged, edgesChanged};
   }
 
 
@@ -282,7 +272,6 @@ class InteractionHandler {
    * This function is called by onDragStart.
    * It is separated out because we can then overload it for the datamanipulation system.
    *
-   * @param {Event} event
    * @private
    */
   onDragStart(event) {
@@ -342,7 +331,6 @@ class InteractionHandler {
 
   /**
    * handle drag event
-   * @param {Event} event
    * @private
    */
   onDrag(event) {
@@ -393,7 +381,7 @@ class InteractionHandler {
         let diffY = pointer.y - this.drag.pointer.y;
 
         this.body.view.translation = {x:this.drag.translation.x + diffX, y:this.drag.translation.y + diffY};
-        this.body.emitter.emit('_requestRedraw');
+        this.body.emitter.emit('_redraw');
       }
     }
   }
@@ -401,7 +389,6 @@ class InteractionHandler {
 
   /**
    * handle drag start event
-   * @param {Event} event
    * @private
    */
   onDragEnd(event) {
@@ -426,7 +413,7 @@ class InteractionHandler {
 
   /**
    * Handle pinch event
-   * @param {Event}  event   The event
+   * @param event
    * @private
    */
   onPinch(event) {
@@ -445,8 +432,9 @@ class InteractionHandler {
 
   /**
    * Zoom the network in or out
-   * @param {number} scale a number around 1, and between 0.01 and 10
-   * @param {{x: number, y: number}} pointer    Position on screen
+   * @param {Number} scale a number around 1, and between 0.01 and 10
+   * @param {{x: Number, y: Number}} pointer    Position on screen
+   * @return {Number} appliedScale    scale is limited within the boundaries
    * @private
    */
   zoom(scale, pointer) {
@@ -578,9 +566,16 @@ class InteractionHandler {
       }
     }
 
-    // adding hover highlights
+    /**
+    * Adding hover highlights
+    */
     if (this.options.hover === true) {
-      this.selectionHandler.hoverObject(event, pointer);
+      // adding hover highlights
+      let obj = this.selectionHandler.getNodeAt(pointer);
+      if (obj === undefined) {
+        obj = this.selectionHandler.getEdgeAt(pointer);
+      }
+      this.selectionHandler.hoverObject(obj);
     }
   }
 
@@ -591,7 +586,7 @@ class InteractionHandler {
    * (a node or edge). If so, and if this element has a title,
    * show a popup window with its title.
    *
-   * @param {{x:number, y:number}} pointer
+   * @param {{x:Number, y:Number}} pointer
    * @private
    */
  _checkShowPopup(pointer) {
@@ -684,7 +679,7 @@ class InteractionHandler {
   /**
    * Check if the popup must be hidden, which is the case when the mouse is no
    * longer hovering on the object
-   * @param {{x:number, y:number}} pointer
+   * @param {{x:Number, y:Number}} pointer
    * @private
    */
  _checkHidePopup(pointer) {
@@ -718,6 +713,7 @@ class InteractionHandler {
       this.body.emitter.emit('hidePopup');
     }
   }
+
 }
 
 export default InteractionHandler;

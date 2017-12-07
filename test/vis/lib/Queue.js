@@ -9,7 +9,7 @@
  *            - max: number      When the queue exceeds the given maximum number
  *                               of entries, the queue is flushed automatically.
  *                               Default value of max is Infinity.
- * @constructor Queue
+ * @constructor
  */
 function Queue(options) {
   // options
@@ -35,6 +35,7 @@ function Queue(options) {
  *            - max: number      When the queue exceeds the given maximum number
  *                               of entries, the queue is flushed automatically.
  *                               Default value of max is Infinity.
+ * @param options
  */
 Queue.prototype.setOptions = function (options) {
   if (options && typeof options.delay !== 'undefined') {

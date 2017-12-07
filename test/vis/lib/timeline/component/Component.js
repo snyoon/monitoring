@@ -5,7 +5,7 @@ var util = require('../../util');
  * @param {{dom: Object, domProps: Object, emitter: Emitter, range: Range}} [body]
  * @param {Object} [options]
  */
-function Component (body, options) {  // eslint-disable-line no-unused-vars
+function Component (body, options) {
   this.options = null;
   this.props = null;
 }

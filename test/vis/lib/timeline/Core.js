@@ -2,6 +2,10 @@ var Emitter = require('emitter-component');
 var Hammer = require('../module/hammer');
 var hammerUtil = require('../hammerUtil');
 var util = require('../util');
+var DataSet = require('../DataSet');
+var DataView = require('../DataView');
+var Range = require('./Range');
+var ItemSet = require('./component/ItemSet');
 var TimeAxis = require('./component/TimeAxis');
 var Activator = require('../shared/Activator');
 var DateUtil = require('./DateUtil');
@@ -9,7 +13,7 @@ var CustomTime = require('./component/CustomTime');
 
 /**
  * Create a timeline visualization
- * @constructor Core
+ * @constructor
  */
 function Core () {}
 
@@ -111,11 +115,6 @@ Core.prototype._create = function (container) {
       this._redraw();
     }
   }.bind(this));
-  this.on('rangechanged', function () {
-    if (!this.initialRangeChangeDone) {
-      this.initialRangeChangeDone = true;
-    }
-  }.bind(this));
   this.on('touch',       this._onTouch.bind(this));
   this.on('panmove',         this._onDrag.bind(this));
 
@@ -169,38 +168,13 @@ Core.prototype._create = function (container) {
     me.emit('release', event);
   }.bind(this));
 
-  /**
-   *
-   * @param {WheelEvent} event
-   */
   function onMouseWheel(event) {
     if (this.isActive()) {
       this.emit('mousewheel', event);
     }
 
-    // deltaX and deltaY normalization from jquery.mousewheel.js
-    var deltaX = 0;
-    var deltaY = 0;
-
-    // Old school scrollwheel delta
-    if ( 'detail'      in event ) { deltaY = event.detail * -1;      }
-    if ( 'wheelDelta'  in event ) { deltaY = event.wheelDelta;       }
-    if ( 'wheelDeltaY' in event ) { deltaY = event.wheelDeltaY;      }
-    if ( 'wheelDeltaX' in event ) { deltaX = event.wheelDeltaX * -1; }
-
-    // Firefox < 17 horizontal scrolling related to DOMMouseScroll event
-    if ( 'axis' in event && event.axis === event.HORIZONTAL_AXIS ) {
-      deltaX = deltaY * -1;
-      deltaY = 0;
-    }
-
-    // New school wheel delta (wheel event)
-    if ( 'deltaY' in event ) {
-      deltaY = event.deltaY * -1;
-    }
-    if ( 'deltaX' in event ) {
-      deltaX = event.deltaX;
-    }
+    // prevent scrolling if not specified explicitly or when horizontalScroll is true
+    if (!this.options.verticalScroll || this.options.horizontalScroll) return;
 
     // prevent scrolling when zoomKey defined or activated
     if (!this.options.zoomKey || event[this.options.zoomKey]) return;
@@ -209,30 +183,22 @@ Core.prototype._create = function (container) {
     // (else the page and timeline both scroll)
     event.preventDefault();
 
-    if (this.options.verticalScroll && Math.abs(deltaY) >= Math.abs(deltaX)) {
-      var current = this.props.scrollTop;
-      var adjusted = current + deltaY;
+    var delta = 0;
+    if (event.wheelDelta) { /* IE/Opera. */
+      delta = event.wheelDelta / 120;
+    } else if (event.detail) { /* Mozilla case. */
+      // In Mozilla, sign of delta is different than in IE.
+      // Also, delta is multiple of 3.
+      delta = -event.detail / 3;
+    }
 
-      if (this.isActive()) {
-        this._setScrollTop(adjusted);
-        this._redraw();
-        this.emit('scroll', event);
-      }
-    } else if (this.options.horizontalScroll) {
-      var delta = Math.abs(deltaX) >= Math.abs(deltaY) ? deltaX : deltaY;
+    var current = this.props.scrollTop;
+    var adjusted = current + delta * 120;
 
-      // calculate a single scroll jump relative to the range scale
-      var diff = (delta / 120) * (this.range.end - this.range.start) / 20;
-      // calculate new start and end
-      var newStart = this.range.start + diff;
-      var newEnd = this.range.end + diff;
-
-      var options = {
-        animation: false,
-        byUser: true,
-        event: event
-      };
-      this.range.setRange(newStart, newEnd, options);
+    if (this.isActive()) {
+      this._setScrollTop(adjusted);
+      this._redraw();
+      this.emit('scroll', event);
     }
   }
 
@@ -246,10 +212,6 @@ Core.prototype._create = function (container) {
     this.dom.centerContainer.attachEvent("onmousewheel", onMouseWheel.bind(this));
   }
 
-  /**
-   *
-   * @param {scroll} event
-   */
   function onMouseScrollSide(event) {
     if (!me.options.verticalScroll) return;
     event.preventDefault();
@@ -266,11 +228,6 @@ Core.prototype._create = function (container) {
 
   var itemAddedToTimeline = false;
 
-  /**
-   *
-   * @param {dragover} event
-   * @returns {boolean}
-   */
   function handleDragOver(event) {
     if (event.preventDefault) {
       event.preventDefault(); // Necessary. Allows us to drop.
@@ -287,19 +244,14 @@ Core.prototype._create = function (container) {
     return false;
   }
 
-  /**
-   *
-   * @param {drop} event
-   * @returns {boolean}
-   */
   function handleDrop(event) {
     // prevent redirect to blank page - Firefox
     if(event.preventDefault) { event.preventDefault(); }
     if(event.stopPropagation) { event.stopPropagation(); }
-    // return when dropping non-vis items
+    // return when dropping non-vis items 
     try {
       var itemData = JSON.parse(event.dataTransfer.getData("text"))
-      if (!itemData || !itemData.content) return
+      if (!itemData.content) return
     } catch (err) {
       return false;
     }
@@ -308,13 +260,8 @@ Core.prototype._create = function (container) {
     event.center = {
       x: event.clientX,
       y: event.clientY
-    };
-
-    if (itemData.target !== 'item') {
-      me.itemSet._onAddItem(event);
-    } else {
-      me.itemSet._onDropObjectOnItem(event);
     }
+    me.itemSet._onAddItem(event);
     me.emit('drop', me.getEventProperties(event))
     return false;
   }
@@ -329,7 +276,6 @@ Core.prototype._create = function (container) {
 
   this.redrawCount = 0;
   this.initialDrawDone = false;
-  this.initialRangeChangeDone = false;
 
   // attach the root panel to the provided container
   if (!container) throw new Error('No container provided');
@@ -342,23 +288,23 @@ Core.prototype._create = function (container) {
  *                           {String} orientation
  *                              Vertical orientation for the Timeline,
  *                              can be 'bottom' (default) or 'top'.
- *                           {string | number} width
+ *                           {String | Number} width
  *                              Width for the timeline, a number in pixels or
  *                              a css string like '1000px' or '75%'. '100%' by default.
- *                           {string | number} height
+ *                           {String | Number} height
  *                              Fixed height for the Timeline, a number in pixels or
  *                              a css string like '400px' or '75%'. If undefined,
  *                              The Timeline will automatically size such that
  *                              its contents fit.
- *                           {string | number} minHeight
+ *                           {String | Number} minHeight
  *                              Minimum height for the Timeline, a number in pixels or
  *                              a css string like '400px' or '75%'.
- *                           {string | number} maxHeight
+ *                           {String | Number} maxHeight
  *                              Maximum height for the Timeline, a number in pixels or
  *                              a css string like '400px' or '75%'.
- *                           {number | Date | string} start
+ *                           {Number | Date | String} start
  *                              Start date for the visible window
- *                           {number | Date | string} end
+ *                           {Number | Date | String} end
  *                              End date for the visible window
  */
 Core.prototype.setOptions = function (options) {
@@ -386,9 +332,7 @@ Core.prototype.setOptions = function (options) {
       }
     }
 
-    if (typeof this.options.orientation !== 'object') {
-      this.options.orientation = {item:undefined,axis:undefined};
-    }
+    this.options.orientation = {item:undefined,axis:undefined};
     if ('orientation' in options) {
       if (typeof options.orientation === 'string') {
         this.options.orientation = {
@@ -570,9 +514,8 @@ Core.prototype.getCustomTime = function(id) {
 
 /**
  * Set a custom title for the custom time bar.
- * @param {string} [title] Custom title
+ * @param {String} [title] Custom title
  * @param {number} [id=undefined]    Id of the custom time bar.
- * @returns {*}
  */
 Core.prototype.setCustomTimeTitle = function(title, id) {
   var customTimes = this.customTimes.filter(function (component) {
@@ -599,13 +542,13 @@ Core.prototype.getEventProperties = function (event) {
 
 /**
  * Add custom vertical bar
- * @param {Date | string | number} [time]  A Date, unix timestamp, or
+ * @param {Date | String | Number} [time]  A Date, unix timestamp, or
  *                                         ISO date string. Time point where
  *                                         the new bar should be placed.
  *                                         If not provided, `new Date()` will
  *                                         be used.
- * @param {number | string} [id=undefined] Id of the new bar. Optional
- * @return {number | string}               Returns the id of the new bar
+ * @param {Number | String} [id=undefined] Id of the new bar. Optional
+ * @return {Number | String}               Returns the id of the new bar
  */
 Core.prototype.addCustomTime = function (time, id) {
   var timestamp = time !== undefined
@@ -634,7 +577,7 @@ Core.prototype.addCustomTime = function (time, id) {
 /**
  * Remove previously added custom bar
  * @param {int} id ID of the custom bar to be removed
- * [at]returns {boolean} True if the bar exists and is removed, false otherwise
+ * @return {boolean} True if the bar exists and is removed, false otherwise
  */
 Core.prototype.removeCustomTime = function (id) {
   var customTimes = this.customTimes.filter(function (bar) {
@@ -670,7 +613,7 @@ Core.prototype.getVisibleItems = function() {
  *                                    provided to specify duration and easing function.
  *                                    Default duration is 500 ms, and default easing
  *                                    function is 'easeInOutQuad'.
- * @param {function} [callback] a callback funtion to be executed at the end of this function
+ * @param {Function} a callback funtion to be executed at the end of this function 
  */
 Core.prototype.fit = function(options, callback) {
   var range = this.getDataRange();
@@ -690,7 +633,7 @@ Core.prototype.fit = function(options, callback) {
 
 /**
  * Calculate the data range of the items start and end dates
- * [at]returns {{min: [Date], max: [Date]}}
+ * @returns {{min: Date | null, max: Date | null}}
  * @protected
  */
 Core.prototype.getDataRange = function() {
@@ -709,8 +652,8 @@ Core.prototype.getDataRange = function() {
  * Where start and end can be a Date, number, or string, and range is an
  * object with properties start and end.
  *
- * @param {Date | number | string | Object} [start] Start date of visible window
- * @param {Date | number | string} [end]            End date of visible window
+ * @param {Date | Number | String | Object} [start] Start date of visible window
+ * @param {Date | Number | String} [end]            End date of visible window
  * @param {Object} [options]  Available options:
  *                                `animation: boolean | {duration: number, easingFunction: string}`
  *                                    If true (default), the range is animated
@@ -718,22 +661,21 @@ Core.prototype.getDataRange = function() {
  *                                    provided to specify duration and easing function.
  *                                    Default duration is 500 ms, and default easing
  *                                    function is 'easeInOutQuad'.
- * @param {function} [callback] a callback funtion to be executed at the end of this function
+ * @param {Function} a callback funtion to be executed at the end of this function 
  */
 Core.prototype.setWindow = function(start, end, options, callback) {
   if (typeof arguments[2] == "function") {
-    callback = arguments[2];
+    callback = arguments[2]
     options = {};
   }
   var animation;
-  var range;
   if (arguments.length == 1) {
-    range = arguments[0];
+    var range = arguments[0];
     animation = (range.animation !== undefined) ? range.animation : true;
     this.range.setRange(range.start, range.end, { animation: animation });
   }
   else if (arguments.length == 2 && typeof arguments[1] == "function") {
-    range = arguments[0];
+    var range = arguments[0];
     callback = arguments[1];
     animation = (range.animation !== undefined) ? range.animation : true;
     this.range.setRange(range.start, range.end, { animation: animation }, callback);
@@ -746,7 +688,7 @@ Core.prototype.setWindow = function(start, end, options, callback) {
 
 /**
  * Move the window such that given time is centered on screen.
- * @param {Date | number | string} time
+ * @param {Date | Number | String} time
  * @param {Object} [options]  Available options:
  *                                `animation: boolean | {duration: number, easingFunction: string}`
  *                                    If true (default), the range is animated
@@ -754,11 +696,11 @@ Core.prototype.setWindow = function(start, end, options, callback) {
  *                                    provided to specify duration and easing function.
  *                                    Default duration is 500 ms, and default easing
  *                                    function is 'easeInOutQuad'.
- * @param {function} [callback] a callback funtion to be executed at the end of this function
+ * @param {Function} a callback funtion to be executed at the end of this function 
  */
 Core.prototype.moveTo = function(time, options, callback) {
   if (typeof arguments[1] == "function") {
-    callback = arguments[1];
+    callback = arguments[1]
     options = {};
   }
   var interval = this.range.end - this.range.start;
@@ -785,7 +727,7 @@ Core.prototype.getWindow = function() {
 
 /**
  * Zoom in the window such that given time is centered on screen.
- * @param {number} percentage - must be between [0..1]
+ * @param {Number} percentage - must be between [0..1]
  * @param {Object} [options]  Available options:
  *                                `animation: boolean | {duration: number, easingFunction: string}`
  *                                    If true (default), the range is animated
@@ -793,12 +735,12 @@ Core.prototype.getWindow = function() {
  *                                    provided to specify duration and easing function.
  *                                    Default duration is 500 ms, and default easing
  *                                    function is 'easeInOutQuad'.
- * @param {function} [callback] a callback funtion to be executed at the end of this function
+ * @param {Function} a callback funtion to be executed at the end of this function 
  */
 Core.prototype.zoomIn = function(percentage, options, callback) {
-  if (!percentage || percentage < 0 || percentage > 1) return;
+  if (!percentage || percentage < 0 || percentage > 1) return
   if (typeof arguments[1] == "function") {
-    callback = arguments[1];
+    callback = arguments[1]
     options = {};
   }
   var range = this.getWindow();
@@ -815,7 +757,7 @@ Core.prototype.zoomIn = function(percentage, options, callback) {
 
 /**
  * Zoom out the window such that given time is centered on screen.
- * @param {number} percentage - must be between [0..1]
+ * @param {Number} percentage - must be between [0..1]
  * @param {Object} [options]  Available options:
  *                                `animation: boolean | {duration: number, easingFunction: string}`
  *                                    If true (default), the range is animated
@@ -823,12 +765,12 @@ Core.prototype.zoomIn = function(percentage, options, callback) {
  *                                    provided to specify duration and easing function.
  *                                    Default duration is 500 ms, and default easing
  *                                    function is 'easeInOutQuad'.
- * @param {function} [callback] a callback funtion to be executed at the end of this function
+ * @param {Function} a callback funtion to be executed at the end of this function 
  */
 Core.prototype.zoomOut = function(percentage, options, callback) {
   if (!percentage || percentage < 0 || percentage > 1) return
   if (typeof arguments[1] == "function") {
-    callback = arguments[1];
+    callback = arguments[1]
     options = {};
   }
   var range = this.getWindow();
@@ -1014,6 +956,7 @@ Core.prototype._redraw = function() {
   } else {
     this.redrawCount = 0;
   }
+  this.initialDrawDone = true;
 
   //Emit public 'changed' event for UI updates, see issue #1592
   this.body.emitter.emit("changed");
@@ -1066,7 +1009,7 @@ Core.prototype._setDOM = function () {
   dom.center.style.left               = '0';
   dom.left.style.left                 = '0';
   dom.right.style.left                = '0';
-};
+}
 
 // TODO: deprecated since version 1.1.0, remove some day
 Core.prototype.repaint = function () {
@@ -1077,7 +1020,7 @@ Core.prototype.repaint = function () {
  * Set a current time. This can be used for example to ensure that a client's
  * time is synchronized with a shared server time.
  * Only applicable when option `showCurrentTime` is true.
- * @param {Date | string | number} time     A Date, unix timestamp, or
+ * @param {Date | String | Number} time     A Date, unix timestamp, or
  *                                          ISO date string.
  */
 Core.prototype.setCurrentTime = function(time) {
@@ -1235,7 +1178,7 @@ Core.prototype._stopAutoResize = function () {
  * @param {Event} event
  * @private
  */
-Core.prototype._onTouch = function (event) {  // eslint-disable-line no-unused-vars
+Core.prototype._onTouch = function (event) {
   this.touch.allowDragging = true;
   this.touch.initialScrollTop = this.props.scrollTop;
 };
@@ -1245,7 +1188,7 @@ Core.prototype._onTouch = function (event) {  // eslint-disable-line no-unused-v
  * @param {Event} event
  * @private
  */
-Core.prototype._onPinch = function (event) {  // eslint-disable-line no-unused-vars
+Core.prototype._onPinch = function (event) {
   this.touch.allowDragging = false;
 };
 
@@ -1277,8 +1220,8 @@ Core.prototype._onDrag = function (event) {
 
 /**
  * Apply a scrollTop
- * @param {number} scrollTop
- * @returns {number} scrollTop  Returns the applied scrollTop
+ * @param {Number} scrollTop
+ * @returns {Number} scrollTop  Returns the applied scrollTop
  * @private
  */
 Core.prototype._setScrollTop = function (scrollTop) {
@@ -1289,7 +1232,7 @@ Core.prototype._setScrollTop = function (scrollTop) {
 
 /**
  * Update the current scrollTop when the height of  the containers has been changed
- * @returns {number} scrollTop  Returns the applied scrollTop
+ * @returns {Number} scrollTop  Returns the applied scrollTop
  * @private
  */
 Core.prototype._updateScrollTop = function () {
@@ -1327,7 +1270,7 @@ Core.prototype._getScrollTop = function () {
 
 /**
  * Load a configurator
- * [at]returns {Object}
+ * @return {Object}
  * @private
  */
 Core.prototype._createConfigurator = function () {

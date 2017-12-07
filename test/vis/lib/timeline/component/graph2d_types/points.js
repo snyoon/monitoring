@@ -1,22 +1,16 @@
 var DOMutil = require('../../../DOMutil');
 
-/**
- *
- * @param {number | string} groupId
- * @param {Object} options   // TODO: Describe options
- *
- * @constructor Points
- */
-function Points(groupId, options) {  // eslint-disable-line no-unused-vars
+function Points(groupId, options) {
 }
 
 /**
  * draw the data points
  *
  * @param {Array} dataset
+ * @param {Object} JSONcontainer
+ * @param {Object} svg            | SVG DOM element
  * @param {GraphGroup} group
- * @param {Object} framework            | SVG DOM element
- * @param {number} [offset]
+ * @param {Number} [offset]
  */
 Points.draw = function (dataset, group, framework, offset) {
   offset = offset || 0;
@@ -38,6 +32,7 @@ Points.draw = function (dataset, group, framework, offset) {
 
 Points.drawIcon = function (group, x, y, iconWidth, iconHeight, framework) {
   var fillHeight = iconHeight * 0.5;
+  var path, fillPath;
 
   var outline = DOMutil.getSVGElement("rect", framework.svgElements, framework.svg);
   outline.setAttributeNS(null, "x", x);
@@ -50,12 +45,6 @@ Points.drawIcon = function (group, x, y, iconWidth, iconHeight, framework) {
   DOMutil.drawPoint(x + 0.5 * iconWidth, y, getGroupTemplate(group), framework.svgElements, framework.svg);
 };
 
-/**
- *
- * @param {vis.Group} group
- * @param {any} callbackResult
- * @returns {{style: *, styles: (*|string), size: *, className: *}}
- */
 function getGroupTemplate(group, callbackResult) {
   callbackResult = (typeof callbackResult === 'undefined') ? {} : callbackResult;
   return {
@@ -66,12 +55,6 @@ function getGroupTemplate(group, callbackResult) {
   };
 }
 
-/**
- *
- * @param {Object} framework            | SVG DOM element
- * @param {vis.Group} group
- * @returns {function}
- */
 function getCallback(framework, group) {
   var callback = undefined;
   // check for the graph2d onRender
@@ -85,5 +68,6 @@ function getCallback(framework, group) {
   }
   return callback;
 }
+
 
 module.exports = Points;

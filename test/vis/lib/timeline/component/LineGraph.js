@@ -15,10 +15,9 @@ var UNGROUPED = '__ungrouped__'; // reserved group id for ungrouped items
 /**
  * This is the constructor of the LineGraph. It requires a Timeline body and options.
  *
- * @param {vis.Timeline.body} body
- * @param {Object} options
- * @constructor LineGraph
- * @extends Component
+ * @param body
+ * @param options
+ * @constructor
  */
 function LineGraph(body, options) {
   this.id = util.randomUUID();
@@ -75,26 +74,26 @@ function LineGraph(body, options) {
 
   // listeners for the DataSet of the items
   this.itemListeners = {
-    'add': function (event, params, senderId) {  // eslint-disable-line no-unused-vars
+    'add': function (event, params, senderId) {
       me._onAdd(params.items);
     },
-    'update': function (event, params, senderId) {  // eslint-disable-line no-unused-vars
+    'update': function (event, params, senderId) {
       me._onUpdate(params.items);
     },
-    'remove': function (event, params, senderId) {  // eslint-disable-line no-unused-vars
+    'remove': function (event, params, senderId) {
       me._onRemove(params.items);
     }
   };
 
   // listeners for the DataSet of the groups
   this.groupListeners = {
-    'add': function (event, params, senderId) {  // eslint-disable-line no-unused-vars
+    'add': function (event, params, senderId) {
       me._onAddGroups(params.items);
     },
-    'update': function (event, params, senderId) {  // eslint-disable-line no-unused-vars
+    'update': function (event, params, senderId) {
       me._onUpdateGroups(params.items);
     },
-    'remove': function (event, params, senderId) {  // eslint-disable-line no-unused-vars
+    'remove': function (event, params, senderId) {
       me._onRemoveGroups(params.items);
     }
   };
@@ -231,6 +230,7 @@ LineGraph.prototype.hide = function () {
 
 /**
  * Show the component in the DOM (when not already visible).
+ * @return {Boolean} changed
  */
 LineGraph.prototype.show = function () {
   // show frame containing the items
@@ -362,7 +362,7 @@ LineGraph.prototype._onRemoveGroups = function (groupIds) {
 
 /**
  * this cleans the group out off the legends and the dataaxis
- * @param {vis.GraphGroup.id} groupId
+ * @param groupId
  * @private
  */
 LineGraph.prototype._removeGroup = function (groupId) {
@@ -379,13 +379,13 @@ LineGraph.prototype._removeGroup = function (groupId) {
     }
     delete this.groups[groupId];
   }
-};
+}
 
 /**
  * update a group object with the group dataset entree
  *
- * @param {vis.GraphGroup} group
- * @param {vis.GraphGroup.id} groupId
+ * @param group
+ * @param groupId
  * @private
  */
 LineGraph.prototype._updateGroup = function (group, groupId) {
@@ -455,9 +455,9 @@ LineGraph.prototype._updateAllGroupData = function (ids, groupIds) {
     //Pre-load arrays from existing groups if items are not changed (not in ids)
     var existingItemsMap = {};
     if (!groupIds && ids) {
-      for (groupId in this.groups) {
+      for (var groupId in this.groups) {
         if (this.groups.hasOwnProperty(groupId)) {
-          group = this.groups[groupId];
+          var group = this.groups[groupId];
           var existing_items = group.getItems();
 
           groupsContent[groupId] = existing_items.filter(function (item) {
@@ -474,9 +474,9 @@ LineGraph.prototype._updateAllGroupData = function (ids, groupIds) {
     }
 
     //Now insert data into the arrays.
-    for (i = 0; i < items.length; i++) {
-      item = items[i];
-      groupId = item.group;
+    for (var i = 0; i < items.length; i++) {
+      var item = items[i];
+      var groupId = item.group;
       if (groupId === null || groupId === undefined) {
         groupId = UNGROUPED;
       }
@@ -499,7 +499,7 @@ LineGraph.prototype._updateAllGroupData = function (ids, groupIds) {
     }
 
     //Make sure all groups are present, to allow removal of old groups
-    for (groupId in this.groups){
+    for (var groupId in this.groups){
       if (this.groups.hasOwnProperty(groupId)){
         if (!groupsContent.hasOwnProperty(groupId)) {
           groupsContent[groupId] = new Array(0);
@@ -508,7 +508,7 @@ LineGraph.prototype._updateAllGroupData = function (ids, groupIds) {
     }
 
     //Update legendas, style and axis
-    for (groupId in groupsContent) {
+    for (var groupId in groupsContent) {
       if (groupsContent.hasOwnProperty(groupId)) {
         if (groupsContent[groupId].length == 0) {
           if (this.groups.hasOwnProperty(groupId)) {
@@ -624,13 +624,11 @@ LineGraph.prototype._getSortedGroupIds = function(){
     groupIds[i] = grouplist[i].id;
   }
   return groupIds;
-};
+}
 
 /**
  * Update and redraw the graph.
  *
- * @returns {boolean}
- * @private
  */
 LineGraph.prototype._updateGraph = function () {
   // reset the svg elements
@@ -738,9 +736,9 @@ LineGraph.prototype._updateGraph = function () {
                 paths[groupIds[i]] = Lines.calcPath(groupsData[groupIds[i]], group);
               }
               Lines.draw(paths[groupIds[i]], group, this.framework);
-            // eslint-disable-line no-fallthrough
+            //explicit no break;
             case "point":
-            // eslint-disable-line no-fallthrough
+            //explicit no break;
             case "points":
               if (group.options.style == "point" || group.options.style == "points" || group.options.drawPoints.enabled == true) {
                 Points.draw(groupsData[groupIds[i]], group, this.framework);
@@ -748,7 +746,7 @@ LineGraph.prototype._updateGraph = function () {
               break;
             case "bar":
             // bar needs to be drawn enmasse
-            // eslint-disable-line no-fallthrough
+            //explicit no break
             default:
             //do nothing...
           }
@@ -856,8 +854,8 @@ LineGraph.prototype._getRelevantData = function (groupIds, groupsData, minDate, 
 
 /**
  *
- * @param {Array.<vis.GraphGroup.id>} groupIds
- * @param {vis.DataSet} groupsData
+ * @param groupIds
+ * @param groupsData
  * @private
  */
 LineGraph.prototype._applySampling = function (groupIds, groupsData) {
@@ -893,8 +891,9 @@ LineGraph.prototype._applySampling = function (groupIds, groupsData) {
 
 /**
  *
- * @param {Array.<vis.GraphGroup.id>} groupIds
- * @param {vis.DataSet} groupsData
+ *
+ * @param {array}  groupIds
+ * @param {object} groupsData
  * @param {object} groupRanges  | this is being filled here
  * @private
  */
@@ -933,9 +932,8 @@ LineGraph.prototype._getYRanges = function (groupIds, groupsData, groupRanges) {
 
 /**
  * this sets the Y ranges for the Y axis. It also determines which of the axis should be shown or hidden.
- * @param {Array.<vis.GraphGroup.id>} groupIds
+ * @param {Array} groupIds
  * @param {Object} groupRanges
- * @returns {boolean} resized
  * @private
  */
 LineGraph.prototype._updateYAxis = function (groupIds, groupRanges) {
@@ -961,7 +959,7 @@ LineGraph.prototype._updateYAxis = function (groupIds, groupRanges) {
     }
 
     // if there are items:
-    for (i = 0; i < groupIds.length; i++) {
+    for (var i = 0; i < groupIds.length; i++) {
       if (groupRanges.hasOwnProperty(groupIds[i])) {
         if (groupRanges[groupIds[i]].ignore !== true) {
           minVal = groupRanges[groupIds[i]].min;
@@ -1019,7 +1017,7 @@ LineGraph.prototype._updateYAxis = function (groupIds, groupRanges) {
 
   // clean the accumulated lists
   var tempGroups = ['__barStackLeft', '__barStackRight', '__lineStackLeft', '__lineStackRight'];
-  for (i = 0; i < tempGroups.length; i++) {
+  for (var i = 0; i < tempGroups.length; i++) {
     if (groupIds.indexOf(tempGroups[i]) != -1) {
       groupIds.splice(groupIds.indexOf(tempGroups[i]), 1);
     }
@@ -1033,9 +1031,9 @@ LineGraph.prototype._updateYAxis = function (groupIds, groupRanges) {
  * This shows or hides the Y axis if needed. If there is a change, the changed event is emitted by the updateYAxis function
  *
  * @param {boolean} axisUsed
- * @param {vis.DataAxis}  axis
  * @returns {boolean}
  * @private
+ * @param axis
  */
 LineGraph.prototype._toggleAxisVisiblity = function (axisUsed, axis) {
   var changed = false;
@@ -1060,7 +1058,8 @@ LineGraph.prototype._toggleAxisVisiblity = function (axisUsed, axis) {
  * util function toScreen to get the x coordinate from the timestamp. It also pre-filters the data and get the minMax ranges for
  * the yAxis.
  *
- * @param {Array.<Object>} datapoints
+ * @param datapoints
+ * @returns {Array}
  * @private
  */
 LineGraph.prototype._convertXcoordinates = function (datapoints) {
@@ -1083,8 +1082,9 @@ LineGraph.prototype._convertXcoordinates = function (datapoints) {
  * util function toScreen to get the x coordinate from the timestamp. It also pre-filters the data and get the minMax ranges for
  * the yAxis.
  *
- * @param {Array.<Object>} datapoints
- * @param {vis.GraphGroup} group
+ * @param datapoints
+ * @param group
+ * @returns {Array}
  * @private
  */
 LineGraph.prototype._convertYcoordinates = function (datapoints, group) {

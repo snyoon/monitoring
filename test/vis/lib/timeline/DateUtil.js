@@ -5,7 +5,6 @@
  * @param {function} moment
  * @param {Object} body
  * @param {Array | Object} hiddenDates
- * @returns {number}
  */
 exports.convertHiddenOptions = function(moment, body, hiddenDates) {
   if (hiddenDates && !Array.isArray(hiddenDates)) {
@@ -33,11 +32,9 @@ exports.convertHiddenOptions = function(moment, body, hiddenDates) {
 
 /**
  * create new entrees for the repeating hidden dates
- *
  * @param {function} moment
  * @param {Object} body
  * @param {Array | Object} hiddenDates
- * @returns {null}
  */
 exports.updateHiddenDates = function (moment, body, hiddenDates) {
   if (hiddenDates && !Array.isArray(hiddenDates)) {
@@ -86,7 +83,7 @@ exports.updateHiddenDates = function (moment, body, hiddenDates) {
               runUntil.add(1, 'weeks');
               break;
             case "weekly":
-              var dayOffset = endDate.diff(startDate,'days');
+              var dayOffset = endDate.diff(startDate,'days')
               var day = startDate.day();
 
               // set the start date to the range.start
@@ -104,7 +101,7 @@ exports.updateHiddenDates = function (moment, body, hiddenDates) {
               endDate.subtract(1,'weeks');
 
               runUntil.add(1, 'weeks');
-              break;
+              break
             case "monthly":
               if (startDate.month() != endDate.month()) {
                 offset = 1;
@@ -178,14 +175,13 @@ exports.updateHiddenDates = function (moment, body, hiddenDates) {
     }
   }
 
-};
+}
 
 
 /**
  * remove duplicates from the hidden dates list. Duplicates are evil. They mess everything up.
  * Scales with N^2
- *
- * @param {Object} body
+ * @param body
  */
 exports.removeDuplicates = function(body) {
   var hiddenDates = body.hiddenDates;
@@ -211,7 +207,7 @@ exports.removeDuplicates = function(body) {
     }
   }
 
-  for (i = 0; i < hiddenDates.length; i++) {
+  for (var i = 0; i < hiddenDates.length; i++) {
     if (hiddenDates[i].remove !== true) {
       safeDates.push(hiddenDates[i]);
     }
@@ -233,7 +229,7 @@ exports.printDates = function(dates) {
  * Used in TimeStep to avoid the hidden times.
  * @param {function} moment
  * @param {TimeStep} timeStep
- * @param {Date} previousTime
+ * @param previousTime
  */
 exports.stepOverHiddenDates = function(moment, timeStep, previousTime) {
   var stepInHidden = false;
@@ -285,16 +281,14 @@ exports.stepOverHiddenDates = function(moment, timeStep, previousTime) {
 
 /**
  * replaces the Core toScreen methods
- *
- * @param {vis.Core} Core
- * @param {Date} time
- * @param {number} width
+ * @param Core
+ * @param time
+ * @param width
  * @returns {number}
  */
 exports.toScreen = function (Core, time, width) {
-  var conversion;
-  if (Core.body.hiddenDates.length == 0) {
-      conversion = Core.range.conversion(width);
+    if (Core.body.hiddenDates.length == 0) {
+      var conversion = Core.range.conversion(width);
       return (time.valueOf() - conversion.offset) * conversion.scale;
     } else {
       var hidden = exports.isHidden(time, Core.body.hiddenDates);
@@ -304,7 +298,7 @@ exports.toScreen = function (Core, time, width) {
 
       var duration = exports.getHiddenDurationBetween(Core.body.hiddenDates, Core.range.start, Core.range.end);
       if (time < Core.range.start) {
-        conversion = Core.range.conversion(width, duration);
+        var conversion = Core.range.conversion(width, duration);
         var hiddenBeforeStart = exports.getHiddenDurationBeforeStart(Core.body.hiddenDates, time, conversion.offset);
         time = Core.options.moment(time).toDate().valueOf();
         time = time + hiddenBeforeStart;
@@ -313,12 +307,12 @@ exports.toScreen = function (Core, time, width) {
       } else if (time > Core.range.end) {
         var rangeAfterEnd = {start: Core.range.start, end: time};
         time = exports.correctTimeForHidden(Core.options.moment, Core.body.hiddenDates, rangeAfterEnd, time);
-        conversion = Core.range.conversion(width, duration);
+        var conversion = Core.range.conversion(width, duration);
         return (time.valueOf() - conversion.offset) * conversion.scale;
 
       } else {
         time = exports.correctTimeForHidden(Core.options.moment, Core.body.hiddenDates, Core.range, time);
-        conversion = Core.range.conversion(width, duration);
+        var conversion = Core.range.conversion(width, duration);
         return (time.valueOf() - conversion.offset) * conversion.scale;
       }
     }
@@ -327,10 +321,10 @@ exports.toScreen = function (Core, time, width) {
 
 /**
  * Replaces the core toTime methods
- *
- * @param {vis.Core} Core
- * @param {number} x
- * @param {number} width
+ * @param body
+ * @param range
+ * @param x
+ * @param width
  * @returns {Date}
  */
 exports.toTime = function(Core, x, width) {
@@ -344,7 +338,8 @@ exports.toTime = function(Core, x, width) {
     var partialDuration = totalDuration * x / width;
     var accumulatedHiddenDuration = exports.getAccumulatedHiddenDuration(Core.body.hiddenDates, Core.range, partialDuration);
 
-    return new Date(accumulatedHiddenDuration + partialDuration + Core.range.start);
+    var newTime = new Date(accumulatedHiddenDuration + partialDuration + Core.range.start);
+    return newTime;
   }
 };
 
@@ -352,9 +347,8 @@ exports.toTime = function(Core, x, width) {
 /**
  * Support function
  *
- * @param {Array.<{start: Window.start, end: *}>} hiddenDates
- * @param {number} start
- * @param {number} end
+ * @param hiddenDates
+ * @param range
  * @returns {number}
  */
 exports.getHiddenDurationBetween = function(hiddenDates, start, end) {
@@ -371,13 +365,13 @@ exports.getHiddenDurationBetween = function(hiddenDates, start, end) {
 };
 
 /**
- * Support function
- *
- * @param {Array.<{start: Window.start, end: *}>} hiddenDates
- * @param {number} start
- * @param {number} end
- * @returns {number}
- */
+   * Support function
+   *
+   * @param hiddenDates
+   * @param start
+   * @param end
+   * @returns {number}
+   */
 exports.getHiddenDurationBeforeStart = function (hiddenDates, start, end) {
   var duration = 0;
   for (var i = 0; i < hiddenDates.length; i++) {
@@ -394,11 +388,11 @@ exports.getHiddenDurationBeforeStart = function (hiddenDates, start, end) {
 
 /**
  * Support function
- * @param {function} moment
- * @param {Array.<{start: Window.start, end: *}>} hiddenDates
- * @param {{start: number, end: number}} range
- * @param {Date} time
- * @returns {number}
+ * @param moment
+ * @param hiddenDates
+ * @param range
+ * @param time
+ * @returns {{duration: number, time: *, offset: number}}
  */
 exports.correctTimeForHidden = function(moment, hiddenDates, range, time) {
   time = moment(time).toDate().valueOf();
@@ -421,15 +415,15 @@ exports.getHiddenDurationBefore = function(moment, hiddenDates, range, time) {
     }
   }
   return timeOffset;
-};
+}
 
 /**
  * sum the duration from start to finish, including the hidden duration,
  * until the required amount has been reached, return the accumulated hidden duration
- * @param {Array.<{start: Window.start, end: *}>} hiddenDates
- * @param {{start: number, end: number}} range
- * @param {number} [requiredDuration=0]
- * @returns {number}
+ * @param hiddenDates
+ * @param range
+ * @param time
+ * @returns {{duration: number, time: *, offset: number}}
  */
 exports.getAccumulatedHiddenDuration = function(hiddenDates, range, requiredDuration) {
   var hiddenDuration = 0;
@@ -459,11 +453,11 @@ exports.getAccumulatedHiddenDuration = function(hiddenDates, range, requiredDura
 
 /**
  * used to step over to either side of a hidden block. Correction is disabled on tablets, might be set to true
- * @param {Array.<{start: Window.start, end: *}>} hiddenDates
- * @param {Date} time
- * @param {number} direction
- * @param {boolean} correctionEnabled
- * @returns {Date|number}
+ * @param hiddenDates
+ * @param time
+ * @param direction
+ * @param correctionEnabled
+ * @returns {*}
  */
 exports.snapAwayFromHidden = function(hiddenDates, time, direction, correctionEnabled) {
   var isHidden = exports.isHidden(time, hiddenDates);
@@ -489,14 +483,14 @@ exports.snapAwayFromHidden = function(hiddenDates, time, direction, correctionEn
     return time;
   }
 
-};
+}
 
 
 /**
  * Check if a time is hidden
  *
- * @param {Date} time
- * @param {Array.<{start: Window.start, end: *}>} hiddenDates
+ * @param time
+ * @param hiddenDates
  * @returns {{hidden: boolean, startDate: Window.start, endDate: *}}
  */
 exports.isHidden = function(time, hiddenDates) {
@@ -509,4 +503,4 @@ exports.isHidden = function(time, hiddenDates) {
     }
   }
   return {hidden: false, startDate: startDate, endDate: endDate};
-};
+}

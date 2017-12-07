@@ -6,33 +6,10 @@
  *
  * DOT language attributes: http://graphviz.org/content/attrs
  *
- * @param {string} data     Text containing a graph in DOT-notation
+ * @param {String} data     Text containing a graph in DOT-notation
  * @return {Object} graph   An object containing two parameters:
  *                          {Object[]} nodes
  *                          {Object[]} edges
- *
- * -------------------------------------------
- * TODO
- * ====
- *
- * For label handling, this is an incomplete implementation. From docs (quote #3015):
- * 
- * > the escape sequences "\n", "\l" and "\r" divide the label into lines, centered, 
- * > left-justified, and right-justified, respectively.
- *
- * Source: http://www.graphviz.org/content/attrs#kescString
- *
- * > As another aid for readability, dot allows double-quoted strings to span multiple physical
- * > lines using the standard C convention of a backslash immediately preceding a newline
- * > character
- * > In addition, double-quoted strings can be concatenated using a '+' operator.
- * > As HTML strings can contain newline characters, which are used solely for formatting,
- * > the language does not allow escaped newlines or concatenation operators to be used
- * > within them.
- *
- * - Currently, only '\\n' is handled
- * - Note that text explicitly says 'labels'; the dot parser currently handles escape
- *   sequences in **all** strings.
  */
 function parseDOT (data) {
   dot = data;
@@ -52,7 +29,6 @@ var NODE_ATTR_MAPPING = {
 };
 var EDGE_ATTR_MAPPING = Object.create(NODE_ATTR_MAPPING);
 EDGE_ATTR_MAPPING.color = 'color.color';
-EDGE_ATTR_MAPPING.style = 'dashes';
 
 // token types enumeration
 var TOKENTYPE = {
@@ -104,18 +80,18 @@ function next() {
 
 /**
  * Preview the next character from the dot file.
- * @return {string} cNext
+ * @return {String} cNext
  */
 function nextPreview() {
   return dot.charAt(index + 1);
 }
 
-var regexAlphaNumeric = /[a-zA-Z_0-9.:#]/;
 /**
  * Test whether given character is alphabetic or numeric
- * @param {string} c
+ * @param {String} c
  * @return {Boolean} isAlphaNumeric
  */
+var regexAlphaNumeric = /[a-zA-Z_0-9.:#]/;
 function isAlphaNumeric(c) {
   return regexAlphaNumeric.test(c);
 }
@@ -149,7 +125,7 @@ function merge (a, b) {
  *     setValue(obj, 'b.c', 3);     // obj = {a: 2, b: {c: 3}}
  *
  * @param {Object} obj
- * @param {string} path  A parameter name or dot-separated parameter path,
+ * @param {String} path  A parameter name or dot-separated parameter path,
  *                      like "color.highlight.border".
  * @param {*} value
  */
@@ -248,9 +224,9 @@ function addEdge(graph, edge) {
 /**
  * Create an edge to a graph object
  * @param {Object} graph
- * @param {string | number | Object} from
- * @param {string | number | Object} to
- * @param {string} type
+ * @param {String | Number | Object} from
+ * @param {String | Number | Object} to
+ * @param {String} type
  * @param {Object | null} attr
  * @return {Object} edge
  */
@@ -382,14 +358,9 @@ function getToken() {
   if (c === '"') {
     next();
     while (c != '' && (c != '"' || (c === '"' && nextPreview() === '"'))) {
-      if (c === '"') {                                  // skip the escape character
-        token += c;
+      token += c;
+      if (c === '"') { // skip the escape character
         next();
-      } else if (c === '\\' && nextPreview() === 'n') { // Honor a newline escape sequence
-        token += '\n';
-        next();
-      } else {
-        token += c;
       }
       next();
     }
@@ -621,7 +592,7 @@ function parseAttributeStatement (graph) {
 /**
  * parse a node statement
  * @param {Object} graph
- * @param {string | number} id
+ * @param {String | Number} id
  */
 function parseNodeStatement(graph, id) {
   // node statement
@@ -641,7 +612,7 @@ function parseNodeStatement(graph, id) {
 /**
  * Parse an edge or a series of edges
  * @param {Object} graph
- * @param {string | number} from        Id of the from node
+ * @param {String | Number} from        Id of the from node
  */
 function parseEdge(graph, from) {
   while (token === '->' || token === '--') {
@@ -683,13 +654,6 @@ function parseEdge(graph, from) {
 function parseAttributeList() {
   var attr = null;
 
-  // edge styles of dot and vis
-  var edgeStyles = {
-    'dashed': true,
-    'solid': false,
-    'dotted': [1, 5]
-  };
-
   while (token === '[') {
     getToken();
     attr = {};
@@ -709,12 +673,6 @@ function parseAttributeList() {
         throw newSyntaxError('Attribute value expected');
       }
       var value = token;
-
-      // convert from dot style to vis
-      if (name === 'style') {
-        value = edgeStyles[value];
-      }
-
       setValue(attr, name, value); // name can be a path
 
       getToken();
@@ -734,7 +692,7 @@ function parseAttributeList() {
 
 /**
  * Create a syntax error with extra information on current token and index.
- * @param {string} message
+ * @param {String} message
  * @returns {SyntaxError} err
  */
 function newSyntaxError(message) {
@@ -743,8 +701,8 @@ function newSyntaxError(message) {
 
 /**
  * Chop off text after a maximum length
- * @param {string} text
- * @param {number} maxLength
+ * @param {String} text
+ * @param {Number} maxLength
  * @returns {String}
  */
 function chop (text, maxLength) {
@@ -843,7 +801,7 @@ function convertAttr (attr, mapping) {
 /**
  * Convert a string containing a graph in DOT language into a map containing
  * with nodes and edges in the format of graph.
- * @param {string} data         Text containing a graph in DOT-notation
+ * @param {String} data         Text containing a graph in DOT-notation
  * @return {Object} graphData
  */
 function DOTToGraph (data) {
@@ -899,6 +857,7 @@ function DOTToGraph (data) {
         }
       }
 
+      // TODO: support of solid/dotted/dashed edges (attr = 'style')
       // TODO: support for attributes 'dir' and 'arrowhead' (edge arrows)
 
       if (dotEdge.to instanceof Object) {

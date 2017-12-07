@@ -1,3 +1,5 @@
+var Emitter = require('emitter-component');
+var Hammer = require('../module/hammer');
 var moment = require('../module/moment');
 var util = require('../util');
 var DataSet = require('../DataSet');
@@ -23,7 +25,7 @@ var Validator = require('../shared/Validator').default;
  * @param {vis.DataSet | vis.DataView | Array} [items]
  * @param {vis.DataSet | vis.DataView | Array} [groups]
  * @param {Object} [options]  See Timeline.setOptions for the available options.
- * @constructor Timeline
+ * @constructor
  * @extends Core
  */
 function Timeline (container, items, groups, options) {
@@ -58,14 +60,13 @@ function Timeline (container, items, groups, options) {
     width: null,
     height: null,
     maxHeight: null,
-    minHeight: null,
+    minHeight: null
   };
   this.options = util.deepExtend({}, this.defaultOptions);
 
   // Create the DOM, props, and emitter
   this._create(container);
   if (!options || (options && typeof options.rtl == "undefined")) {
-    this.dom.root.style.visibility = 'hidden';
     var directionFromDom, domNode = this.dom.root;
     while (!directionFromDom && domNode) {
       directionFromDom = window.getComputedStyle(domNode, null).direction;
@@ -77,7 +78,6 @@ function Timeline (container, items, groups, options) {
   }
 
   this.options.rollingMode = options && options.rollingMode;
-  this.options.onInitialDrawComplete = options && options.onInitialDrawComplete;
 
   // all components listed here will be repainted automatically
   this.components = [];
@@ -162,11 +162,11 @@ function Timeline (container, items, groups, options) {
   }
 
   //Single time autoscale/fit
-  this.initialFitDone = false;
+  this.fitDone = false;
   this.on('changed', function (){
     if (this.itemsData == null || this.options.rollingMode) return;
-    if (!me.initialFitDone) {
-      me.initialFitDone = true;
+    if (!me.fitDone) {
+      me.fitDone = true;
       if (me.options.start != undefined || me.options.end != undefined) {
         if (me.options.start == undefined || me.options.end == undefined) {
           var range = me.getItemRange();
@@ -175,18 +175,9 @@ function Timeline (container, items, groups, options) {
         var start = me.options.start != undefined ? me.options.start : range.min;
         var end   = me.options.end   != undefined ? me.options.end   : range.max;
         me.setWindow(start, end, {animation: false});
-      } else {
-        me.fit({animation: false});
       }
-    }
-
-    if (!me.initialDrawDone && me.initialRangeChangeDone) {
-      me.initialDrawDone = true;
-      me.dom.root.style.visibility = 'visible';
-      if (me.options.onInitialDrawComplete) {
-        setTimeout(() => {
-          return me.options.onInitialDrawComplete();
-        }, 0)
+      else {
+        me.fit({animation: false});
       }
     }
   });
@@ -317,7 +308,7 @@ Timeline.prototype.setGroups = function(groups) {
 
 /**
  * Set both items and groups in one go
- * @param {{items: (Array | vis.DataSet), groups: (Array | vis.DataSet)}} data
+ * @param {{items: Array | vis.DataSet, groups: Array | vis.DataSet}} data
  */
 Timeline.prototype.setData = function (data) {
   if (data && data.groups) {
@@ -365,7 +356,7 @@ Timeline.prototype.getSelection = function() {
 /**
  * Adjust the visible window such that the selected item (or multiple items)
  * are centered on screen.
- * @param {string | String[]} id     An item id or array with item ids
+ * @param {String | String[]} id     An item id or array with item ids
  * @param {Object} [options]      Available options:
  *                                `animation: boolean | {duration: number, easingFunction: string}`
  *                                    If true (default), the range is animated
@@ -403,74 +394,13 @@ Timeline.prototype.focus = function(id, options) {
     }
   });
 
-
   if (start !== null && end !== null) {
-    var me = this;
-    // Use the first item for the vertical focus
-    var item = this.itemSet.items[ids[0]];
-    var startPos = this._getScrollTop() * -1;
-    var initialVerticalScroll = null;
-
-    // Setup a handler for each frame of the vertical scroll
-    var verticalAnimationFrame = function(ease, willDraw, done) {
-      var verticalScroll = getItemVerticalScroll(me, item);
-
-      if(!initialVerticalScroll) {
-        initialVerticalScroll = verticalScroll;
-      }
-
-      if(initialVerticalScroll.itemTop == verticalScroll.itemTop && !initialVerticalScroll.shouldScroll) {
-        return; // We don't need to scroll, so do nothing
-      }
-      else if(initialVerticalScroll.itemTop != verticalScroll.itemTop && verticalScroll.shouldScroll) {
-        // The redraw shifted elements, so reset the animation to correct
-        initialVerticalScroll = verticalScroll;
-        startPos = me._getScrollTop() * -1;
-      }      
-
-      var from = startPos;
-      var to = initialVerticalScroll.scrollOffset;
-      var scrollTop = done ? to : (from + (to - from) * ease);
-
-      me._setScrollTop(-scrollTop);
-
-      if(!willDraw) {
-        me._redraw();
-      }
-    };
-    
-    // Enforces the final vertical scroll position
-    var setFinalVerticalPosition = function() {
-      var finalVerticalScroll = getItemVerticalScroll(me, item);
-
-      if (finalVerticalScroll.shouldScroll && finalVerticalScroll.itemTop != initialVerticalScroll.itemTop) {
-        me._setScrollTop(-finalVerticalScroll.scrollOffset);
-        me._redraw();
-      }
-    };
-
-    // Perform one last check at the end to make sure the final vertical
-    // position is correct
-    var finalVerticalCallback = function() {
-      // Double check we ended at the proper scroll position
-      setFinalVerticalPosition();
-
-      // Let the redraw settle and finalize the position.      
-      setTimeout(setFinalVerticalPosition, 100);
-    };
-
     // calculate the new middle and interval for the window
     var middle = (start + end) / 2;
-    var interval = Math.max(this.range.end - this.range.start, (end - start) * 1.1);
+    var interval = Math.max((this.range.end - this.range.start), (end - start) * 1.1);
 
-    var animation = options && options.animation !== undefined ? options.animation : true;
-
-    if (!animation) {
-      // We aren't animating so set a default so that the final callback forces the vertical location
-      initialVerticalScroll = { shouldScroll: false, scrollOffset: -1, itemTop: -1 };
-    }
-
-    this.range.setRange(middle - interval / 2, middle + interval / 2, { animation: animation }, finalVerticalCallback, verticalAnimationFrame);  
+    var animation = (options && options.animation !== undefined) ? options.animation : true;
+    this.range.setRange(middle - interval / 2, middle + interval / 2, { animation: animation });
   }
 };
 
@@ -483,9 +413,8 @@ Timeline.prototype.focus = function(id, options) {
  *                                    provided to specify duration and easing function.
  *                                    Default duration is 500 ms, and default easing
  *                                    function is 'easeInOutQuad'.
- * @param {function} [callback]
  */
-Timeline.prototype.fit = function (options, callback) {
+Timeline.prototype.fit = function (options) {
   var animation = (options && options.animation !== undefined) ? options.animation : true;
   var range;
 
@@ -493,83 +422,19 @@ Timeline.prototype.fit = function (options, callback) {
   if (dataset.length === 1 && dataset.get()[0].end === undefined) {
     // a single item -> don't fit, just show a range around the item from -4 to +3 days
     range = this.getDataRange();
-    this.moveTo(range.min.valueOf(), {animation}, callback);
+    this.moveTo(range.min.valueOf(), {animation});
   }
   else {
     // exactly fit the items (plus a small margin)
     range = this.getItemRange();
-    this.range.setRange(range.min, range.max, { animation: animation }, callback);
+    this.range.setRange(range.min, range.max, { animation: animation });
   }
 };
 
 /**
- *
- * @param {vis.Item} item
- * @returns {number}
- */
-function getStart(item) {
-  return util.convert(item.data.start, 'Date').valueOf()
-}
-
-/**
- *
- * @param {vis.Item} item
- * @returns {number}
- */
-function getEnd(item) {
-  var end = item.data.end != undefined ? item.data.end : item.data.start;
-  return util.convert(end, 'Date').valueOf();
-}
-
-/**
- * @param {vis.Timeline} timeline
- * @param {vis.Item} item
- * @return {{shouldScroll: bool, scrollOffset: number, itemTop: number}}
- */
-function getItemVerticalScroll(timeline, item) {
-  var leftHeight = timeline.props.leftContainer.height;
-  var contentHeight = timeline.props.left.height;
-  
-  var group = item.parent;
-  var offset = group.top;
-  var shouldScroll = true;
-  var orientation = timeline.timeAxis.options.orientation.axis;
-  
-  var itemTop = function () {
-  if (orientation == "bottom") {
-      return group.height - item.top - item.height;
-    }
-    else {
-      return item.top;
-    }
-  };
-
-  var currentScrollHeight = timeline._getScrollTop() * -1;
-  var targetOffset = offset + itemTop();
-  var height = item.height;
-
-  if (targetOffset < currentScrollHeight) {
-    if (offset + leftHeight <= offset + itemTop() + height) {
-      offset += itemTop() - timeline.itemSet.options.margin.item.vertical;
-    }
-  }
-  else if (targetOffset + height > currentScrollHeight + leftHeight) {
-    offset += itemTop() + height - leftHeight + timeline.itemSet.options.margin.item.vertical;
-  }
-  else {
-    shouldScroll = false;
-  }
-
-  offset = Math.min(offset, contentHeight - leftHeight);
-
-  return { shouldScroll: shouldScroll, scrollOffset: offset, itemTop: targetOffset };
-}
-
-/**
  * Determine the range of the items, taking into account their actual width
  * and a margin of 10 pixels on both sides.
- *
- * @returns {{min: Date, max: Date}}
+ * @return {{min: Date | null, max: Date | null}}
  */
 Timeline.prototype.getItemRange = function () {
   // get a rough approximation for the range based on the items start and end dates
@@ -586,42 +451,33 @@ Timeline.prototype.getItemRange = function () {
     }
     var factor = interval / this.props.center.width;
 
-    var redrawQueue = {};
-    var redrawQueueLength = 0;
-
-    // collect redraw functions
-    util.forEach(this.itemSet.items, function (item, key) {
-      if (item.groupShowing) {
-        var returnQueue = true;
-        redrawQueue[key] = item.redraw(returnQueue);
-        redrawQueueLength = redrawQueue[key].length;
-      }
-    })
-
-    var needRedraw = redrawQueueLength > 0;
-    if (needRedraw) {
-      // redraw all regular items
-      for (var i = 0; i < redrawQueueLength; i++) {
-        util.forEach(redrawQueue, function (fns) {
-          fns[i]();
-        });
-      }
+    function getStart(item) {
+      return util.convert(item.data.start, 'Date').valueOf()
     }
 
-     // calculate the date of the left side and right side of the items given
+    function getEnd(item) {
+      var end = item.data.end != undefined ? item.data.end : item.data.start;
+      return util.convert(end, 'Date').valueOf();
+    }
+
+    // calculate the date of the left side and right side of the items given
     util.forEach(this.itemSet.items, function (item) {
+      if (item.groupShowing) {
+        item.show();
+        item.repositionX();
+      }
+
       var start = getStart(item);
       var end = getEnd(item);
-      var startSide;
-      var endSide;
 
       if (this.options.rtl) {
-        startSide  = start - (item.getWidthRight()  + 10) * factor;
-        endSide = end   + (item.getWidthLeft() + 10) * factor;
+        var startSide  = start - (item.getWidthRight()  + 10) * factor;
+        var endSide = end   + (item.getWidthLeft() + 10) * factor;
       } else {
-        startSide  = start - (item.getWidthLeft()  + 10) * factor;
-        endSide = end   + (item.getWidthRight() + 10) * factor;
+        var startSide  = start - (item.getWidthLeft()  + 10) * factor;
+        var endSide = end   + (item.getWidthRight() + 10) * factor;
       }
+
 
       if (startSide < min) {
         min = startSide;
@@ -658,7 +514,7 @@ Timeline.prototype.getItemRange = function () {
 
 /**
  * Calculate the data range of the items start and end dates
- * @returns {{min: Date, max: Date}}
+ * @returns {{min: Date | null, max: Date | null}}
  */
 Timeline.prototype.getDataRange = function() {
   var min = null;
@@ -693,11 +549,10 @@ Timeline.prototype.getDataRange = function() {
 Timeline.prototype.getEventProperties = function (event) {
   var clientX = event.center ? event.center.x : event.clientX;
   var clientY = event.center ? event.center.y : event.clientY;
-  var x;
   if (this.options.rtl) {
-    x = util.getAbsoluteRight(this.dom.centerContainer) - clientX;
+    var x = util.getAbsoluteRight(this.dom.centerContainer) - clientX;
   } else {
-    x = clientX - util.getAbsoluteLeft(this.dom.centerContainer);
+    var x = clientX - util.getAbsoluteLeft(this.dom.centerContainer);
   }
   var y = clientY - util.getAbsoluteTop(this.dom.centerContainer);
 

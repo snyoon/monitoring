@@ -1,19 +1,11 @@
 let util = require("../../util");
 let DataSet = require('../../DataSet');
 let DataView = require('../../DataView');
+
 var Node = require("./components/Node").default;
+var Label = require("./components/shared/Label").default;
 
-
-/**
- * Handler for Nodes
- */
 class NodesHandler {
-  /**
-   * @param {Object} body
-   * @param {Images} images
-   * @param {Array.<Group>} groups
-   * @param {LayoutEngine} layoutEngine
-   */
   constructor(body, images, groups, layoutEngine) {
     this.body = body;
     this.images = images;
@@ -25,10 +17,11 @@ class NodesHandler {
 
     this.nodesListeners = {
       add: (event, params) => { this.add(params.items); },
-      update: (event, params) => { this.update(params.items, params.data, params.oldData); },
+      update: (event, params) => { this.update(params.items, params.data); },
       remove: (event, params) => { this.remove(params.items); }
     };
 
+    this.options = {};
     this.defaultOptions = {
       borderWidth: 1,
       borderWidthSelected: 2,
@@ -136,20 +129,11 @@ class NodesHandler {
       x: undefined,
       y: undefined
     };
-
-    // Protect from idiocy
-    if (this.defaultOptions.mass <= 0) {
-      throw 'Internal error: mass in defaultOptions of NodesHandler may not be zero or negative';
-    }
-
-    this.options = util.bridgeObject(this.defaultOptions);
+    util.extend(this.options, this.defaultOptions);
 
     this.bindEventListeners();
   }
 
-  /**
-   * Binds event listeners
-   */
   bindEventListeners() {
     // refresh the nodes. Used when reverting from hierarchical layout
     this.body.emitter.on('refreshNodes', this.refresh.bind(this));
@@ -167,11 +151,8 @@ class NodesHandler {
     });
   }
 
-  /**
-   *
-   * @param {Object} options
-   */
   setOptions(options) {
+    this.nodeOptions = options;
     if (options !== undefined) {
       Node.parseOptions(this.options, options);
 
@@ -186,6 +167,7 @@ class NodesHandler {
 
       // update the font in all nodes
       if (options.font !== undefined) {
+        Label.parseOptions(this.options.font, options);
         for (let nodeId in this.body.nodes) {
           if (this.body.nodes.hasOwnProperty(nodeId)) {
             this.body.nodes[nodeId].updateLabelModule();
@@ -213,7 +195,6 @@ class NodesHandler {
   /**
    * Set a data set with nodes for the network
    * @param {Array | DataSet | DataView} nodes         The data containing the nodes.
-   * @param {boolean} [doNotEmit=false]
    * @private
    */
   setData(nodes, doNotEmit = false) {
@@ -263,8 +244,7 @@ class NodesHandler {
 
   /**
    * Add nodes
-   * @param {number[] | string[]} ids
-   * @param {boolean} [doNotEmit=false]
+   * @param {Number[] | String[]} ids
    * @private
    */
   add(ids, doNotEmit = false) {
@@ -287,12 +267,10 @@ class NodesHandler {
 
   /**
    * Update existing nodes, or create them when not yet existing
-   * @param {number[] | string[]} ids id's of changed nodes
-   * @param {Array} changedData array with changed data
-   * @param {Array|undefined} oldData optional; array with previous data
+   * @param {Number[] | String[]} ids
    * @private
    */
-  update(ids, changedData, oldData) {
+  update(ids, changedData) {
     let nodes = this.body.nodes;
     let dataChanged = false;
     for (let i = 0; i < ids.length; i++) {
@@ -301,9 +279,7 @@ class NodesHandler {
       let data = changedData[i];
       if (node !== undefined) {
         // update node
-        if (node.setOptions(data)) {
-          dataChanged = true;
-        }
+        dataChanged = node.setOptions(data);
       }
       else {
         dataChanged = true;
@@ -312,17 +288,6 @@ class NodesHandler {
         nodes[id] = node;
       }
     }
-
-    if (!dataChanged && oldData !== undefined) {
-      // Check for any changes which should trigger a layout recalculation
-      // For now, this is just 'level' for hierarchical layout
-      // Assumption: old and new data arranged in same order; at time of writing, this holds.
-      dataChanged = changedData.some(function(newValue, index) {
-        let oldValue = oldData[index];
-        return (oldValue && oldValue.level !== newValue.level);
-      });
-    }
-
     if (dataChanged === true) {
       this.body.emitter.emit("_dataChanged");
     }
@@ -333,7 +298,7 @@ class NodesHandler {
 
   /**
    * Remove existing nodes. If nodes do not exist, the method will just ignore it.
-   * @param {number[] | string[]} ids
+   * @param {Number[] | String[]} ids
    * @private
    */
   remove(ids) {
@@ -350,36 +315,35 @@ class NodesHandler {
 
   /**
    * create a node
-   * @param {Object} properties
-   * @param {class} [constructorClass=Node.default]
-   * @returns {*}
+   * @param properties
+   * @param constructorClass
    */
   create(properties, constructorClass = Node) {
-    return new constructorClass(properties, this.body, this.images, this.groups, this.options, this.defaultOptions)
+    return new constructorClass(properties, this.body, this.images, this.groups, this.options, this.defaultOptions, this.nodeOptions)
   }
 
 
-  /**
-   *
-   * @param {boolean} [clearPositions=false]
-   */
   refresh(clearPositions = false) {
-    util.forEach(this.body.nodes, (node, nodeId) => {
+    let nodes = this.body.nodes;
+    for (let nodeId in nodes) {
+      let node = undefined;
+      if (nodes.hasOwnProperty(nodeId)) {
+        node = nodes[nodeId];
+      }
       let data = this.body.data.nodes.get(nodeId);
-      if (data !== undefined) {
+      if (node !== undefined && data !== undefined) {
         if (clearPositions === true) {
           node.setOptions({x:null, y:null});
         }
         node.setOptions({ fixed: false });
         node.setOptions(data);
       }
-    });
+    }
   }
-
 
   /**
    * Returns the positions of the nodes.
-   * @param {Array.<Node.id>|String} [ids]  --> optional, can be array of nodeIds, can be string
+   * @param ids  --> optional, can be array of nodeIds, can be string
    * @returns {{}}
    */
   getPositions(ids) {
@@ -431,7 +395,7 @@ class NodesHandler {
 
   /**
    * get the bounding box of a node.
-   * @param {Node.id} nodeId
+   * @param nodeId
    * @returns {j|*}
    */
   getBoundingBox(nodeId) {
@@ -443,25 +407,23 @@ class NodesHandler {
 
   /**
    * Get the Ids of nodes connected to this node.
-   * @param {Node.id} nodeId
-   * @param {'to'|'from'|undefined} direction values 'from' and 'to' select respectively parent and child nodes only.
-   *                                          Any other value returns both parent and child nodes.
+   * @param nodeId
    * @returns {Array}
    */
-  getConnectedNodes(nodeId, direction) {
+  getConnectedNodes(nodeId) {
     let nodeList = [];
     if (this.body.nodes[nodeId] !== undefined) {
       let node = this.body.nodes[nodeId];
       let nodeObj = {}; // used to quickly check if node already exists
       for (let i = 0; i < node.edges.length; i++) {
         let edge = node.edges[i];
-        if (direction !== 'to' && edge.toId == node.id) { // these are double equals since ids can be numeric or string
+        if (edge.toId == node.id) { // these are double equals since ids can be numeric or string
           if (nodeObj[edge.fromId] === undefined) {
             nodeList.push(edge.fromId);
             nodeObj[edge.fromId] = true;
           }
         }
-        else if (direction !== 'from' && edge.fromId == node.id) { // these are double equals since ids can be numeric or string
+        else if (edge.fromId == node.id) { // these are double equals since ids can be numeric or string
           if (nodeObj[edge.toId] === undefined) {
             nodeList.push(edge.toId);
             nodeObj[edge.toId] = true;
@@ -474,7 +436,7 @@ class NodesHandler {
 
   /**
    * Get the ids of the edges connected to this node.
-   * @param {Node.id} nodeId
+   * @param nodeId
    * @returns {*}
    */
   getConnectedEdges(nodeId) {
@@ -494,10 +456,9 @@ class NodesHandler {
 
   /**
    * Move a node.
-   *
-   * @param {Node.id} nodeId
-   * @param {number} x
-   * @param {number} y
+   * @param String nodeId
+   * @param Number x
+   * @param Number y
    */
   moveNode(nodeId, x, y) {
     if (this.body.nodes[nodeId] !== undefined) {

@@ -1,18 +1,16 @@
 var util = require('../../util');
 var stack = require('../Stack');
+var RangeItem = require('./item/RangeItem');
 
 /**
- * @param {number | string} groupId
+ * @constructor Group
+ * @param {Number | String} groupId
  * @param {Object} data
  * @param {ItemSet} itemSet
- * @constructor Group
  */
 function Group (groupId, data, itemSet) {
   this.groupId = groupId;
   this.subgroups = {};
-  this.subgroupStack = {};
-  this.subgroupStackAll = false;
-  this.doInnerStack = false;
   this.subgroupIndex = 0;
   this.subgroupOrderer = data && data.subgroupOrder;
   this.itemSet = itemSet;
@@ -25,21 +23,6 @@ function Group (groupId, data, itemSet) {
       this.showNested = false;
     } else {
       this.showNested = true;
-    }
-  }
-
-  if (data && data.subgroupStack) {
-    if (typeof data.subgroupStack === "boolean") {
-      this.doInnerStack = data.subgroupStack;
-      this.subgroupStackAll = data.subgroupStack;
-    }
-    else {
-      // We might be doing stacking on specific sub groups, but only
-      // if at least one is set to do stacking
-      for(var key in data.subgroupStack) {
-        this.subgroupStack[key] = data.subgroupStack[key];
-        this.doInnerStack = this.doInnerStack || data.subgroupStack[key];
-      }
     }
   }
 
@@ -174,7 +157,8 @@ Group.prototype.setData = function(data) {
     }
   } else if (this.nestedGroups) {
     this.nestedGroups = null;
-    collapsedDirClassName = this.itemSet.options.rtl ? 'collapsed-rtl' : 'collapsed'
+    
+    var collapsedDirClassName = this.itemSet.options.rtl ? 'collapsed-rtl' : 'collapsed'
     util.removeClassName(this.dom.label, collapsedDirClassName);
     util.removeClassName(this.dom.label, 'expanded');
     util.removeClassName(this.dom.label, 'vis-nesting-group');
@@ -224,52 +208,46 @@ Group.prototype.getLabelWidth = function() {
   return this.props.label.width;
 };
 
-Group.prototype._didMarkerHeightChange = function() {
+
+/**
+ * Repaint this group
+ * @param {{start: number, end: number}} range
+ * @param {{item: {horizontal: number, vertical: number}, axis: number}} margin
+ * @param {boolean} [forceRestack=false]  Force restacking of all items
+ * @return {boolean} Returns true if the group is resized
+ */
+Group.prototype.redraw = function(range, margin, forceRestack) {
+  var resized = false;
+ 
+  // force recalculation of the height of the items when the marker height changed
+  // (due to the Timeline being attached to the DOM or changed from display:none to visible)
   var markerHeight = this.dom.marker.clientHeight;
   if (markerHeight != this.lastMarkerHeight) {
     this.lastMarkerHeight = markerHeight;
-    var redrawQueue = {};
-    var redrawQueueLength = 0;
-
-    util.forEach(this.items, function (item, key) {
+    util.forEach(this.items, function (item) {
       item.dirty = true;
-      if (item.displayed) {
-        var returnQueue = true;
-        redrawQueue[key] = item.redraw(returnQueue);
-        redrawQueueLength = redrawQueue[key].length;
-      }
-    })
+      if (item.displayed) item.redraw();
+    });
 
-    var needRedraw = redrawQueueLength > 0;
-    if (needRedraw) {
-      // redraw all regular items
-      for (var i = 0; i < redrawQueueLength; i++) {
-        util.forEach(redrawQueue, function (fns) {
-          fns[i]();
-        });
-      }
-    }
-    return true;
-  }
-}
+    forceRestack = true;
+  }  
+  
+  // recalculate the height of the subgroups
+  this._calculateSubGroupHeights(margin);
 
-Group.prototype._calculateGroupSizeAndPosition = function() {
-  var offsetTop = this.dom.foreground.offsetTop
-  var offsetLeft = this.dom.foreground.offsetLeft
-  var offsetWidth = this.dom.foreground.offsetWidth
-  this.top = offsetTop;
-  this.right = offsetLeft;
-  this.width = offsetWidth;
-}
+  // calculate actual size and position
+  var foreground = this.dom.foreground;
+  this.top = foreground.offsetTop;
+  this.right = foreground.offsetLeft;
+  this.width = foreground.offsetWidth;
 
-Group.prototype._redrawItems = function(forceRestack, lastIsVisible, margin, range) {
-  var restack = forceRestack || this.stackDirty || this.isVisible && !lastIsVisible;
+  var lastIsVisible = this.isVisible;
+  this.isVisible = this._isGroupVisible(range, margin);
+  
+  var restack = forceRestack || this.stackDirty || (this.isVisible && !lastIsVisible);
 
-  // if restacking, reposition visible items vertically
-  if (restack) {
-    var visibleSubgroups = {};
-    var subgroup = null;
-
+  // if restacking, reposition visible items vertically 
+  if(restack) {
     if (typeof this.itemSet.options.order === 'function') {
       // a custom order function
       // brute force restack of all items
@@ -277,96 +255,58 @@ Group.prototype._redrawItems = function(forceRestack, lastIsVisible, margin, ran
       // show all items
       var me = this;
       var limitSize = false;
-
-      var redrawQueue = {};
-      var redrawQueueLength = 0;
-
-      util.forEach(this.items, function (item, key) {
+      util.forEach(this.items, function (item) {
         if (!item.displayed) {
-          var returnQueue = true;
-          redrawQueue[key] = item.redraw(returnQueue);
-          redrawQueueLength = redrawQueue[key].length;
+          item.redraw();
           me.visibleItems.push(item);
         }
-      })
-
-      var needRedraw = redrawQueueLength > 0;
-      if (needRedraw) {
-        // redraw all regular items
-        for (var i = 0; i < redrawQueueLength; i++) {
-          util.forEach(redrawQueue, function (fns) {
-            fns[i]();
-          });
-        }
-      }
-
-      util.forEach(this.items, function (item) {
         item.repositionX(limitSize);
       });
 
-      if (this.doInnerStack && this.itemSet.options.stackSubgroups) {
-        // Order the items within each subgroup
-        for(subgroup in this.subgroups) {            
-          visibleSubgroups[subgroup] = this.subgroups[subgroup].items.slice().sort(function (a, b) {
-            return me.itemSet.options.order(a.data, b.data);
-          });
-        }
-
-        stack.stackSubgroupsWithInnerStack(visibleSubgroups, margin, this.subgroups);          
-      }
-      else {
-        // order all items and force a restacking
-        var customOrderedItems = this.orderedItems.byStart.slice().sort(function (a, b) {
-          return me.itemSet.options.order(a.data, b.data);
-        });
-        stack.stack(customOrderedItems, margin, true /* restack=true */);        
-      }
-
+      // order all items and force a restacking
+      var customOrderedItems = this.orderedItems.byStart.slice().sort(function (a, b) {
+        return me.itemSet.options.order(a.data, b.data);
+      });
+      stack.stack(customOrderedItems, margin, true /* restack=true */);
       this.visibleItems = this._updateItemsInRange(this.orderedItems, this.visibleItems, range);
-    } else {
+
+    }
+    else {
       // no custom order function, lazy stacking
       this.visibleItems = this._updateItemsInRange(this.orderedItems, this.visibleItems, range);
 
-      if (this.itemSet.options.stack) {
-        if (this.doInnerStack && this.itemSet.options.stackSubgroups) {                    
-          for(subgroup in this.subgroups) {            
-            visibleSubgroups[subgroup] = this.subgroups[subgroup].items;
-          }
-
-          stack.stackSubgroupsWithInnerStack(visibleSubgroups, margin, this.subgroups);
-        }
-        else {
-          // TODO: ugly way to access options...
-          stack.stack(this.visibleItems, margin, true /* restack=true */);
-        }
-      } else {
-        // no stacking
+      if (this.itemSet.options.stack) { // TODO: ugly way to access options...
+        stack.stack(this.visibleItems, margin,  true /* restack=true */);
+      }
+      else { // no stacking
         stack.nostack(this.visibleItems, margin, this.subgroups, this.itemSet.options.stackSubgroups);
       }
     }
-
+    
     this.stackDirty = false;
   }
-}
 
-Group.prototype._didResize = function(resized, height) {
+  this._updateSubgroupsSizes();
+
+  // recalculate the height of the group
+  var height = this._calculateHeight(margin);
+
+  // calculate actual size and position
+  var foreground = this.dom.foreground;
+  this.top = foreground.offsetTop;
+  this.right = foreground.offsetLeft;
+  this.width = foreground.offsetWidth;
   resized = util.updateProperty(this, 'height', height) || resized;
   // recalculate size of label
-  var labelWidth = this.dom.inner.clientWidth;
-  var labelHeight = this.dom.inner.clientHeight;
-  resized = util.updateProperty(this.props.label, 'width', labelWidth) || resized;
-  resized = util.updateProperty(this.props.label, 'height', labelHeight) || resized;
-  return resized;
-}
+  resized = util.updateProperty(this.props.label, 'width', this.dom.inner.clientWidth) || resized;
+  resized = util.updateProperty(this.props.label, 'height', this.dom.inner.clientHeight) || resized;
 
-Group.prototype._applyGroupHeight = function(height) {
-  this.dom.background.style.height = height + 'px';
-  this.dom.foreground.style.height = height + 'px';
+  // apply new height
+  this.dom.background.style.height  = height + 'px';
+  this.dom.foreground.style.height  = height + 'px';
   this.dom.label.style.height = height + 'px';
-}
 
-// update vertical position of items after they are re-stacked and the height of the group is calculated
-Group.prototype._updateItemsVerticalPosition = function(margin) {
+  // update vertical position of items after they are re-stacked and the height of the group is calculated
   for (var i = 0, ii = this.visibleItems.length; i < ii; i++) {
     var item = this.visibleItems[i];
     item.repositionY(margin);
@@ -374,96 +314,19 @@ Group.prototype._updateItemsVerticalPosition = function(margin) {
       if (item.displayed) item.hide();
     }
   }
-}
 
-/**
- * Repaint this group
- * @param {{start: number, end: number}} range
- * @param {{item: {horizontal: number, vertical: number}, axis: number}} margin
- * @param {boolean} [forceRestack=false]  Force restacking of all items
- * @param {boolean} [returnQueue=false]  return the queue or if the group resized
- * @return {boolean} Returns true if the group is resized or the redraw queue if returnQueue=true
- */
-Group.prototype.redraw = function(range, margin, forceRestack, returnQueue) {
-  var resized = false;
-  var lastIsVisible = this.isVisible;
-  var height;
-
-  var queue = [
-    // force recalculation of the height of the items when the marker height changed
-    // (due to the Timeline being attached to the DOM or changed from display:none to visible)
-    (function () {
-      forceRestack = this._didMarkerHeightChange.bind(this);
-    }).bind(this),
-
-    // recalculate the height of the subgroups
-    this._updateSubGroupHeights.bind(this, margin),
-
-    // calculate actual size and position
-    this._calculateGroupSizeAndPosition.bind(this),
-
-    // check if group is visible
-    (function() {
-      this.isVisible = this._isGroupVisible.bind(this)(range, margin);
-    }).bind(this),
-
-    // redraw Items if needed
-    (function() {
-      this._redrawItems.bind(this)(forceRestack, lastIsVisible, margin, range)
-    }).bind(this),
-
-    // update subgroups
-    this._updateSubgroupsSizes.bind(this),
-
-    // recalculate the height of the group
-    (function() {
-      height = this._calculateHeight.bind(this)(margin);
-    }).bind(this),
-
-    // calculate actual size and position again
-    this._calculateGroupSizeAndPosition.bind(this),
-
-    // check if resized
-    (function() {
-      resized = this._didResize.bind(this)(resized, height)
-    }).bind(this),
-
-    // apply group height
-    (function() {
-      this._applyGroupHeight.bind(this)(height)
-    }).bind(this),
-
-    // update vertical position of items after they are re-stacked and the height of the group is calculated
-    (function() {
-      this._updateItemsVerticalPosition.bind(this)(margin)
-    }).bind(this),
-
-    function() {
-      if (!this.isVisible && this.height) {
-        resized = false;
-      }
-      return resized
-    }
-  ]
-
-  if (returnQueue) {
-    return queue;
-  } else {
-    var result;
-    queue.forEach(function (fn) {
-      result = fn();
-    });
-    return result;
+  if (!this.isVisible && this.height) {
+    return resized = false;
   }
+
+  return resized;
 };
 
 /**
  * recalculate the height of the subgroups
- *
- * @param {{item: vis.Item}} margin
  * @private
  */
-Group.prototype._updateSubGroupHeights = function (margin) {
+Group.prototype._calculateSubGroupHeights = function (margin) {
   if (Object.keys(this.subgroups).length > 0) {
     var me = this;
 
@@ -480,16 +343,14 @@ Group.prototype._updateSubGroupHeights = function (margin) {
 
 /**
  * check if group is visible
- *
- * @param {vis.Range} range
- * @param {{axis: vis.DataAxis}} margin
- * @returns {boolean} is visible
  * @private
- */
+  */
 Group.prototype._isGroupVisible = function (range, margin) {
-  return (this.top <= range.body.domProps.centerContainer.height - range.body.domProps.scrollTop + margin.axis)
+  var isVisible = 
+  (this.top <= range.body.domProps.centerContainer.height - range.body.domProps.scrollTop + margin.axis) 
   && (this.top + this.height + margin.axis >= - range.body.domProps.scrollTop);
-};
+  return isVisible;
+}
 
 /**
  * recalculate the height of the group
@@ -600,11 +461,10 @@ Group.prototype._addToSubgroup = function(item, subgroupId) {
       height:0,
       top: 0,
       start: item.data.start,
-      end: item.data.end || item.data.start,
+      end: item.data.end,
       visible: false,
       index:this.subgroupIndex,
-      items: [],
-      stack: this.subgroupStackAll || this.subgroupStack[subgroupId] || false
+      items: []
     };
     this.subgroupIndex++;
   }
@@ -613,10 +473,8 @@ Group.prototype._addToSubgroup = function(item, subgroupId) {
   if (new Date(item.data.start) < new Date(this.subgroups[subgroupId].start)) {
     this.subgroups[subgroupId].start = item.data.start;
   }
-
-  var itemEnd = item.data.end || item.data.start;
-  if (new Date(itemEnd) > new Date(this.subgroups[subgroupId].end)) {
-    this.subgroups[subgroupId].end = itemEnd;
+  if (new Date(item.data.end) > new Date(this.subgroups[subgroupId].end)) {
+    this.subgroups[subgroupId].end = item.data.end;
   }
 
   this.subgroups[subgroupId].items.push(item);
@@ -627,23 +485,20 @@ Group.prototype._updateSubgroupsSizes = function () {
   var me = this;
   if (me.subgroups) {
     for (var subgroup in me.subgroups) {
-      var initialEnd = me.subgroups[subgroup].items[0].data.end || me.subgroups[subgroup].items[0].data.start;
       var newStart = me.subgroups[subgroup].items[0].data.start;
-      var newEnd = initialEnd - 1;
+      var newEnd = me.subgroups[subgroup].items[0].data.end;
 
       me.subgroups[subgroup].items.forEach(function(item) {
         if (new Date(item.data.start) < new Date(newStart)) { 
           newStart = item.data.start; 
         }
-
-        var itemEnd = item.data.end || item.data.start;
-        if (new Date(itemEnd) > new Date(newEnd)) {
-          newEnd = itemEnd;
+        if (new Date(item.data.end) > new Date(newEnd)) { 
+          newEnd = item.data.end; 
         }
       })
 
       me.subgroups[subgroup].start = newStart;
-      me.subgroups[subgroup].end = new Date(newEnd - 1) // -1 to compensate for colliding end to start subgroups;
+      me.subgroups[subgroup].end = newEnd;
 
     }
   }
@@ -652,9 +507,8 @@ Group.prototype._updateSubgroupsSizes = function () {
 Group.prototype.orderSubgroups = function() {
   if (this.subgroupOrderer !== undefined) {
     var sortArray = [];
-    var subgroup;
     if (typeof this.subgroupOrderer == 'string') {
-      for (subgroup in this.subgroups) {
+      for (var subgroup in this.subgroups) {
         sortArray.push({subgroup: subgroup, sortField: this.subgroups[subgroup].items[0].data[this.subgroupOrderer]})
       }
       sortArray.sort(function (a, b) {
@@ -662,7 +516,7 @@ Group.prototype.orderSubgroups = function() {
       })
     }
     else if (typeof this.subgroupOrderer == 'function') {
-      for (subgroup in this.subgroups) {
+      for (var subgroup in this.subgroups) {
         sortArray.push(this.subgroups[subgroup].items[0].data);
       }
       sortArray.sort(this.subgroupOrderer);
@@ -759,7 +613,7 @@ Group.prototype.order = function() {
 /**
  * Update the visible items
  * @param {{byStart: Item[], byEnd: Item[]}} orderedItems   All items ordered by start date and by end date
- * @param {Item[]} oldVisibleItems                          The previously visible items.
+ * @param {Item[]} visibleItems                             The previously visible items.
  * @param {{start: number, end: number}} range              Visible range
  * @return {Item[]} visibleItems                            The new visible items.
  * @private
@@ -777,7 +631,7 @@ Group.prototype._updateItemsInRange = function(orderedItems, oldVisibleItems, ra
     if      (value < lowerBound)  {return -1;}
     else if (value <= upperBound) {return  0;}
     else                          {return  1;}
-  };
+  }
 
   // first check if the items that were in view previously are still in view.
   // IMPORTANT: this handles the case for the items with startdate before the window and enddate after the window!
@@ -814,39 +668,21 @@ Group.prototype._updateItemsInRange = function(orderedItems, oldVisibleItems, ra
     });
   }
 
-  var redrawQueue = {};
-  var redrawQueueLength = 0;
-
-  for (i = 0; i < visibleItems.length; i++) {
+  // finally, we reposition all the visible items.
+  for (var i = 0; i < visibleItems.length; i++) {
     var item = visibleItems[i];
-    if (!item.displayed) {
-      var returnQueue = true;
-      redrawQueue[i] = item.redraw(returnQueue);
-      redrawQueueLength = redrawQueue[i].length;
-    }
+    if (!item.displayed) item.show();
+    // reposition item horizontally
+    item.repositionX();
   }
-
-  var needRedraw = redrawQueueLength > 0;
-  if (needRedraw) {
-    // redraw all regular items
-    for (var j = 0; j < redrawQueueLength; j++) {
-      util.forEach(redrawQueue, function (fns) {
-        fns[j]();
-      });
-    }
-  }
-
-  for (i = 0; i < visibleItems.length; i++) {
-    visibleItems[i].repositionX();
-  }
+  
   return visibleItems;
 };
 
 Group.prototype._traceVisible = function (initialPos, items, visibleItems, visibleItemsLookup, breakCondition) {
   if (initialPos != -1) {
-    var i, item;
-    for (i = initialPos; i >= 0; i--) {
-      item = items[i];
+    for (var i = initialPos; i >= 0; i--) {
+      var item = items[i];
       if (breakCondition(item)) {
         break;
       }
@@ -858,8 +694,8 @@ Group.prototype._traceVisible = function (initialPos, items, visibleItems, visib
       }
     }
 
-    for (i = initialPos + 1; i < items.length; i++) {
-      item = items[i];
+    for (var i = initialPos + 1; i < items.length; i++) {
+      var item = items[i];
       if (breakCondition(item)) {
         break;
       }
@@ -905,8 +741,7 @@ Group.prototype._checkIfVisible = function(item, visibleItems, range) {
  * this one is for brute forcing and hiding.
  *
  * @param {Item} item
- * @param {Array.<vis.Item>} visibleItems
- * @param {Object<number, boolean>} visibleItemsLookup
+ * @param {Array} visibleItems
  * @param {{start:number, end:number}} range
  * @private
  */

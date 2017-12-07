@@ -1,9 +1,4 @@
-/**
- *
- * @param {json} gephiJSON
- * @param {obj} optionsObj
- * @returns {{nodes: Array, edges: Array}}
- */
+
 function parseGephi(gephiJSON, optionsObj) {
   var edges = [];
   var nodes = [];
@@ -45,9 +40,9 @@ function parseGephi(gephiJSON, optionsObj) {
     edges.push(edge);
   }
 
-  for (var j = 0; j < gNodes.length; j++) {
+  for (var i = 0; i < gNodes.length; i++) {
     var node = {};
-    var gNode = gNodes[j];
+    var gNode = gNodes[i];
     node['id'] = gNode.id;
     node['attributes'] = gNode.attributes;
     node['x'] = gNode.x;

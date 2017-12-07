@@ -1,12 +1,10 @@
 let util = require('../../util');
 
 /**
+ * @class Groups
  * This class can store groups and options specific for groups.
  */
 class Groups {
-  /**
-   * @ignore
-   */
   constructor() {
     this.clear();
     this.defaultIndex = 0;
@@ -46,10 +44,7 @@ class Groups {
     util.extend(this.options, this.defaultOptions);
   }
 
-  /**
-   *
-   * @param {Object} options
-   */
+
   setOptions(options) {
     let optionFields = ['useDefaultGroups'];
 
@@ -75,17 +70,14 @@ class Groups {
   }
   
   /**
-   * Get group options of a groupname.
-   * If groupname is not found, a new group may be created.
-   *
-   * @param {*}       groupname     Can be a number, string, Date, etc.
-   * @param {boolean} [shouldCreate=true] If true, create a new group
-   * @return {Object} The found or created group
+   * get group options of a groupname. If groupname is not found, a new group
+   * is added.
+   * @param {*} groupname        Can be a number, string, Date, etc.
+   * @return {Object} group      The created group, containing all group options
    */
-  get(groupname, shouldCreate = true) {
+  get(groupname) {
     let group = this.groups[groupname];
-
-    if (group === undefined && shouldCreate) {
+    if (group === undefined) {
       if (this.options.useDefaultGroups === false && this.groupsArray.length > 0) {
         // create new group
         let index = this.groupIndex % this.groupsArray.length;
@@ -109,7 +101,7 @@ class Groups {
   
   /**
    * Add a custom group style
-   * @param {string} groupName
+   * @param {String} groupName
    * @param {Object} style       An object containing borderColor,
    *                             backgroundColor, etc.
    * @return {Object} group      The created group object

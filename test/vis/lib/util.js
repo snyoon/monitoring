@@ -19,7 +19,7 @@ exports.isNumber = function (object) {
 
 /**
  * Remove everything in the DOM object
- * @param {Element} DOMobject
+ * @param DOMobject
  */
 exports.recursiveDOMDelete = function (DOMobject) {
   if (DOMobject) {
@@ -33,10 +33,10 @@ exports.recursiveDOMDelete = function (DOMobject) {
 /**
  * this function gives you a range between 0 and 1 based on the min and max values in the set, the total sum of all values and the current value.
  *
- * @param {number} min
- * @param {number} max
- * @param {number} total
- * @param {number} value
+ * @param min
+ * @param max
+ * @param total
+ * @param value
  * @returns {number}
  */
 exports.giveRange = function (min, max, total, value) {
@@ -47,7 +47,7 @@ exports.giveRange = function (min, max, total, value) {
     var scale = 1 / (max - min);
     return Math.max(0, (value - min) * scale);
   }
-};
+}
 
 /**
  * Test whether given object is a string
@@ -84,7 +84,7 @@ exports.isDate = function (object) {
 /**
  * Create a semi UUID
  * source: http://stackoverflow.com/a/105074/1262753
- * @return {string} uuid
+ * @return {String} uuid
  */
 exports.randomUUID = function () {
   return uuid.v4();
@@ -92,8 +92,8 @@ exports.randomUUID = function () {
 
 /**
  * assign all keys of an object that are not nested objects to a certain value (used for color objects).
- * @param {object} obj
- * @param {number} value
+ * @param obj
+ * @param value
  */
 exports.assignAllKeys = function (obj, value) {
   for (var prop in obj) {
@@ -103,70 +103,62 @@ exports.assignAllKeys = function (obj, value) {
       }
     }
   }
-};
-
-
-/**
- * Copy property from b to a if property present in a.
- * If property in b explicitly set to null, delete it if `allowDeletion` set.
- *
- * Internal helper routine, should not be exported. Not added to `exports` for that reason.
- *
- * @param {object} a  target object
- * @param {object} b  source object
- * @param {string} prop  name of property to copy to a
- * @param {boolean} allowDeletion  if true, delete property in a if explicitly set to null in b 
- * @private
- */
-function copyOrDelete(a, b, prop, allowDeletion) {
-  var doDeletion = false;
-  if (allowDeletion === true) {
-    doDeletion = (b[prop] === null && a[prop] !== undefined);
-  }
-
-  if (doDeletion) {
-      delete a[prop];
-  } else {
-    a[prop] = b[prop];  // Remember, this is a reference copy!
-  }
 }
 
 
 /**
- * Fill an object with a possibly partially defined other object.
- *
- * Only copies values for the properties already present in a.
+ * Fill an object with a possibly partially defined other object. Only copies values if the a object has an object requiring values.
  * That means an object is not created on a property if only the b object has it.
- *
- * @param {object} a
- * @param {object} b
- * @param {boolean} [allowDeletion=false]  if true, delete properties in a that are explicitly set to null in b 
+ * @param obj
+ * @param value
  */
 exports.fillIfDefined = function (a, b, allowDeletion = false) {
-  // NOTE: iteration of properties of a
-  // NOTE: prototype properties iterated over as well
   for (var prop in a) {
     if (b[prop] !== undefined) {
-      if (b[prop] === null || typeof b[prop] !== 'object') { // Note: typeof null === 'object'
-        copyOrDelete(a, b, prop, allowDeletion);
-      } else {
+      if (typeof b[prop] !== 'object') {
+        if ((b[prop] === undefined || b[prop] === null) && a[prop] !== undefined && allowDeletion === true) {
+          delete a[prop];
+        }
+        else {
+          a[prop] = b[prop];
+        }
+      }
+      else {
         if (typeof a[prop] === 'object') {
           exports.fillIfDefined(a[prop], b[prop], allowDeletion);
         }
       }
     }
   }
-};
+}
+
 
 
 /**
  * Extend object a with the properties of object b or a series of objects
  * Only properties with defined values are copied
  * @param {Object} a
- * @param {...Object} b
+ * @param {... Object} b
  * @return {Object} a
  */
-exports.extend = function (a, b) {  // eslint-disable-line no-unused-vars
+exports.protoExtend = function (a, b) {
+  for (var i = 1; i < arguments.length; i++) {
+    var other = arguments[i];
+    for (var prop in other) {
+      a[prop] = other[prop];
+    }
+  }
+  return a;
+};
+
+/**
+ * Extend object a with the properties of object b or a series of objects
+ * Only properties with defined values are copied
+ * @param {Object} a
+ * @param {... Object} b
+ * @return {Object} a
+ */
+exports.extend = function (a, b) {
   for (var i = 1; i < arguments.length; i++) {
     var other = arguments[i];
     for (var prop in other) {
@@ -181,12 +173,12 @@ exports.extend = function (a, b) {  // eslint-disable-line no-unused-vars
 /**
  * Extend object a with selected properties of object b or a series of objects
  * Only properties with defined values are copied
- * @param {Array.<string>} props
+ * @param {Array.<String>} props
  * @param {Object} a
  * @param {Object} b
  * @return {Object} a
  */
-exports.selectiveExtend = function (props, a, b) {  // eslint-disable-line no-unused-vars
+exports.selectiveExtend = function (props, a, b) {
   if (!Array.isArray(props)) {
     throw new Error('Array with property names expected as first argument');
   }
@@ -204,112 +196,116 @@ exports.selectiveExtend = function (props, a, b) {  // eslint-disable-line no-un
   return a;
 };
 
-
 /**
- * Extend object a with selected properties of object b.
- * Only properties with defined values are copied.
- *
- * **Note:** Previous version of this routine implied that multiple source objects
- *           could be used; however, the implementation was **wrong**.
- *           Since multiple (>1) sources weren't used anywhere in the `vis.js` code,
- *           this has been removed
- *
- * @param {Array.<string>} props names of first-level properties to copy over
- * @param {object} a  target object
- * @param {object} b  source object
- * @param {boolean} [allowDeletion=false]  if true, delete property in a if explicitly set to null in b 
- * @returns {Object} a
+ * Extend object a with selected properties of object b or a series of objects
+ * Only properties with defined values are copied
+ * @param {Array.<String>} props
+ * @param {Object} a
+ * @param {Object} b
+ * @return {Object} a
  */
 exports.selectiveDeepExtend = function (props, a, b, allowDeletion = false) {
   // TODO: add support for Arrays to deepExtend
   if (Array.isArray(b)) {
     throw new TypeError('Arrays are not supported by deepExtend');
   }
+  for (var i = 2; i < arguments.length; i++) {
+    var other = arguments[i];
+    for (var p = 0; p < props.length; p++) {
+      var prop = props[p];
+      if (other.hasOwnProperty(prop)) {
+        if (b[prop] && b[prop].constructor === Object) {
+          if (a[prop] === undefined) {
+            a[prop] = {};
+          }
+          if (a[prop].constructor === Object) {
+            exports.deepExtend(a[prop], b[prop], false, allowDeletion);
+          }
+          else {
+            if ((b[prop] === null) && a[prop] !== undefined && allowDeletion === true) {
+              delete a[prop];
+            }
+            else {
+              a[prop] = b[prop];
+            }
+          }
+        } else if (Array.isArray(b[prop])) {
+          throw new TypeError('Arrays are not supported by deepExtend');
+        } else {
+          if ((b[prop] === null) && a[prop] !== undefined && allowDeletion === true) {
+            delete a[prop];
+          }
+          else {
+            a[prop] = b[prop];
+          }
+        }
 
-  for (var p = 0; p < props.length; p++) {
-    var prop = props[p];
-    if (b.hasOwnProperty(prop)) {
-      if (b[prop] && b[prop].constructor === Object) {
-        if (a[prop] === undefined) {
-          a[prop] = {};
-        }
-        if (a[prop].constructor === Object) {
-          exports.deepExtend(a[prop], b[prop], false, allowDeletion);
-        }
-        else {
-          copyOrDelete(a, b, prop, allowDeletion);
-        }
-      } else if (Array.isArray(b[prop])) {
-        throw new TypeError('Arrays are not supported by deepExtend');
-      } else {
-        copyOrDelete(a, b, prop, allowDeletion);
       }
     }
   }
   return a;
 };
 
-
 /**
- * Extend object `a` with properties of object `b`, ignoring properties which are explicitly 
- * specified to be excluded.
- * 
- * The properties of `b` are considered for copying.
- * Properties which are themselves objects are are also extended.
+ * Extend object a with selected properties of object b or a series of objects
  * Only properties with defined values are copied
- *
- * @param {Array.<string>} propsToExclude  names of properties which should *not* be copied
- * @param {Object}                      a  object to extend
- * @param {Object}                      b  object to take properties from for extension
- * @param {boolean} [allowDeletion=false]  if true, delete properties in a that are explicitly set to null in b 
+ * @param {Array.<String>} props
+ * @param {Object} a
+ * @param {Object} b
  * @return {Object} a
  */
-exports.selectiveNotDeepExtend = function (propsToExclude, a, b, allowDeletion = false) {
+exports.selectiveNotDeepExtend = function (props, a, b, allowDeletion = false) {
   // TODO: add support for Arrays to deepExtend
-  // NOTE: array properties have an else-below; apparently, there is a problem here. 
   if (Array.isArray(b)) {
     throw new TypeError('Arrays are not supported by deepExtend');
   }
-
   for (var prop in b) {
-    if (!b.hasOwnProperty(prop)) continue;              // Handle local properties only 
-    if (propsToExclude.indexOf(prop) !== -1) continue;  // In exclusion list, skip
-
-    if (b[prop] && b[prop].constructor === Object) {
-      if (a[prop] === undefined) {
-        a[prop] = {};
+    if (b.hasOwnProperty(prop)) {
+      if (props.indexOf(prop) == -1) {
+        if (b[prop] && b[prop].constructor === Object) {
+          if (a[prop] === undefined) {
+            a[prop] = {};
+          }
+          if (a[prop].constructor === Object) {
+            exports.deepExtend(a[prop], b[prop]);
+          }
+          else {
+            if ((b[prop] === null) && a[prop] !== undefined && allowDeletion === true) {
+              delete a[prop];
+            }
+            else {
+              a[prop] = b[prop];
+            }
+          }
+        } else if (Array.isArray(b[prop])) {
+          a[prop] = [];
+          for (let i = 0; i < b[prop].length; i++) {
+            a[prop].push(b[prop][i]);
+          }
+        } else {
+          if ((b[prop] === null) && a[prop] !== undefined && allowDeletion === true) {
+            delete a[prop];
+          }
+          else {
+            a[prop] = b[prop];
+          }
+        }
       }
-      if (a[prop].constructor === Object) {
-        exports.deepExtend(a[prop], b[prop]);  // NOTE: allowDeletion not propagated!
-      }
-      else {
-        copyOrDelete(a, b, prop, allowDeletion);
-      }
-    } else if (Array.isArray(b[prop])) {
-      a[prop] = [];
-      for (let i = 0; i < b[prop].length; i++) {
-        a[prop].push(b[prop][i]);
-      }
-    } else {
-      copyOrDelete(a, b, prop, allowDeletion);
     }
   }
-
   return a;
 };
 
-
 /**
  * Deep extend an object a with the properties of object b
- *
  * @param {Object} a
  * @param {Object} b
- * @param {boolean} [protoExtend=false]  If true, the prototype values will also be extended.
- *                          (ie. the options objects that inherit from others will also get the inherited options)
- * @param {boolean} [allowDeletion=false] If true, the values of fields that are null will be deleted
+ * @param [Boolean] protoExtend --> optional parameter. If true, the prototype values will also be extended.
+ *                                  (ie. the options objects that inherit from others will also get the inherited options)
+ * @param [Boolean] global      --> optional parameter. If true, the values of fields that are null will not deleted
  * @returns {Object}
  */
-exports.deepExtend = function (a, b, protoExtend=false, allowDeletion=false) {
+exports.deepExtend = function (a, b, protoExtend, allowDeletion) {
   for (var prop in b) {
     if (b.hasOwnProperty(prop) || protoExtend === true) {
       if (b[prop] && b[prop].constructor === Object) {
@@ -317,10 +313,15 @@ exports.deepExtend = function (a, b, protoExtend=false, allowDeletion=false) {
           a[prop] = {};
         }
         if (a[prop].constructor === Object) {
-          exports.deepExtend(a[prop], b[prop], protoExtend);  // NOTE: allowDeletion not propagated!
+          exports.deepExtend(a[prop], b[prop], protoExtend);
         }
         else {
-          copyOrDelete(a, b, prop, allowDeletion);
+          if ((b[prop] === null) && a[prop] !== undefined && allowDeletion === true) {
+            delete a[prop];
+          }
+          else {
+            a[prop] = b[prop];
+          }
         }
       } else if (Array.isArray(b[prop])) {
         a[prop] = [];
@@ -328,13 +329,17 @@ exports.deepExtend = function (a, b, protoExtend=false, allowDeletion=false) {
           a[prop].push(b[prop][i]);
         }
       } else {
-        copyOrDelete(a, b, prop, allowDeletion);
+        if ((b[prop] === null) && a[prop] !== undefined && allowDeletion === true) {
+          delete a[prop];
+        }
+        else {
+          a[prop] = b[prop];
+        }
       }
     }
   }
   return a;
 };
-
 
 /**
  * Test whether all elements in two arrays are equal.
@@ -355,8 +360,8 @@ exports.equalArray = function (a, b) {
 
 /**
  * Convert an object to another type
- * @param {boolean | number | string | Date | Moment | Null | undefined} object
- * @param {string | undefined} type   Name of the type. Available types:
+ * @param {Boolean | Number | String | Date | Moment | Null | undefined} object
+ * @param {String | undefined} type   Name of the type. Available types:
  *                                    'Boolean', 'Number', 'String',
  *                                    'Date', 'Moment', ISODate', 'ASPDate'.
  * @return {*} object
@@ -512,7 +517,7 @@ var ASPDateRegex = /^\/?Date\((\-?\d+)/i;
 /**
  * Get the type of an object, for example exports.getType([]) returns 'Array'
  * @param {*} object
- * @return {string} type
+ * @return {String} type
  */
 exports.getType = function (object) {
   var type = typeof object;
@@ -559,8 +564,8 @@ exports.getType = function (object) {
 /**
  * Used to extend an array and copy it. This is used to propagate paths recursively.
  *
- * @param {Array} arr
- * @param {*} newValue
+ * @param arr
+ * @param newValue
  * @returns {Array}
  */
 exports.copyAndExtendArray = function (arr, newValue) {
@@ -570,12 +575,13 @@ exports.copyAndExtendArray = function (arr, newValue) {
   }
   newArr.push(newValue);
   return newArr;
-};
+}
 
 /**
  * Used to extend an array and copy it. This is used to propagate paths recursively.
  *
- * @param {Array} arr
+ * @param arr
+ * @param newValue
  * @returns {Array}
  */
 exports.copyArray = function (arr) {
@@ -584,7 +590,7 @@ exports.copyArray = function (arr) {
     newArr.push(arr[i]);
   }
   return newArr;
-};
+}
 
 /**
  * Retrieve the absolute left value of a DOM element
@@ -613,7 +619,7 @@ exports.getAbsoluteTop = function (elem) {
 /**
  * add a className to the given elements style
  * @param {Element} elem
- * @param {string} classNames
+ * @param {String} className
  */
 exports.addClassName = function (elem, classNames) {
   var classes = elem.className.split(' ');
@@ -627,7 +633,7 @@ exports.addClassName = function (elem, classNames) {
 /**
  * add a className to the given elements style
  * @param {Element} elem
- * @param {string} classNames
+ * @param {String} className
  */
 exports.removeClassName = function (elem, classNames) {
   var classes = elem.className.split(' ');
@@ -640,7 +646,7 @@ exports.removeClassName = function (elem, classNames) {
 
 /**
  * For each method for both arrays and objects.
- * In case of an array, the built-in Array.forEach() is applied. (**No, it's not!**)
+ * In case of an array, the built-in Array.forEach() is applied.
  * In case of an Object, the method loops over all properties of the object.
  * @param {Object | Array} object   An Object or Array
  * @param {function} callback       Callback method, called for each item in
@@ -670,7 +676,7 @@ exports.forEach = function (object, callback) {
  * Convert an object into an array: all objects properties are put into the
  * array. The resulting array is unordered.
  * @param {Object} object
- * @returns {Array} array
+ * @param {Array} array
  */
 exports.toArray = function (object) {
   var array = [];
@@ -685,7 +691,7 @@ exports.toArray = function (object) {
 /**
  * Update a property in an object
  * @param {Object} object
- * @param {string} key
+ * @param {String} key
  * @param {*} value
  * @return {Boolean} changed
  */
@@ -767,7 +773,6 @@ exports.removeEventListener = function (element, action, listener, useCapture) {
 
 /**
  * Cancels the event if it is cancelable, without stopping further propagation of the event.
- * @param {Event} event
  */
 exports.preventDefault = function (event) {
   if (!event)
@@ -813,7 +818,6 @@ exports.getTarget = function (event) {
  * Check if given element contains given parent somewhere in the DOM tree
  * @param {Element} element
  * @param {Element} parent
- * @returns {boolean}
  */
 exports.hasParent = function (element, parent) {
   var e = element;
@@ -833,7 +837,7 @@ exports.option = {};
 /**
  * Convert a value into a boolean
  * @param {Boolean | function | undefined} value
- * @param {boolean} [defaultValue]
+ * @param {Boolean} [defaultValue]
  * @returns {Boolean} bool
  */
 exports.option.asBoolean = function (value, defaultValue) {
@@ -851,8 +855,8 @@ exports.option.asBoolean = function (value, defaultValue) {
 /**
  * Convert a value into a number
  * @param {Boolean | function | undefined} value
- * @param {number} [defaultValue]
- * @returns {number} number
+ * @param {Number} [defaultValue]
+ * @returns {Number} number
  */
 exports.option.asNumber = function (value, defaultValue) {
   if (typeof value == 'function') {
@@ -868,8 +872,8 @@ exports.option.asNumber = function (value, defaultValue) {
 
 /**
  * Convert a value into a string
- * @param {string | function | undefined} value
- * @param {string} [defaultValue]
+ * @param {String | function | undefined} value
+ * @param {String} [defaultValue]
  * @returns {String} str
  */
 exports.option.asString = function (value, defaultValue) {
@@ -886,8 +890,8 @@ exports.option.asString = function (value, defaultValue) {
 
 /**
  * Convert a size or location into a string with pixels or a percentage
- * @param {string | number | function | undefined} value
- * @param {string} [defaultValue]
+ * @param {String | Number | function | undefined} value
+ * @param {String} [defaultValue]
  * @returns {String} size
  */
 exports.option.asSize = function (value, defaultValue) {
@@ -923,7 +927,7 @@ exports.option.asElement = function (value, defaultValue) {
 /**
  * http://stackoverflow.com/questions/5623838/rgb-to-hex-and-hex-to-rgb
  *
- * @param {string} hex
+ * @param {String} hex
  * @returns {{r: *, g: *, b: *}} | 255 range
  */
 exports.hexToRGB = function (hex) {
@@ -942,21 +946,20 @@ exports.hexToRGB = function (hex) {
 
 /**
  * This function takes color in hex format or rgb() or rgba() format and overrides the opacity. Returns rgba() string.
- * @param {string} color
- * @param {number} opacity
- * @returns {String}
+ * @param color
+ * @param opacity
+ * @returns {*}
  */
 exports.overrideOpacity = function (color, opacity) {
-  var rgb;
   if (color.indexOf("rgba") != -1) {
     return color;
   }
   else if (color.indexOf("rgb") != -1) {
-    rgb = color.substr(color.indexOf("(") + 1).replace(")", "").split(",");
+    var rgb = color.substr(color.indexOf("(") + 1).replace(")", "").split(",");
     return "rgba(" + rgb[0] + "," + rgb[1] + "," + rgb[2] + "," + opacity + ")"
   }
   else {
-    rgb = exports.hexToRGB(color);
+    var rgb = exports.hexToRGB(color);
     if (rgb == null) {
       return color;
     }
@@ -964,14 +967,14 @@ exports.overrideOpacity = function (color, opacity) {
       return "rgba(" + rgb.r + "," + rgb.g + "," + rgb.b + "," + opacity + ")"
     }
   }
-};
+}
 
 /**
  *
- * @param {number} red     0 -- 255
- * @param {number} green   0 -- 255
- * @param {number} blue    0 -- 255
- * @returns {String}
+ * @param red     0 -- 255
+ * @param green   0 -- 255
+ * @param blue    0 -- 255
+ * @returns {string}
  * @constructor
  */
 exports.RGBToHex = function (red, green, blue) {
@@ -1063,10 +1066,10 @@ exports.parseColor = function (color) {
 /**
  * http://www.javascripter.net/faq/rgb2hsv.htm
  *
- * @param {number} red
- * @param {number} green
- * @param {number} blue
- * @returns {{h: number, s: number, v: number}}
+ * @param red
+ * @param green
+ * @param blue
+ * @returns {*}
  * @constructor
  */
 exports.RGBToHSV = function (red, green, blue) {
@@ -1118,7 +1121,7 @@ var cssUtil = {
 /**
  * Append a string with css styles to an element
  * @param {Element} element
- * @param {string} cssText
+ * @param {String} cssText
  */
 exports.addCssText = function (element, cssText) {
   var currentStyles = cssUtil.split(element.style.cssText);
@@ -1131,7 +1134,7 @@ exports.addCssText = function (element, cssText) {
 /**
  * Remove a string with css styles from an element
  * @param {Element} element
- * @param {string} cssText
+ * @param {String} cssText
  */
 exports.removeCssText = function (element, cssText) {
   var styles = cssUtil.split(element.style.cssText);
@@ -1148,9 +1151,9 @@ exports.removeCssText = function (element, cssText) {
 
 /**
  * https://gist.github.com/mjijackson/5311256
- * @param {number} h
- * @param {number} s
- * @param {number} v
+ * @param h
+ * @param s
+ * @param v
  * @returns {{r: number, g: number, b: number}}
  * @constructor
  */
@@ -1194,23 +1197,22 @@ exports.isValidRGB = function (rgb) {
   rgb = rgb.replace(" ", "");
   var isOk = /rgb\((\d{1,3}),(\d{1,3}),(\d{1,3})\)/i.test(rgb);
   return isOk;
-};
+}
 exports.isValidRGBA = function (rgba) {
   rgba = rgba.replace(" ", "");
   var isOk = /rgba\((\d{1,3}),(\d{1,3}),(\d{1,3}),(.{1,3})\)/i.test(rgba);
   return isOk;
-};
+}
 
 /**
  * This recursively redirects the prototype of JSON objects to the referenceObject
  * This is used for default options.
  *
- * @param {Array.<string>} fields
- * @param {Object} referenceObject
+ * @param referenceObject
  * @returns {*}
  */
 exports.selectiveBridgeObject = function (fields, referenceObject) {
-  if (referenceObject !== null && typeof referenceObject === "object") {  // !!! typeof null === 'object'
+  if (typeof referenceObject == "object") {
     var objectTo = Object.create(referenceObject);
     for (var i = 0; i < fields.length; i++) {
       if (referenceObject.hasOwnProperty(fields[i])) {
@@ -1230,22 +1232,16 @@ exports.selectiveBridgeObject = function (fields, referenceObject) {
  * This recursively redirects the prototype of JSON objects to the referenceObject
  * This is used for default options.
  *
- * @param {Object} referenceObject
+ * @param referenceObject
  * @returns {*}
  */
 exports.bridgeObject = function (referenceObject) {
-  if (referenceObject !== null && typeof referenceObject === "object") {  // !!! typeof null === 'object'
+  if (typeof referenceObject == "object") {
     var objectTo = Object.create(referenceObject);
-    if (referenceObject instanceof Element) {
-      // Avoid bridging DOM objects
-      objectTo = referenceObject;
-    } else {
-      objectTo = Object.create(referenceObject);
-      for (var i in referenceObject) {
-        if (referenceObject.hasOwnProperty(i)) {
-          if (typeof referenceObject[i] == "object") {
-            objectTo[i] = exports.bridgeObject(referenceObject[i]);
-          }
+    for (var i in referenceObject) {
+      if (referenceObject.hasOwnProperty(i)) {
+        if (typeof referenceObject[i] == "object") {
+          objectTo[i] = exports.bridgeObject(referenceObject[i]);
         }
       }
     }
@@ -1259,9 +1255,9 @@ exports.bridgeObject = function (referenceObject) {
 /**
  * This method provides a stable sort implementation, very fast for presorted data
  *
- * @param {Array} a the array
- * @param {function} compare an order comparator
- * @returns {Array}
+ * @param a the array
+ * @param a order comparator
+ * @returns {the array}
  */
 exports.insertSort = function (a,compare) {
   for (var i = 0; i < a.length; i++) {
@@ -1274,128 +1270,35 @@ exports.insertSort = function (a,compare) {
   return a;
 }
 
-
 /**
- * This is used to set the options of subobjects in the options object.
+ * this is used to set the options of subobjects in the options object. A requirement of these subobjects
+ * is that they have an 'enabled' element which is optional for the user but mandatory for the program.
  *
- * A requirement of these subobjects is that they have an 'enabled' element
- * which is optional for the user but mandatory for the program.
- *
- * The added value here of the merge is that option 'enabled' is set as required.
- *
- *
- * @param {object} mergeTarget   | either this.options or the options used for the groups.
- * @param {object} options       | options
- * @param {string} option        | option key in the options argument
- * @param {object} globalOptions | global options, passed in to determine value of option 'enabled'
+ * @param [object] mergeTarget | this is either this.options or the options used for the groups.
+ * @param [object] options     | options
+ * @param [String] option      | this is the option key in the options argument
  */
-exports.mergeOptions = function (mergeTarget, options, option, globalOptions = {}) {
-  // Local helpers
-  var isPresent = function(obj) {
-    return obj !== null && obj !== undefined;
+exports.mergeOptions = function (mergeTarget, options, option, allowDeletion = false, globalOptions = {}) {
+  if (options[option] === null) {
+    mergeTarget[option] = Object.create(globalOptions[option]);
   }
-
-  var isObject = function(obj) {
-    return obj !== null && typeof obj === 'object';
-  }
-
-  // https://stackoverflow.com/a/34491287/1223531
-  var isEmpty = function(obj) {
-    for (var x in obj) { if (obj.hasOwnProperty(x)) return false; }
-    return true;
-  };
-
-  // Guards
-  if (!isObject(mergeTarget)) {
-    throw new Error('Parameter mergeTarget must be an object');
-  }
-
-  if (!isObject(options)) {
-    throw new Error('Parameter options must be an object');
-  }
-
-  if (!isPresent(option)) {
-    throw new Error('Parameter option must have a value');
-  }
-
-  if (!isObject(globalOptions)) {
-    throw new Error('Parameter globalOptions must be an object');
-  }
-
-
-  //
-  // Actual merge routine, separated from main logic
-  // Only a single level of options is merged. Deeper levels are ref'd. This may actually be an issue.
-  //
-  var doMerge = function(target, options, option) {
-    if (!isObject(target[option])) {
-      target[option] = {};
-    }
-
-    let src = options[option];
-    let dst = target[option];
-    for (var prop in src) {
-      if (src.hasOwnProperty(prop)) {
-        dst[prop] = src[prop];
+  else {
+    if (options[option] !== undefined) {
+      if (typeof options[option] === 'boolean') {
+        mergeTarget[option].enabled = options[option];
+      }
+      else {
+        if (options[option].enabled === undefined) {
+          mergeTarget[option].enabled = true;
+        }
+        for (var prop in options[option]) {
+          if (options[option].hasOwnProperty(prop)) {
+            mergeTarget[option][prop] = options[option][prop];
+          }
+        }
       }
     }
-  };
-
-
-  // Local initialization
-  var srcOption     = options[option];
-  var globalPassed  = isObject(globalOptions) && !isEmpty(globalOptions);
-  var globalOption  = globalPassed? globalOptions[option]: undefined;
-  var globalEnabled = globalOption? globalOption.enabled: undefined;
-
-
-  /////////////////////////////////////////
-  // Main routine
-  /////////////////////////////////////////
-  if (srcOption === undefined) {
-    return;  // Nothing to do
   }
-
-
-  if ((typeof srcOption) === 'boolean') {
-    if (!isObject(mergeTarget[option])) {
-      mergeTarget[option] = {};
-    }
-
-    mergeTarget[option].enabled = srcOption;
-    return;
-  } 
-
-  if (srcOption === null && !isObject(mergeTarget[option])) {
-    // If possible, explicit copy from globals
-    if (isPresent(globalOption)) {
-      mergeTarget[option] = Object.create(globalOption);
-    } else {
-      return;  // Nothing to do
-    }
-  }
-
-  if (!isObject(srcOption)) {
-    return;
-  }
-
-  //
-  // Ensure that 'enabled' is properly set. It is required internally
-  // Note that the value from options will always overwrite the existing value
-  //
-  let enabled = true;  // default value
-
-  if (srcOption.enabled !== undefined) {
-    enabled = srcOption.enabled;
-  } else {
-    // Take from globals, if present
-    if (globalEnabled !== undefined) {
-      enabled = globalOption.enabled;
-    }
-  }
-
-  doMerge(mergeTarget, options, option);
-  mergeTarget[option].enabled = enabled;
 }
 
 
@@ -1405,8 +1308,8 @@ exports.mergeOptions = function (mergeTarget, options, option, globalOptions = {
  *
  * @param {Item[]} orderedItems       | Items ordered by start
  * @param {function} comparator       | -1 is lower, 0 is equal, 1 is higher
- * @param {string} field
- * @param {string} field2
+ * @param {String} field
+ * @param {String} field2
  * @returns {number}
  * @private
  */
@@ -1446,8 +1349,8 @@ exports.binarySearchCustom = function (orderedItems, comparator, field, field2) 
  *
  * @param {Array} orderedItems
  * @param {{start: number, end: number}} target
- * @param {string} field
- * @param {string} sidePreference   'before' or 'after'
+ * @param {String} field
+ * @param {String} sidePreference   'before' or 'after'
  * @param {function} comparator an optional comparator, returning -1,0,1 for <,==,>.
  * @returns {number}
  * @private
@@ -1459,7 +1362,7 @@ exports.binarySearchValue = function (orderedItems, target, field, sidePreferenc
   var high = orderedItems.length - 1;
   var prevValue, value, nextValue, middle;
 
-  comparator = comparator != undefined ? comparator : function (a, b) {
+  var comparator = comparator != undefined ? comparator : function (a, b) {
     return a == b ? 0 : a < b ? -1 : 1
   };
 
@@ -1579,7 +1482,6 @@ exports.getScrollBarWidth = function () {
 
   return (w1 - w2);
 };
-
 
 exports.topMost = function (pile, accessors) {
   let candidate;

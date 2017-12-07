@@ -13,8 +13,6 @@ let object = 'object'; // should only be in a __type__ property
 let dom = 'dom';
 let any = 'any';
 
-// List of endpoints
-let endPoints = ['arrow', 'circle', 'bar'];
 
 let allOptions = {
   configure: {
@@ -26,9 +24,9 @@ let allOptions = {
   },
   edges: {
     arrows: {
-      to: { enabled: { boolean: bool }, scaleFactor: { number }, type: { string: endPoints }, __type__: { object, boolean: bool } },
-      middle: { enabled: { boolean: bool }, scaleFactor: { number }, type: { string: endPoints }, __type__: { object, boolean: bool } },
-      from: { enabled: { boolean: bool }, scaleFactor: { number }, type: { string: endPoints }, __type__: { object, boolean: bool } },
+      to: { enabled: { boolean: bool }, scaleFactor: { number }, type: { string: ['arrow', 'circle'] }, __type__: { object, boolean: bool } },
+      middle: { enabled: { boolean: bool }, scaleFactor: { number }, type: { string: ['arrow', 'circle'] }, __type__: { object, boolean: bool } },
+      from: { enabled: { boolean: bool }, scaleFactor: { number }, type: { string: ['arrow', 'circle'] }, __type__: { object, boolean: bool } },
       __type__: { string: ['from', 'to', 'middle'], object }
     },
     arrowStrikethrough: { boolean: bool },
@@ -321,7 +319,7 @@ let allOptions = {
       y: { number },
       __type__: { object, boolean: bool }
     },
-    shape: { string: ['ellipse', 'circle', 'database', 'box', 'text', 'image', 'circularImage', 'diamond', 'dot', 'star', 'triangle', 'triangleDown', 'square', 'icon', 'hexagon'] },
+    shape: { string: ['ellipse', 'circle', 'database', 'box', 'text', 'image', 'circularImage', 'diamond', 'dot', 'star', 'triangle', 'triangleDown', 'square', 'icon'] },
     shapeProperties: {
       borderDashes: { boolean: bool, array },
       borderRadius: { number },
@@ -331,7 +329,7 @@ let allOptions = {
       __type__: { object }
     },
     size: { number },
-    title: { string, dom, 'undefined': 'undefined' },
+    title: { string, 'undefined': 'undefined' },
     value: { number, 'undefined': 'undefined' },
     widthConstraint: {
       minimum: { number },
@@ -468,7 +466,7 @@ let configureOptions = {
       x: [5, -30, 30, 1],
       y: [5, -30, 30, 1]
     },
-    shape: ['ellipse', 'box', 'circle', 'database', 'diamond', 'dot', 'square', 'star', 'text', 'triangle', 'triangleDown','hexagon'],
+    shape: ['ellipse', 'box', 'circle', 'database', 'diamond', 'dot', 'square', 'star', 'text', 'triangle', 'triangleDown'],
     shapeProperties: {
       borderDashes: false,
       borderRadius: [6, 0, 20, 1],

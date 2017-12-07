@@ -1,3 +1,5 @@
+var Emitter = require('emitter-component');
+var Hammer = require('../module/hammer');
 var moment = require('../module/moment');
 var util = require('../util');
 var DataSet = require('../DataSet');
@@ -20,9 +22,8 @@ var Validator = require('../shared/Validator').default;
  * Create a timeline visualization
  * @param {HTMLElement} container
  * @param {vis.DataSet | Array} [items]
- * @param {vis.DataSet | Array | vis.DataView | Object} [groups]
  * @param {Object} [options]  See Graph2d.setOptions for the available options.
- * @constructor Graph2d
+ * @constructor
  * @extends Core
  */
 function Graph2d (container, items, groups, options) {
@@ -213,10 +214,9 @@ Graph2d.prototype.setGroups = function(groups) {
 
 /**
  * Returns an object containing an SVG element with the icon of the group (size determined by iconWidth and iconHeight), the label of the group (content) and the yAxisOrientation of the group (left or right).
- * @param {vis.GraphGroup.id} groupId
- * @param {number} width
- * @param {number} height
- * @returns {{icon: SVGElement, label: string, orientation: string}|string}
+ * @param groupId
+ * @param width
+ * @param height
  */
 Graph2d.prototype.getLegend = function(groupId, width, height) {
   if (width  === undefined) {width  = 15;}
@@ -231,8 +231,8 @@ Graph2d.prototype.getLegend = function(groupId, width, height) {
 
 /**
  * This checks if the visible option of the supplied group (by ID) is true or false.
- * @param {vis.GraphGroup.id} groupId
- * @returns {boolean}
+ * @param groupId
+ * @returns {*}
  */
 Graph2d.prototype.isGroupVisible = function(groupId) {
   if (this.linegraph.groups[groupId] !== undefined) {

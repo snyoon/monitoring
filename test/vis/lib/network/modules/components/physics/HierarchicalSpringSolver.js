@@ -1,22 +1,10 @@
-/**
- * Hierarchical Spring Solver
- */
 class HierarchicalSpringSolver {
-  /**
-   * @param {Object} body
-   * @param {{physicsNodeIndices: Array, physicsEdgeIndices: Array, forces: {}, velocities: {}}} physicsBody
-   * @param {Object} options
-   */
   constructor(body, physicsBody, options) {
     this.body = body;
     this.physicsBody = physicsBody;
     this.setOptions(options);
   }
 
-  /**
-   *
-   * @param {Object} options
-   */
   setOptions(options) {
     this.options = options;
   }
@@ -85,7 +73,7 @@ class HierarchicalSpringSolver {
     }
 
     // normalize spring forces
-    springForce = 1;
+    var springForce = 1;
     var springFx, springFy;
     for (let i = 0; i < nodeIndices.length; i++) {
       let nodeId = nodeIndices[i];
@@ -113,6 +101,7 @@ class HierarchicalSpringSolver {
       forces[nodeId].y -= correctionFy;
     }
   }
+
 }
 
 export default HierarchicalSpringSolver;

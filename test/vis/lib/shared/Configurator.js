@@ -10,14 +10,13 @@ var ColorPicker = require('./ColorPicker').default;
  * Strings with should be written as array: [option1, option2, option3, ..]
  *
  * The options are matched with their counterparts in each of the modules and the values used in the configuration are
+ *
+ * @param parentModule        | the location where parentModule.setOptions() can be called
+ * @param defaultContainer    | the default container of the module
+ * @param configureOptions    | the fully configured and predefined options set found in allOptions.js
+ * @param pixelRatio          | canvas pixel ratio
  */
 class Configurator {
-  /**
-   * @param {Object} parentModule        | the location where parentModule.setOptions() can be called
-   * @param {Object} defaultContainer    | the default container of the module
-   * @param {Object} configureOptions    | the fully configured and predefined options set found in allOptions.js
-   * @param {number} pixelRatio          | canvas pixel ratio
-   */
   constructor(parentModule, defaultContainer, configureOptions, pixelRatio = 1) {
     this.parent = parentModule;
     this.changedOptions = [];
@@ -50,7 +49,7 @@ class Configurator {
    * refresh all options.
    * Because all modules parse their options by themselves, we just use their options. We copy them here.
    *
-   * @param {Object} options
+   * @param options
    */
   setOptions(options) {
     if (options !== undefined) {
@@ -96,10 +95,7 @@ class Configurator {
     this._clean();
   }
 
-  /**
-   *
-   * @param {Object} moduleOptions
-   */
+
   setModuleOptions(moduleOptions) {
     this.moduleOptions = moduleOptions;
     if (this.options.enabled === true) {
@@ -229,9 +225,8 @@ class Configurator {
 
   /**
    * all option elements are wrapped in an item
-   * @param {Array} path    | where to look for the actual option
-   * @param {Array.<Element>} domElements
-   * @returns {number}
+   * @param path
+   * @param domElements
    * @private
    */
   _makeItem(path, ...domElements) {
@@ -250,7 +245,7 @@ class Configurator {
 
   /**
    * header for major subjects
-   * @param {string} name
+   * @param name
    * @private
    */
   _makeHeader(name) {
@@ -263,9 +258,9 @@ class Configurator {
 
   /**
    * make a label, if it is an object label, it gets different styling.
-   * @param {string} name
-   * @param {array} path    | where to look for the actual option
-   * @param {string} objectLabel
+   * @param name
+   * @param path
+   * @param objectLabel
    * @returns {HTMLElement}
    * @private
    */
@@ -284,9 +279,9 @@ class Configurator {
 
   /**
    * make a dropdown list for multiple possible string optoins
-   * @param {Array.<number>} arr
-   * @param {number} value
-   * @param {array} path    | where to look for the actual option
+   * @param arr
+   * @param value
+   * @param path
    * @private
    */
   _makeDropdown(arr, value, path) {
@@ -319,9 +314,9 @@ class Configurator {
 
   /**
    * make a range object for numeric options
-   * @param {Array.<number>} arr
-   * @param {number} value
-   * @param {array} path    | where to look for the actual option
+   * @param arr
+   * @param value
+   * @param path
    * @private
    */
   _makeRange(arr, value, path) {
@@ -336,8 +331,7 @@ class Configurator {
       range.min = min;
       range.max = max;
     }
-    // TODO: Add some error handling and remove this lint exception
-    catch (err) {}  // eslint-disable-line no-empty
+    catch (err) {}
     range.step = step;
 
     // set up the popup settings in case they are needed.
@@ -389,8 +383,8 @@ class Configurator {
 
   /**
    * prepare the popup
-   * @param {string} string
-   * @param {number} index
+   * @param string
+   * @param index
    * @private
    */
   _setupPopup(string, index) {
@@ -442,9 +436,9 @@ class Configurator {
 
   /**
    * make a checkbox for boolean options.
-   * @param {number} defaultValue
-   * @param {number} value
-   * @param {array} path    | where to look for the actual option
+   * @param defaultValue
+   * @param value
+   * @param path
    * @private
    */
   _makeCheckbox(defaultValue, value, path) {
@@ -475,9 +469,9 @@ class Configurator {
 
   /**
    * make a text input field for string options.
-   * @param {number} defaultValue
-   * @param {number} value
-   * @param {array} path    | where to look for the actual option
+   * @param defaultValue
+   * @param value
+   * @param path
    * @private
    */
   _makeTextInput(defaultValue, value, path) {
@@ -499,9 +493,9 @@ class Configurator {
 
   /**
    * make a color field with a color picker for color fields
-   * @param {Array.<number>} arr
-   * @param {number} value
-   * @param {array} path    | where to look for the actual option
+   * @param arr
+   * @param value
+   * @param path
    * @private
    */
   _makeColorField(arr, value, path) {
@@ -529,9 +523,10 @@ class Configurator {
 
   /**
    * used by the color buttons to call the color picker.
-   * @param {number} value
-   * @param {HTMLElement} div
-   * @param {array} path    | where to look for the actual option
+   * @param event
+   * @param value
+   * @param div
+   * @param path
    * @private
    */
   _showColorPicker(value, div, path) {
@@ -559,10 +554,8 @@ class Configurator {
 
   /**
    * parse an object and draw the correct items
-   * @param {Object} obj
-   * @param {array} [path=[]]    | where to look for the actual option
-   * @param {boolean} [checkOnly=false]
-   * @returns {boolean}
+   * @param obj
+   * @param path
    * @private
    */
   _handleObject(obj, path = [], checkOnly = false) {
@@ -642,9 +635,10 @@ class Configurator {
 
   /**
    * handle the array type of option
-   * @param {Array.<number>} arr
-   * @param {number} value
-   * @param {array} path    | where to look for the actual option
+   * @param optionName
+   * @param arr
+   * @param value
+   * @param path
    * @private
    */
   _handleArray(arr, value, path) {
@@ -666,8 +660,8 @@ class Configurator {
 
   /**
    * called to update the network with the new settings.
-   * @param {number} value
-   * @param {array} path    | where to look for the actual option
+   * @param value
+   * @param path
    * @private
    */
   _update(value, path) {
@@ -680,15 +674,6 @@ class Configurator {
     this.parent.setOptions(options);
   }
 
-
-  /**
-   *
-   * @param {string|Boolean} value
-   * @param {Array.<string>} path
-   * @param {{}} optionsObj
-   * @returns {{}}
-   * @private
-   */
   _constructOptions(value, path, optionsObj = {}) {
     let pointer = optionsObj;
 
@@ -712,18 +697,11 @@ class Configurator {
     return optionsObj;
   }
 
-  /**
-   * @private
-   */
   _printOptions() {
     let options = this.getOptions();
     this.optionsContainer.innerHTML = '<pre>var options = ' + JSON.stringify(options, null, 2) + '</pre>';
   }
 
-  /**
-   *
-   * @returns {{}} options
-   */
   getOptions() {
     let options = {};
     for (var i = 0; i < this.changedOptions.length; i++) {

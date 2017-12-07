@@ -1,17 +1,11 @@
 var util = require("../../util");
 var DataSet = require('../../DataSet');
 var DataView = require('../../DataView');
-var Edge = require("./components/Edge").default;
 
-/**
- * Handler for Edges
- */
+var Edge = require("./components/Edge").default;
+var Label = require("./components/shared/Label").default;
+
 class EdgesHandler {
-  /**
-   * @param {Object} body
-   * @param {Array.<Image>} images
-   * @param {Array.<Group>} groups
-   */
   constructor(body, images, groups) {
     this.body = body;
     this.images = images;
@@ -29,7 +23,7 @@ class EdgesHandler {
     this.options = {};
     this.defaultOptions = {
       arrows: {
-        to:     {enabled: false, scaleFactor:1, type: 'arrow'},// boolean / {arrowScaleFactor:1} / {enabled: false, arrowScaleFactor:1}
+        to:     {enabled: false, scaleFactor:1, type: 'arrow'}, // boolean / {arrowScaleFactor:1} / {enabled: false, arrowScaleFactor:1}
         middle: {enabled: false, scaleFactor:1, type: 'arrow'},
         from:   {enabled: false, scaleFactor:1, type: 'arrow'}
       },
@@ -114,21 +108,18 @@ class EdgesHandler {
       value: undefined
     };
 
-    util.deepExtend(this.options, this.defaultOptions);
+    util.extend(this.options, this.defaultOptions);
 
     this.bindEventListeners();
   }
 
-  /**
-   * Binds event listeners
-   */
   bindEventListeners() {
     // this allows external modules to force all dynamic curves to turn static.
-    this.body.emitter.on("_forceDisableDynamicCurves", (type, emit = true) => {
+    this.body.emitter.on("_forceDisableDynamicCurves", (type) => {
       if (type === 'dynamic') {
         type = 'continuous';
       }
-      let dataChanged = false;
+      let emitChange = false;
       for (let edgeId in this.body.edges) {
         if (this.body.edges.hasOwnProperty(edgeId)) {
           let edge = this.body.edges[edgeId];
@@ -137,34 +128,27 @@ class EdgesHandler {
           // only forcibly remove the smooth curve if the data has been set of the edge has the smooth curves defined.
           // this is because a change in the global would not affect these curves.
           if (edgeData !== undefined) {
-            let smoothOptions = edgeData.smooth;
-            if (smoothOptions !== undefined) {
-              if (smoothOptions.enabled === true && smoothOptions.type === 'dynamic') {
+            let edgeOptions = edgeData.smooth;
+            if (edgeOptions !== undefined) {
+              if (edgeOptions.enabled === true && edgeOptions.type === 'dynamic') {
                 if (type === undefined) {
                   edge.setOptions({smooth: false});
                 }
                 else {
                   edge.setOptions({smooth: {type: type}});
                 }
-                dataChanged = true;
+                emitChange = true;
               }
             }
           }
         }
       }
-      if (emit === true && dataChanged === true) {
+      if (emitChange === true) {
         this.body.emitter.emit("_dataChanged");
       }
     });
 
     // this is called when options of EXISTING nodes or edges have changed.
-    //
-    // NOTE: Not true, called when options have NOT changed, for both existing as well as new nodes.
-    //       See update() for logic.
-    // TODO: Verify and examine the consequences of this. It might still trigger when
-    //       non-option fields have changed, but then reconnecting edges is still useless.
-    //       Alternatively, it might also be called when edges are removed.
-    //
     this.body.emitter.on("_dataUpdated", () => {
       this.reconnectEdges();
     });
@@ -186,14 +170,11 @@ class EdgesHandler {
 
   }
 
-  /**
-   *
-   * @param {Object} options
-   */
   setOptions(options) {
+    this.edgeOptions = options;
     if (options !== undefined) {
       // use the parser from the Edge class to fill in all shorthand notations
-      Edge.parseOptions(this.options, options, true, this.defaultOptions, true);
+      Edge.parseOptions(this.options, options);
 
       // update smooth settings in all edges
       let dataChanged = false;
@@ -207,6 +188,8 @@ class EdgesHandler {
 
       // update fonts in all edges
       if (options.font !== undefined) {
+        // use the parser from the Label class to fill in all shorthand notations
+        Label.parseOptions(this.options.font, options);
         for (let edgeId in this.body.edges) {
           if (this.body.edges.hasOwnProperty(edgeId)) {
             this.body.edges[edgeId].updateLabelModule();
@@ -225,7 +208,7 @@ class EdgesHandler {
   /**
    * Load edges by reading the data table
    * @param {Array | DataSet | DataView} edges    The data containing the edges.
-   * @param {boolean} [doNotEmit=false]
+   * @private
    * @private
    */
   setData(edges, doNotEmit = false) {
@@ -264,7 +247,6 @@ class EdgesHandler {
       this.add(ids, true);
     }
 
-    this.body.emitter.emit('_adjustEdgesForHierarchicalLayout');
     if (doNotEmit === false) {
       this.body.emitter.emit("_dataChanged");
     }
@@ -273,8 +255,7 @@ class EdgesHandler {
 
   /**
    * Add edges
-   * @param {number[] | string[]} ids
-   * @param {boolean} [doNotEmit=false]
+   * @param {Number[] | String[]} ids
    * @private
    */
   add(ids, doNotEmit = false) {
@@ -293,8 +274,6 @@ class EdgesHandler {
       edges[id] = this.create(data);
     }
 
-    this.body.emitter.emit('_adjustEdgesForHierarchicalLayout');
-
     if (doNotEmit === false) {
       this.body.emitter.emit("_dataChanged");
     }
@@ -304,7 +283,7 @@ class EdgesHandler {
 
   /**
    * Update existing edges, or create them when not yet existing
-   * @param {number[] | string[]} ids
+   * @param {Number[] | String[]} ids
    * @private
    */
   update(ids) {
@@ -329,7 +308,6 @@ class EdgesHandler {
     }
 
     if (dataChanged === true) {
-      this.body.emitter.emit('_adjustEdgesForHierarchicalLayout');
       this.body.emitter.emit("_dataChanged");
     }
     else {
@@ -338,47 +316,43 @@ class EdgesHandler {
   }
 
 
+
   /**
    * Remove existing edges. Non existing ids will be ignored
-   * @param {number[] | string[]} ids
-   * @param {boolean} [emit=true]
+   * @param {Number[] | String[]} ids
    * @private
    */
-  remove(ids, emit = true) {
-    if (ids.length === 0) return;  // early out
-
+  remove(ids) {
     var edges = this.body.edges;
-    util.forEach(ids, (id) => {
+    for (var i = 0; i < ids.length; i++) {
+      var id = ids[i];
       var edge = edges[id];
       if (edge !== undefined) {
-        edge.remove();
+        edge.cleanup();
+        edge.disconnect();
+        delete edges[id];
       }
-    });
+    }
 
-    if (emit) {
-      this.body.emitter.emit("_dataChanged");
+    this.body.emitter.emit("_dataChanged");
+  }
+
+  refresh() {
+    let edges = this.body.edges;
+    for (let edgeId in edges) {
+      let edge = undefined;
+      if (edges.hasOwnProperty(edgeId)) {
+        edge = edges[edgeId];
+      }
+      let data = this.body.data.edges._data[edgeId];
+      if (edge !== undefined && data !== undefined) {
+        edge.setOptions(data);
+      }
     }
   }
 
-  /**
-   * Refreshes Edge Handler
-   */
-  refresh() {
-    util.forEach(this.body.edges, (edge, edgeId) => {
-      let data = this.body.data.edges._data[edgeId];
-      if (data !== undefined) {
-        edge.setOptions(data);
-      }
-    });
-  }
-
-  /**
-   *
-   * @param {Object} properties
-   * @returns {Edge}
-   */
   create(properties) {
-    return new Edge(properties, this.body, this.options, this.defaultOptions)
+    return new Edge(properties, this.body, this.options, this.defaultOptions, this.edgeOptions)
   }
 
   /**
@@ -406,11 +380,7 @@ class EdgesHandler {
     }
   }
 
-  /**
-   *
-   * @param {Edge.id} edgeId
-   * @returns {Array}
-   */
+
   getConnectedNodes(edgeId) {
     let nodeList = [];
     if (this.body.edges[edgeId] !== undefined) {
@@ -421,59 +391,6 @@ class EdgesHandler {
     return nodeList;
   }
 
-  /**
-   * There is no direct relation between the nodes and the edges DataSet,
-   * so the right place to do call this is in the handler for event `_dataUpdated`.
-   */
-  _updateState() {
-    this._addMissingEdges();
-    this._removeInvalidEdges();
-  }
-
-  /**
-   * Scan for missing nodes and remove corresponding edges, if any.
-   * @private
-   */
-  _removeInvalidEdges() {
-    
-    let edgesToDelete = [];
-
-    util.forEach(this.body.edges, (edge, id) => {
-      let toNode = this.body.nodes[edge.toId];
-      let fromNode = this.body.nodes[edge.fromId];
-
-      // Skip clustering edges here, let the Clustering module handle those
-      if ((toNode   !== undefined && toNode.isCluster   === true)
-       || (fromNode !== undefined && fromNode.isCluster === true)) {
-        return;
-      }
-
-      if (toNode === undefined || fromNode === undefined) {
-        edgesToDelete.push(id);
-      }
-    });
-
-    this.remove(edgesToDelete, false);
-  }
-
-  /**
-   * add all edges from dataset that are not in the cached state
-   * @private
-   */ 
-  _addMissingEdges() {
-     let edges = this.body.edges;
-     let edgesData = this.body.data.edges;
-     let addIds = [];
-
-     edgesData.forEach((edgeData, edgeId) => {
-         let edge = edges[edgeId];
-         if(edge===undefined) {
-           addIds.push(edgeId);
-         }
-     });
-     
-     this.add(addIds,true);
-   }  
 }
 
 export default EdgesHandler;

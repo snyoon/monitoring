@@ -1,12 +1,5 @@
-/**
- * Barnes Hut Solver
- */
+
 class BarnesHutSolver {
-  /**
-   * @param {Object} body
-   * @param {{physicsNodeIndices: Array, physicsEdgeIndices: Array, forces: {}, velocities: {}}} physicsBody
-   * @param {Object} options
-   */
   constructor(body, physicsBody, options) {
     this.body = body;
     this.physicsBody = physicsBody;
@@ -15,25 +8,15 @@ class BarnesHutSolver {
     this.randomSeed = 5;
 
     // debug: show grid
-    // this.body.emitter.on("afterDrawing", (ctx) => {this._debug(ctx,'#ff0000')})
+    //this.body.emitter.on("afterDrawing", (ctx) => {this._debug(ctx,'#ff0000')})
   }
 
-  /**
-   *
-   * @param {Object} options
-   */
   setOptions(options) {
     this.options = options;
     this.thetaInversed = 1 / this.options.theta;
-
-    // if 1 then min distance = 0.5, if 0.5 then min distance = 0.5 + 0.5*node.shape.radius
-    this.overlapAvoidanceFactor = 1 - Math.max(0, Math.min(1, this.options.avoidOverlap));
+    this.overlapAvoidanceFactor = 1 - Math.max(0, Math.min(1,this.options.avoidOverlap)); // if 1 then min distance = 0.5, if 0.5 then min distance = 0.5 + 0.5*node.shape.radius
   }
 
-  /**
-   *
-   * @returns {number} random integer
-   */
   seededRandom() {
     var x = Math.sin(this.randomSeed++) * 10000;
     return x - Math.floor(x);
@@ -64,7 +47,10 @@ class BarnesHutSolver {
         node = nodes[nodeIndices[i]];
         if (node.options.mass > 0) {
           // starting with root is irrelevant, it never passes the BarnesHutSolver condition
-          this._getForceContributions(barnesHutTree.root, node);
+          this._getForceContribution(barnesHutTree.root.children.NW, node);
+          this._getForceContribution(barnesHutTree.root.children.NE, node);
+          this._getForceContribution(barnesHutTree.root.children.SW, node);
+          this._getForceContribution(barnesHutTree.root.children.SE, node);
         }
       }
     }
@@ -72,24 +58,11 @@ class BarnesHutSolver {
 
 
   /**
-   * @param {Object} parentBranch
-   * @param {Node} node
-   * @private
-   */
-  _getForceContributions(parentBranch, node) {
-    this._getForceContribution(parentBranch.children.NW, node);
-    this._getForceContribution(parentBranch.children.NE, node);
-    this._getForceContribution(parentBranch.children.SW, node);
-    this._getForceContribution(parentBranch.children.SE, node);
-  }
-
-
-  /**
    * This function traverses the barnesHutTree. It checks when it can approximate distant nodes with their center of mass.
    * If a region contains a single node, we check if it is not itself, then we apply the force.
    *
-   * @param {Object} parentBranch
-   * @param {Node} node
+   * @param parentBranch
+   * @param node
    * @private
    */
   _getForceContribution(parentBranch, node) {
@@ -111,7 +84,10 @@ class BarnesHutSolver {
       else {
         // Did not pass the condition, go into children if available
         if (parentBranch.childrenCount === 4) {
-          this._getForceContributions(parentBranch, node);
+          this._getForceContribution(parentBranch.children.NW, node);
+          this._getForceContribution(parentBranch.children.NE, node);
+          this._getForceContribution(parentBranch.children.SW, node);
+          this._getForceContribution(parentBranch.children.SE, node);
         }
         else { // parentBranch must have only one node, if it was empty we wouldnt be here
           if (parentBranch.children.data.id != node.id) { // if it is not self
@@ -126,11 +102,11 @@ class BarnesHutSolver {
   /**
    * Calculate the forces based on the distance.
    *
-   * @param {number} distance
-   * @param {number} dx
-   * @param {number} dy
-   * @param {Node} node
-   * @param {Object} parentBranch
+   * @param distance
+   * @param dx
+   * @param dy
+   * @param node
+   * @param parentBranch
    * @private
    */
   _calculateForces(distance, dx, dy, node, parentBranch) {
@@ -157,9 +133,8 @@ class BarnesHutSolver {
   /**
    * This function constructs the barnesHut tree recursively. It creates the root, splits it and starts placing the nodes.
    *
-   * @param {Array.<Node>} nodes
-   * @param {Array.<number>} nodeIndices
-   * @returns {{root: {centerOfMass: {x: number, y: number}, mass: number, range: {minX: number, maxX: number, minY: number, maxY: number}, size: number, calcSize: number, children: {data: null}, maxWidth: number, level: number, childrenCount: number}}} BarnesHutTree
+   * @param nodes
+   * @param nodeIndices
    * @private
    */
   _formBarnesHutTree(nodes, nodeIndices) {
@@ -173,10 +148,9 @@ class BarnesHutSolver {
 
     // get the range of the nodes
     for (let i = 1; i < nodeCount; i++) {
-      let node = nodes[nodeIndices[i]];
-      let x = node.x;
-      let y = node.y;
-      if (node.options.mass > 0) {
+      let x = nodes[nodeIndices[i]].x;
+      let y = nodes[nodeIndices[i]].y;
+      if (nodes[nodeIndices[i]].options.mass > 0) {
         if (x < minX) {
           minX = x;
         }
@@ -243,20 +217,19 @@ class BarnesHutSolver {
   /**
    * this updates the mass of a branch. this is increased by adding a node.
    *
-   * @param {Object} parentBranch
-   * @param {Node} node
+   * @param parentBranch
+   * @param node
    * @private
    */
   _updateBranchMass(parentBranch, node) {
-    let centerOfMass = parentBranch.centerOfMass;
     let totalMass = parentBranch.mass + node.options.mass;
     let totalMassInv = 1 / totalMass;
 
-    centerOfMass.x = centerOfMass.x * parentBranch.mass + node.x * node.options.mass;
-    centerOfMass.x *= totalMassInv;
+    parentBranch.centerOfMass.x = parentBranch.centerOfMass.x * parentBranch.mass + node.x * node.options.mass;
+    parentBranch.centerOfMass.x *= totalMassInv;
 
-    centerOfMass.y = centerOfMass.y * parentBranch.mass + node.y * node.options.mass;
-    centerOfMass.y *= totalMassInv;
+    parentBranch.centerOfMass.y = parentBranch.centerOfMass.y * parentBranch.mass + node.y * node.options.mass;
+    parentBranch.centerOfMass.y *= totalMassInv;
 
     parentBranch.mass = totalMass;
     let biggestSize = Math.max(Math.max(node.height, node.radius), node.width);
@@ -268,9 +241,9 @@ class BarnesHutSolver {
   /**
    * determine in which branch the node will be placed.
    *
-   * @param {Object} parentBranch
-   * @param {Node} node
-   * @param {boolean} skipMassUpdate
+   * @param parentBranch
+   * @param node
+   * @param skipMassUpdate
    * @private
    */
   _placeInTree(parentBranch, node, skipMassUpdate) {
@@ -279,60 +252,55 @@ class BarnesHutSolver {
       this._updateBranchMass(parentBranch, node);
     }
 
-    let range = parentBranch.children.NW.range;
-    let region;
-    if (range.maxX > node.x) { // in NW or SW
-      if (range.maxY > node.y) {
-        region = "NW";
+    if (parentBranch.children.NW.range.maxX > node.x) { // in NW or SW
+      if (parentBranch.children.NW.range.maxY > node.y) { // in NW
+        this._placeInRegion(parentBranch, node, "NW");
       }
-      else {
-        region = "SW";
+      else { // in SW
+        this._placeInRegion(parentBranch, node, "SW");
       }
     }
     else { // in NE or SE
-      if (range.maxY > node.y) {
-        region = "NE";
+      if (parentBranch.children.NW.range.maxY > node.y) { // in NE
+        this._placeInRegion(parentBranch, node, "NE");
       }
-      else {
-        region = "SE";
+      else { // in SE
+        this._placeInRegion(parentBranch, node, "SE");
       }
     }
-
-    this._placeInRegion(parentBranch, node, region);
   }
 
 
   /**
    * actually place the node in a region (or branch)
    *
-   * @param {Object} parentBranch
-   * @param {Node} node
-   * @param {'NW'| 'NE' | 'SW' | 'SE'} region
+   * @param parentBranch
+   * @param node
+   * @param region
    * @private
    */
   _placeInRegion(parentBranch, node, region) {
-    let children = parentBranch.children[region];
-
-    switch (children.childrenCount) {
+    switch (parentBranch.children[region].childrenCount) {
       case 0: // place node here
-        children.children.data = node;
-        children.childrenCount = 1;
-        this._updateBranchMass(children, node);
+        parentBranch.children[region].children.data = node;
+        parentBranch.children[region].childrenCount = 1;
+        this._updateBranchMass(parentBranch.children[region], node);
         break;
       case 1: // convert into children
               // if there are two nodes exactly overlapping (on init, on opening of cluster etc.)
               // we move one node a little bit and we do not put it in the tree.
-        if (children.children.data.x === node.x && children.children.data.y === node.y) {
+        if (parentBranch.children[region].children.data.x === node.x &&
+          parentBranch.children[region].children.data.y === node.y) {
           node.x += this.seededRandom();
           node.y += this.seededRandom();
         }
         else {
-          this._splitBranch(children);
-          this._placeInTree(children, node);
+          this._splitBranch(parentBranch.children[region]);
+          this._placeInTree(parentBranch.children[region], node);
         }
         break;
       case 4: // place in branch
-        this._placeInTree(children, node);
+        this._placeInTree(parentBranch.children[region], node);
         break;
     }
   }
@@ -342,7 +310,7 @@ class BarnesHutSolver {
    * this function splits a branch into 4 sub branches. If the branch contained a node, we place it in the subbranch
    * after the split is complete.
    *
-   * @param {Object} parentBranch
+   * @param parentBranch
    * @private
    */
   _splitBranch(parentBranch) {
@@ -372,8 +340,9 @@ class BarnesHutSolver {
    * Specifically, this inserts a single new segment.
    * It fills the children section of the parentBranch
    *
-   * @param {Object} parentBranch
-   * @param {'NW'| 'NE' | 'SW' | 'SE'} region
+   * @param parentBranch
+   * @param region
+   * @param parentRange
    * @private
    */
   _insertRegion(parentBranch, region) {
@@ -421,14 +390,16 @@ class BarnesHutSolver {
   }
 
 
+
+
   //---------------------------  DEBUGGING BELOW  ---------------------------//
 
 
   /**
    * This function is for debugging purposed, it draws the tree.
    *
-   * @param {CanvasRenderingContext2D} ctx
-   * @param {string} color
+   * @param ctx
+   * @param color
    * @private
    */
   _debug(ctx, color) {
@@ -444,9 +415,9 @@ class BarnesHutSolver {
   /**
    * This function is for debugging purposes. It draws the branches recursively.
    *
-   * @param {Object} branch
-   * @param {CanvasRenderingContext2D} ctx
-   * @param {string} color
+   * @param branch
+   * @param ctx
+   * @param color
    * @private
    */
   _drawBranch(branch, ctx, color) {

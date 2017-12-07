@@ -7,14 +7,9 @@
  *
  * NOTE: Images can also be of type 'data:svg+xml`. This code also works
  *       for svg, but the mipmapping may not be necessary.
- *
- * @param {Image} image
  */
 class CachedImage {
-  /**
-   * @ignore
-   */  
-  constructor() {  // eslint-disable-line no-unused-vars
+  constructor(image) {
     this.NUM_ITERATIONS = 4;  // Number of items in the coordinates array
 
     this.image  = new Image();
@@ -23,12 +18,11 @@ class CachedImage {
 
 
   /**
-   * Called when the image has been successfully loaded.
+   * Called when the image has been succesfully loaded.
    */
   init() {
     if (this.initialized()) return;
 
-    this.src = this.image.src;  // For same interface with Image
     var w = this.image.width;
     var h = this.image.height;
 
@@ -36,28 +30,17 @@ class CachedImage {
     this.width  = w;
     this.height = h;
 
-    var h2 = Math.floor(h/2);
-    var h4 = Math.floor(h/4);
-    var h8 = Math.floor(h/8);
-    var h16 = Math.floor(h/16);
-
-    var w2 = Math.floor(w/2);
-    var w4 = Math.floor(w/4);
-    var w8 = Math.floor(w/8);
-    var w16 = Math.floor(w/16);
-
     // Make canvas as small as possible
-    this.canvas.width  = 3*w4;
-    this.canvas.height = h2;
+    this.canvas.width  = 3*w/4;
+    this.canvas.height = h/2;
 
     // Coordinates and sizes of images contained in the canvas
     // Values per row:  [top x, left y, width, height]
-
     this.coordinates = [
-      [ 0    , 0  , w2 , h2],
-      [ w2  , 0  , w4 , h4],
-      [ w2  , h4, w8 , h8],
-      [ 5*w8, h4, w16, h16]
+      [ 0    , 0  , w/2 , h/2],
+      [ w/2  , 0  , w/4 , h/4],
+      [ w/2  , h/4, w/8 , h/8],
+      [ 5*w/8, h/4, w/16, h/16]
     ];
 
     this._fillMipMap();
@@ -82,10 +65,6 @@ class CachedImage {
    *
    * This methods takes the resizing out of the drawing loop, in order to
    * reduce performance overhead.
-   *
-   * TODO: The code assumes that a 2D context can always be gotten. This is
-   *       not necessarily true! OTOH, if not true then usage of this class
-   *       is senseless.
    *
    * @private
    */
@@ -117,19 +96,11 @@ class CachedImage {
    *
    * Credits to 'Alex de Mulder' for original implementation.
    *
-   * @param {CanvasRenderingContext2D} ctx  context on which to draw zoomed image
-   * @param {Float} factor scale factor at which to draw
-   * @param {number} left
-   * @param {number} top
-   * @param {number} width
-   * @param {number} height
+   * ctx    {Context} context on which to draw zoomed image
+   * factor {Float}   scale factor at which to draw
    */
   drawImageAtPosition(ctx, factor, left, top, width, height) {
-
-    if(!this.initialized())
-      return; //can't draw image yet not intialized
-
-    if (factor > 2) {
+    if (factor > 2 && this.initialized()) {
       // Determine which zoomed image to use
       factor *= 0.5;
       let iterations = 0;
@@ -148,12 +119,41 @@ class CachedImage {
         from[0], from[1], from[2], from[3],
            left,     top,   width,  height
       );
-    } else {
+    } else if (this._isImageOk()) {
       // Draw image directly
       ctx.drawImage(this.image, left, top, width, height);
     }
   }
 
+
+  /**
+   * Check if image is loaded
+   *
+   * Source: http://stackoverflow.com/a/1977898/1223531
+   *
+   * @private
+   */
+  _isImageOk(img) {
+    var img = this.image;
+
+    // During the onload event, IE correctly identifies any images that
+    // weren’t downloaded as not complete. Others should too. Gecko-based
+    // browsers act like NS4 in that they report this incorrectly.
+    if (!img.complete) {
+        return false;
+    }
+
+    // However, they do have two very useful properties: naturalWidth and
+    // naturalHeight. These give the true size of the image. If it failed
+    // to load, either of these should be zero.
+
+    if (typeof img.naturalWidth !== "undefined" && img.naturalWidth === 0) {
+        return false;
+    }
+
+    // No other way of checking: assume it’s ok.
+    return true;
+  }
 }
 
 

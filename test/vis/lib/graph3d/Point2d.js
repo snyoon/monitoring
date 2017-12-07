@@ -1,7 +1,7 @@
 /**
  * @prototype Point2d
- * @param {number} [x]
- * @param {number} [y]
+ * @param {Number} [x]
+ * @param {Number} [y]
  */
 function Point2d (x, y) {
   this.x = x !== undefined ? x : 0;

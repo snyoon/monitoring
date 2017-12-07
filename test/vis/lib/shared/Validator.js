@@ -7,19 +7,14 @@ let printStyle = 'background: #FFeeee; color: #dd0000';
  *  Used to validate options.
  */
 class Validator {
-  /**
-   * @ignore
-   */
   constructor() {
   }
 
   /**
    * Main function to be called
-   * @param {Object} options
-   * @param {Object} referenceOptions
-   * @param {Object} subObject
+   * @param options
+   * @param subObject
    * @returns {boolean}
-   * @static
    */
   static validate(options, referenceOptions, subObject) {
     errorFound = false;
@@ -35,10 +30,9 @@ class Validator {
 
   /**
    * Will traverse an object recursively and check every value
-   * @param {Object} options
-   * @param {Object} referenceOptions
-   * @param {array} path    | where to look for the actual option
-   * @static
+   * @param options
+   * @param referenceOptions
+   * @param path
    */
   static parse(options, referenceOptions, path) {
     for (let option in options) {
@@ -51,72 +45,61 @@ class Validator {
 
   /**
    * Check every value. If the value is an object, call the parse function on that object.
-   * @param {string} option
-   * @param {Object} options
-   * @param {Object} referenceOptions
-   * @param {array} path    | where to look for the actual option
-   * @static
+   * @param option
+   * @param options
+   * @param referenceOptions
+   * @param path
    */
   static check(option, options, referenceOptions, path) {
     if (referenceOptions[option] === undefined && referenceOptions.__any__ === undefined) {
       Validator.getSuggestion(option, referenceOptions, path);
-      return;
     }
-
-    let referenceOption = option;
-    let is_object = true;
-
-    if (referenceOptions[option] === undefined && referenceOptions.__any__ !== undefined) {
-      // NOTE: This only triggers if the __any__ is in the top level of the options object.
-      //       THAT'S A REALLY BAD PLACE TO ALLOW IT!!!!
-      // TODO: Examine if needed, remove if possible
-
+    else if (referenceOptions[option] === undefined && referenceOptions.__any__ !== undefined) {
       // __any__ is a wildcard. Any value is accepted and will be further analysed by reference.
-      referenceOption = '__any__';
-
-      // if the any-subgroup is not a predefined object in the configurator,
-      // we do not look deeper into the object.
-      is_object = (Validator.getType(options[option]) === 'object');
+      if (Validator.getType(options[option]) === 'object' && referenceOptions['__any__'].__type__ !== undefined) {
+        // if the any subgroup is not a predefined object int he configurator we do not look deeper into the object.
+        Validator.checkFields(option, options, referenceOptions, '__any__', referenceOptions['__any__'].__type__, path);
+      }
+      else {
+        Validator.checkFields(option, options, referenceOptions, '__any__', referenceOptions['__any__'], path);
+      }
     }
     else {
-      // Since all options in the reference are objects, we can check whether 
-      // they are supposed to be the object to look for the __type__ field.
-      // if this is an object, we check if the correct type has been supplied to account for shorthand options.
+      // Since all options in the reference are objects, we can check whether they are supposed to be object to look for the __type__ field.
+      if (referenceOptions[option].__type__ !== undefined) {
+        // if this should be an object, we check if the correct type has been supplied to account for shorthand options.
+        Validator.checkFields(option, options, referenceOptions, option, referenceOptions[option].__type__, path);
+      }
+      else {
+        Validator.checkFields(option, options, referenceOptions, option, referenceOptions[option], path);
+      }
     }
-
-    let refOptionObj = referenceOptions[referenceOption];
-    if (is_object && refOptionObj.__type__ !== undefined) {
-      refOptionObj = refOptionObj.__type__;
-    }
-
-    Validator.checkFields(option, options, referenceOptions, referenceOption, refOptionObj, path);
   }
 
   /**
    *
-   * @param {string}  option           | the option property
-   * @param {Object}  options          | The supplied options object
-   * @param {Object}  referenceOptions | The reference options containing all options and their allowed formats
-   * @param {string}  referenceOption  | Usually this is the same as option, except when handling an __any__ tag.
-   * @param {string}  refOptionObj     | This is the type object from the reference options
-   * @param {Array}   path             | where in the object is the option
-   * @static
+   * @param {String}  option     | the option property
+   * @param {Object}  options    | The supplied options object
+   * @param {Object}  referenceOptions    | The reference options containing all options and their allowed formats
+   * @param {String}  referenceOption     | Usually this is the same as option, except when handling an __any__ tag.
+   * @param {String}  refOptionType       | This is the type object from the reference options
+   * @param {Array}   path      | where in the object is the option
    */
   static checkFields(option, options, referenceOptions, referenceOption, refOptionObj, path) {
-    let log = function(message) {
-      console.log('%c' + message + Validator.printLocation(path, option), printStyle);
-    };
-
     let optionType = Validator.getType(options[option]);
     let refOptionType = refOptionObj[optionType];
-
     if (refOptionType !== undefined) {
       // if the type is correct, we check if it is supposed to be one of a few select values
-      if (Validator.getType(refOptionType) === 'array' && refOptionType.indexOf(options[option]) === -1) {
-        log('Invalid option detected in "' + option + '".' +
-          ' Allowed values are:' + Validator.print(refOptionType) +
-          ' not "' + options[option] + '". ');
-        errorFound = true;
+      if (Validator.getType(refOptionType) === 'array') {
+        if (refOptionType.indexOf(options[option]) === -1) {
+          console.log('%cInvalid option detected in "' + option + '".' +
+            ' Allowed values are:' + Validator.print(refOptionType) + ' not "' + options[option] + '". ' + Validator.printLocation(path, option), printStyle);
+          errorFound = true;
+        }
+        else if (optionType === 'object' && referenceOption !== "__any__") {
+          path = util.copyAndExtendArray(path, option);
+          Validator.parse(options[option], referenceOptions[referenceOption], path);
+        }
       }
       else if (optionType === 'object' && referenceOption !== "__any__") {
         path = util.copyAndExtendArray(path, option);
@@ -125,19 +108,12 @@ class Validator {
     }
     else if (refOptionObj['any'] === undefined) {
       // type of the field is incorrect and the field cannot be any
-      log('Invalid type received for "' + option +
-        '". Expected: ' + Validator.print(Object.keys(refOptionObj)) +
-        '. Received ['  + optionType + '] "' + options[option] + '"');
+      console.log('%cInvalid type received for "' + option + '". Expected: ' + Validator.print(Object.keys(refOptionObj)) + '. Received [' + optionType + '] "' + options[option] + '"' + Validator.printLocation(path, option), printStyle);
       errorFound = true;
     }
   }
 
-  /**
-   *
-   * @param {Object|boolean|number|string|Array.<number>|Date|Node|Moment|undefined|null} object
-   * @returns {string}
-   * @static
-   */
+
   static getType(object) {
     var type = typeof object;
 
@@ -183,12 +159,6 @@ class Validator {
     return type;
   }
 
-  /**
-   * @param {string} option
-   * @param {Object} options
-   * @param {Array.<string>} path
-   * @static
-   */
   static getSuggestion(option, options, path) {
     let localSearch = Validator.findInOptions(option,options,path,false);
     let globalSearch = Validator.findInOptions(option,allOptions,[],true);
@@ -196,37 +166,29 @@ class Validator {
     let localSearchThreshold = 8;
     let globalSearchThreshold = 4;
 
-    let msg;
     if (localSearch.indexMatch !== undefined) {
-      msg = ' in ' + Validator.printLocation(localSearch.path, option,'') +
-        'Perhaps it was incomplete? Did you mean: "' + localSearch.indexMatch + '"?\n\n';
+      console.log('%cUnknown option detected: "' + option + '" in ' + Validator.printLocation(localSearch.path, option,'') + 'Perhaps it was incomplete? Did you mean: "' + localSearch.indexMatch + '"?\n\n', printStyle);
     }
     else if (globalSearch.distance <= globalSearchThreshold && localSearch.distance > globalSearch.distance) {
-      msg = ' in ' + Validator.printLocation(localSearch.path, option,'') +
-        'Perhaps it was misplaced? Matching option found at: ' +
-        Validator.printLocation(globalSearch.path, globalSearch.closestMatch,'');
+      console.log('%cUnknown option detected: "' + option + '" in ' + Validator.printLocation(localSearch.path, option,'') + 'Perhaps it was misplaced? Matching option found at: ' + Validator.printLocation(globalSearch.path, globalSearch.closestMatch,''), printStyle);
     }
     else if (localSearch.distance <= localSearchThreshold) {
-      msg = '. Did you mean "' + localSearch.closestMatch + '"?' +
-        Validator.printLocation(localSearch.path, option);
+      console.log('%cUnknown option detected: "' + option + '". Did you mean "' + localSearch.closestMatch + '"?' + Validator.printLocation(localSearch.path, option), printStyle);
     }
     else {
-      msg = '. Did you mean one of these: ' + Validator.print(Object.keys(options)) +
-      Validator.printLocation(path, option);
+      console.log('%cUnknown option detected: "' + option + '". Did you mean one of these: ' + Validator.print(Object.keys(options)) + Validator.printLocation(path, option), printStyle);
     }
 
-    console.log('%cUnknown option detected: "' + option + '"' + msg, printStyle);
     errorFound = true;
   }
 
   /**
    * traverse the options in search for a match.
-   * @param {string} option
-   * @param {Object} options
-   * @param {Array} path    | where to look for the actual option
-   * @param {boolean} [recursive=false]
+   * @param option
+   * @param options
+   * @param path
+   * @param recursive
    * @returns {{closestMatch: string, path: Array, distance: number}}
-   * @static
    */
   static findInOptions(option, options, path, recursive = false) {
     let min = 1e9;
@@ -234,7 +196,7 @@ class Validator {
     let closestMatchPath = [];
     let lowerCaseOption = option.toLowerCase();
     let indexMatch = undefined;
-    for (let op in options) {  // eslint-disable-line guard-for-in
+    for (let op in options) {
       let distance;
       if (options[op].__type__ !== undefined && recursive === true) {
         let result = Validator.findInOptions(option, options[op], util.copyAndExtendArray(path,op));
@@ -260,13 +222,6 @@ class Validator {
     return {closestMatch:closestMatch, path:closestMatchPath, distance:min, indexMatch: indexMatch};
   }
 
-  /**
-   * @param {Array.<string>} path
-   * @param {Object} option
-   * @param {string} prefix
-   * @returns {String}
-   * @static
-   */
   static printLocation(path, option, prefix = 'Problem value found at: \n') {
     let str = '\n\n' + prefix + 'options = {\n';
     for (let i = 0; i < path.length; i++) {
@@ -288,32 +243,21 @@ class Validator {
     return str + '\n\n';
   }
 
-  /**
-   * @param {Object} options
-   * @returns {String}
-   * @static
-   */
   static print(options) {
     return JSON.stringify(options).replace(/(\")|(\[)|(\])|(,"__type__")/g, "").replace(/(\,)/g, ', ')
   }
 
 
-  /**
-   *  Compute the edit distance between the two given strings
-   * http://en.wikibooks.org/wiki/Algorithm_Implementation/Strings/Levenshtein_distance#JavaScript
-   *
-   * Copyright (c) 2011 Andrei Mackenzie
-   *
-   * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-   *
-   * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-   *
-   * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-   *
-   * @param {string} a
-   * @param {string} b
-   * @returns {Array.<Array.<number>>}}
-   * @static
+  // Compute the edit distance between the two given strings
+  // http://en.wikibooks.org/wiki/Algorithm_Implementation/Strings/Levenshtein_distance#JavaScript
+  /*
+   Copyright (c) 2011 Andrei Mackenzie
+
+   Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
    */
   static levenshteinDistance(a, b) {
     if (a.length === 0) return b.length;
@@ -348,6 +292,8 @@ class Validator {
 
     return matrix[b.length][a.length];
   }
+
+;
 }
 
 

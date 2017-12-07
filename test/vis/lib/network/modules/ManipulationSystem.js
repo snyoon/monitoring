@@ -4,16 +4,11 @@ let Hammer = require('../../module/hammer');
 let hammerUtil = require('../../hammerUtil');
 
 /**
- * Clears the toolbar div element of children
+ * clears the toolbar div element of children
  *
  * @private
  */
 class ManipulationSystem {
-  /**
-   * @param {Object} body
-   * @param {Canvas} canvas
-   * @param {SelectionHandler} selectionHandler
-   */
   constructor(body, canvas, selectionHandler) {
     this.body = body;
     this.canvas = canvas;
@@ -77,10 +72,7 @@ class ManipulationSystem {
 
   /**
    * Set the Options
-   *
-   * @param {Object} options
-   * @param {Object} allOptions
-   * @param {Object} globalOptions
+   * @param options
    */
   setOptions(options, allOptions, globalOptions) {
     if (allOptions !== undefined) {
@@ -119,9 +111,6 @@ class ManipulationSystem {
   }
 
 
-  /**
-   * Enables Edit Mode
-   */
   enableEditMode() {
     this.editMode = true;
 
@@ -134,9 +123,6 @@ class ManipulationSystem {
     }
   }
 
-  /**
-   * Disables Edit Mode
-   */
   disableEditMode() {
     this.editMode = false;
 
@@ -336,7 +322,8 @@ class ManipulationSystem {
     this._temporaryBindUI('onDragEnd',  this._finishConnect.bind(this));
     this._temporaryBindUI('onDrag',     this._dragControlNode.bind(this));
     this._temporaryBindUI('onRelease',  this._finishConnect.bind(this));
-    this._temporaryBindUI('onDragStart',this._dragStartEdge.bind(this));
+
+    this._temporaryBindUI('onDragStart', () => {});
     this._temporaryBindUI('onHold', () => {});
   }
 
@@ -555,10 +542,9 @@ class ManipulationSystem {
 
   /**
    * generate a new target node. Used for creating new edges and editing edges
-   *
-   * @param {number} x
-   * @param {number} y
-   * @returns {Node}
+   * @param x
+   * @param y
+   * @returns {*}
    * @private
    */
   _getNewTargetNode(x,y) {
@@ -675,7 +661,7 @@ class ManipulationSystem {
 
   /**
    * create a seperator line. the index is to differentiate in the manipulation dom
-   * @param {number} [index=1]
+   * @param index
    * @private
    */
   _createSeperator(index = 1) {
@@ -686,87 +672,47 @@ class ManipulationSystem {
 
   // ----------------------    DOM functions for buttons    --------------------------//
 
-  /**
-   *
-   * @param {Locale} locale
-   * @private
-   */
   _createAddNodeButton(locale) {
     let button = this._createButton('addNode', 'vis-button vis-add', locale['addNode'] || this.options.locales['en']['addNode']);
     this.manipulationDiv.appendChild(button);
     this._bindHammerToDiv(button, this.addNodeMode.bind(this));
   }
 
-  /**
-   *
-   * @param {Locale} locale
-   * @private
-   */
   _createAddEdgeButton(locale) {
     let button = this._createButton('addEdge', 'vis-button vis-connect',  locale['addEdge'] || this.options.locales['en']['addEdge']);
     this.manipulationDiv.appendChild(button);
     this._bindHammerToDiv(button, this.addEdgeMode.bind(this));
   }
 
-  /**
-   *
-   * @param {Locale} locale
-   * @private
-   */
   _createEditNodeButton(locale) {
     let button = this._createButton('editNode', 'vis-button vis-edit', locale['editNode'] || this.options.locales['en']['editNode']);
     this.manipulationDiv.appendChild(button);
     this._bindHammerToDiv(button, this.editNode.bind(this));
   }
 
-  /**
-   *
-   * @param {Locale} locale
-   * @private
-   */
   _createEditEdgeButton(locale) {
     let button = this._createButton('editEdge', 'vis-button vis-edit',  locale['editEdge'] || this.options.locales['en']['editEdge']);
     this.manipulationDiv.appendChild(button);
     this._bindHammerToDiv(button, this.editEdgeMode.bind(this));
   }
 
-  /**
-   *
-   * @param {Locale} locale
-   * @private
-   */
   _createDeleteButton(locale) {
-    var deleteBtnClass;
     if (this.options.rtl) {
-      deleteBtnClass = 'vis-button vis-delete-rtl';
+      var deleteBtnClass = 'vis-button vis-delete-rtl';
     } else {
-      deleteBtnClass = 'vis-button vis-delete';
+      var deleteBtnClass = 'vis-button vis-delete';
     }
     let button = this._createButton('delete', deleteBtnClass, locale['del'] || this.options.locales['en']['del']);
     this.manipulationDiv.appendChild(button);
     this._bindHammerToDiv(button, this.deleteSelected.bind(this));
   }
 
-  /**
-   *
-   * @param {Locale} locale
-   * @private
-   */
   _createBackButton(locale) {
     let button = this._createButton('back', 'vis-button vis-back', locale['back'] || this.options.locales['en']['back']);
     this.manipulationDiv.appendChild(button);
     this._bindHammerToDiv(button, this.showManipulatorToolbar.bind(this));
   }
 
-  /**
-   *
-   * @param {number|string} id
-   * @param {string} className
-   * @param {label} label
-   * @param {string} labelClassName
-   * @returns {HTMLElement}
-   * @private
-   */
   _createButton(id, className, label, labelClassName = 'vis-label') {
 
     this.manipulationDOM[id+'Div'] = document.createElement('div');
@@ -778,11 +724,6 @@ class ManipulationSystem {
     return this.manipulationDOM[id+'Div'];
   }
 
-  /**
-   *
-   * @param {Label} label
-   * @private
-   */
   _createDescription(label) {
     this.manipulationDiv.appendChild(
       this._createButton('description', 'vis-button vis-none', label)
@@ -793,8 +734,8 @@ class ManipulationSystem {
 
   /**
    * this binds an event until cleanup by the clean functions.
-   * @param {Event}  event   The event
-   * @param {function} newFunction
+   * @param event
+   * @param newFunction
    * @private
    */
   _temporaryBindEvent(event, newFunction) {
@@ -804,8 +745,8 @@ class ManipulationSystem {
 
   /**
    * this overrides an UI function until cleanup by the clean function
-   * @param {string} UIfunctionName
-   * @param {function} newFunction
+   * @param UIfunctionName
+   * @param newFunction
    * @private
    */
   _temporaryBindUI(UIfunctionName, newFunction) {
@@ -848,9 +789,8 @@ class ManipulationSystem {
 
   /**
    * Bind an hammer instance to a DOM element.
-   *
-   * @param {Element} domElement
-   * @param {function} boundFunction
+   * @param domElement
+   * @param funct
    */
   _bindHammerToDiv(domElement, boundFunction) {
     let hammer = new Hammer(domElement, {});
@@ -886,7 +826,7 @@ class ManipulationSystem {
 
   /**
    * the touch is used to get the position of the initial click
-   * @param {Event}  event   The event
+   * @param event
    * @private
    */
   _controlNodeTouch(event) {
@@ -898,10 +838,10 @@ class ManipulationSystem {
 
   /**
    * the drag start is used to mark one of the control nodes as selected.
-   * @param {Event}  event   The event
+   * @param event
    * @private
    */
-  _controlNodeDragStart(event) {  // eslint-disable-line no-unused-vars
+  _controlNodeDragStart(event) {
     let pointer = this.lastTouch;
     let pointerObj = this.selectionHandler._pointerToPositionObject(pointer);
     let from = this.body.nodes[this.temporaryIds.nodes[0]];
@@ -931,7 +871,7 @@ class ManipulationSystem {
 
   /**
    * dragging the control nodes or the canvas
-   * @param {Event}  event   The event
+   * @param event
    * @private
    */
   _controlNodeDrag(event) {
@@ -954,7 +894,7 @@ class ManipulationSystem {
 
   /**
    * connecting or restoring the control nodes.
-   * @param {Event}  event   The event
+   * @param event
    * @private
    */
   _controlNodeDragEnd(event) {
@@ -995,7 +935,6 @@ class ManipulationSystem {
       edge.updateEdgeType();
       this.body.emitter.emit('restorePhysics');
     }
-
     this.body.emitter.emit('_redraw');
   }
 
@@ -1008,7 +947,6 @@ class ManipulationSystem {
    * the function bound to the selection event. It checks if you want to connect a cluster and changes the description
    * to walk the user through the process.
    *
-   * @param {Event} event
    * @private
    */
   _handleConnect(event) {
@@ -1053,11 +991,6 @@ class ManipulationSystem {
     }
   }
 
-  /**
-   *
-   * @param {Event} event
-   * @private
-   */
   _dragControlNode(event) {
     let pointer = this.body.functions.getPointer(event.center);
     if (this.temporaryIds.nodes[0] !== undefined) {
@@ -1077,7 +1010,7 @@ class ManipulationSystem {
 
   /**
    * Connect the new edge to the target if one exists, otherwise remove temp line
-   * @param {Event}  event   The event
+   * @param event
    * @private
    */
   _finishConnect(event) {
@@ -1115,21 +1048,7 @@ class ManipulationSystem {
         }
       }
     }
-
-
-    // No need to do _generateclickevent('dragEnd') here, the regular dragEnd event fires.
     this.body.emitter.emit('_redraw');
-  }
-
-
-  /**
-   *
-   * @param {Event} event
-   * @private
-   */
-  _dragStartEdge(event) {
-    let pointer = this.lastTouch;
-    this.selectionHandler._generateClickEvent('dragStart', event, pointer, undefined, true);
   }
 
   // --------------------------------------- END OF ADD EDGE FUNCTIONS -------------------------------------//
@@ -1139,9 +1058,6 @@ class ManipulationSystem {
 
   /**
    * Adds a node on the specified location
-   *
-   * @param {Object} clickData
-   * @private
    */
   _performAddNode(clickData) {
     let defaultData = {
@@ -1161,8 +1077,8 @@ class ManipulationSystem {
         });
       }
       else {
-        this.showManipulatorToolbar();
         throw new Error('The function for add does not support two arguments (data,callback)');
+        this.showManipulatorToolbar();
       }
     }
     else {
@@ -1175,8 +1091,6 @@ class ManipulationSystem {
   /**
    * connect two nodes with a new edge.
    *
-   * @param {Node.id} sourceNodeId
-   * @param {Node.id} targetNodeId
    * @private
    */
   _performAddEdge(sourceNodeId, targetNodeId) {
@@ -1205,8 +1119,6 @@ class ManipulationSystem {
   /**
    * connect two nodes with a new edge.
    *
-   * @param {Node.id} sourceNodeId
-   * @param {Node.id} targetNodeId
    * @private
    */
   _performEditEdge(sourceNodeId, targetNodeId) {

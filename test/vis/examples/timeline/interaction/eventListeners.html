@@ -34,8 +34,7 @@
 
     var container = document.getElementById('visualization');
     var options = {
-      editable: true,
-      onInitialDrawComplete: function() { logEvent('Timeline initial draw completed', {}); },
+      editable: true
     };
     var timeline = new vis.Timeline(container, items, options);
 

@@ -1,22 +1,10 @@
-/**
- * Spring Solver
- */
 class SpringSolver {
-  /**
-   * @param {Object} body
-   * @param {{physicsNodeIndices: Array, physicsEdgeIndices: Array, forces: {}, velocities: {}}} physicsBody
-   * @param {Object} options
-   */
   constructor(body, physicsBody, options) {
     this.body = body;
     this.physicsBody = physicsBody;
     this.setOptions(options);
   }
 
-  /**
-   *
-   * @param {Object} options
-   */
   setOptions(options) {
     this.options = options;
   }
@@ -62,9 +50,9 @@ class SpringSolver {
   /**
    * This is the code actually performing the calculation for the function above.
    *
-   * @param {Node} node1
-   * @param {Node} node2
-   * @param {number} edgeLength
+   * @param node1
+   * @param node2
+   * @param edgeLength
    * @private
    */
   _calculateSpringForce(node1, node2, edgeLength) {

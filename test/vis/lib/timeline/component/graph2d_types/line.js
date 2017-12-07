@@ -1,12 +1,6 @@
 var DOMutil = require('../../../DOMutil');
 
-/**
- *
- * @param {vis.GraphGroup.id} groupId
- * @param {Object} options   // TODO: Describe options
- * @constructor Line
- */
-function Line(groupId, options) {  // eslint-disable-line no-unused-vars
+function Line(groupId, options) {
 }
 
 Line.calcPath = function (dataset, group) {
@@ -24,7 +18,7 @@ Line.calcPath = function (dataset, group) {
             return d;
         }
     }
-};
+}
 
 Line.drawIcon = function (group, x, y, iconWidth, iconHeight, framework) {
     var fillHeight = iconHeight * 0.5;
@@ -71,7 +65,7 @@ Line.drawIcon = function (group, x, y, iconWidth, iconHeight, framework) {
         };
         DOMutil.drawPoint(x + 0.5 * iconWidth, y, groupTemplate, framework.svgElements, framework.svg);
     }
-};
+}
 
 Line.drawShading = function (pathArray, group, subPathArray, framework) {
     // append shading to the path
@@ -112,14 +106,13 @@ Line.drawShading = function (pathArray, group, subPathArray, framework) {
         }
         fillPath.setAttributeNS(null, 'd', dFill);
     }
-};
+}
 
 /**
  * draw a line graph
  *
- * @param {Array.<Object>} pathArray
- * @param {vis.Group} group
- * @param {{svg: Object, svgElements: Array.<Object>, options: Object, groups: Array.<vis.Group>}} framework
+ * @param dataset
+ * @param group
  */
 Line.draw = function (pathArray, group, framework) {
     if (pathArray != null && pathArray != undefined) {
@@ -144,24 +137,23 @@ Line.serializePath = function(pathArray,type,inverse){
         return "";
     }
     var d = type;
-    var i;
     if (inverse){
-        for (i = pathArray.length-2; i > 0; i--){
+        for (var i = pathArray.length-2; i > 0; i--){
             d += pathArray[i][0] + "," + pathArray[i][1] + " ";
         }
     }
     else {
-        for (i = 1; i < pathArray.length; i++){
+        for (var i = 1; i < pathArray.length; i++){
             d += pathArray[i][0] + "," + pathArray[i][1] + " ";
         }
     }
     return d;
-};
+}
 
 /**
  * This uses an uniform parametrization of the interpolation algorithm:
  * 'On the Parameterization of Catmull-Rom Curves' by Cem Yuksel et al.
- * @param {Array.<Object>} data
+ * @param data
  * @returns {string}
  * @private
  */
@@ -211,8 +203,8 @@ Line._catmullRomUniform = function (data) {
  * These parameterizations are relatively heavy because the distance between 4 points have to be calculated.
  *
  * One optimization can be used to reuse distances since this is a sliding window approach.
- * @param {Array.<Object>} data
- * @param {vis.GraphGroup} group
+ * @param data
+ * @param group
  * @returns {string}
  * @private
  */
@@ -293,7 +285,7 @@ Line._catmullRom = function (data, group) {
 
 /**
  * this generates the SVG path for a linear drawing between datapoints.
- * @param {Array.<Object>} data
+ * @param data
  * @returns {string}
  * @private
  */

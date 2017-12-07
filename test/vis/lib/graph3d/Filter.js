@@ -3,12 +3,12 @@ var DataView = require('../DataView');
 /**
  * @class Filter
  *
- * @param {DataGroup} dataGroup the data group 
- * @param {number}  column             The index of the column to be filtered
- * @param {Graph3d} graph              The graph
+ * @param {DataSet} data The google data table
+ * @param {Number}  column             The index of the column to be filtered
+ * @param {Graph} graph           The graph
  */
-function Filter (dataGroup, column, graph) {
-  this.dataGroup = dataGroup;
+function Filter (data, column, graph) {
+  this.data = data;
   this.column = column;
   this.graph = graph; // the parent graph
 
@@ -16,7 +16,12 @@ function Filter (dataGroup, column, graph) {
   this.value = undefined;
 
   // read all distinct values and select the first one
-  this.values = dataGroup.getDistinctValues(this.column);
+  this.values = graph.getDistinctValues(data.get(), this.column);
+
+  // sort both numeric and string values correctly
+  this.values.sort(function (a, b) {
+    return a > b ? 1 : a < b ? -1 : 0;
+  });
 
   if (this.values.length > 0) {
     this.selectValue(0);
@@ -35,7 +40,7 @@ function Filter (dataGroup, column, graph) {
   else {
     this.loaded = true;
   }
-}
+};
 
 
 /**
@@ -49,7 +54,7 @@ Filter.prototype.isLoaded = function() {
 
 /**
  * Return the loaded progress
- * @return {number} percentage between 0 and 100
+ * @return {Number} percentage between 0 and 100
  */
 Filter.prototype.getLoadedProgress = function() {
   var len = this.values.length;
@@ -74,7 +79,7 @@ Filter.prototype.getLabel = function() {
 
 /**
  * Return the columnIndex of the filter
- * @return {number} columnIndex
+ * @return {Number} columnIndex
  */
 Filter.prototype.getColumn = function() {
   return this.column;
@@ -101,7 +106,7 @@ Filter.prototype.getValues = function() {
 
 /**
  * Retrieve one value of the filter
- * @param {number}  index
+ * @param {Number}  index
  * @return {*} value
  */
 Filter.prototype.getValue = function(index) {
@@ -114,7 +119,7 @@ Filter.prototype.getValue = function(index) {
 
 /**
  * Retrieve the (filtered) dataPoints for the currently selected filter index
- * @param {number} [index] (optional)
+ * @param {Number} [index] (optional)
  * @return {Array} dataPoints
  */
 Filter.prototype._getDataPoints = function(index) {
@@ -133,8 +138,8 @@ Filter.prototype._getDataPoints = function(index) {
     f.column = this.column;
     f.value = this.values[index];
 
-    var dataView = new DataView(this.dataGroup.getDataSet(), {filter: function (item) {return (item[f.column] == f.value);}}).get();
-    dataPoints = this.dataGroup._getDataPoints(dataView);
+    var dataView = new DataView(this.data,{filter: function (item) {return (item[f.column] == f.value);}}).get();
+    dataPoints = this.graph._getDataPoints(dataView);
 
     this.dataPoints[index] = dataPoints;
   }
@@ -146,8 +151,6 @@ Filter.prototype._getDataPoints = function(index) {
 
 /**
  * Set a callback function when the filter is fully loaded.
- *
- * @param {function} callback
  */
 Filter.prototype.setOnLoadCallback = function(callback) {
   this.onLoadCallback = callback;
@@ -157,7 +160,7 @@ Filter.prototype.setOnLoadCallback = function(callback) {
 /**
  * Add a value to the list with available values for this filter
  * No double entries will be created.
- * @param {number} index
+ * @param {Number} index
  */
 Filter.prototype.selectValue = function(index) {
   if (index >= this.values.length)
@@ -170,8 +173,6 @@ Filter.prototype.selectValue = function(index) {
 /**
  * Load all filtered rows in the background one by one
  * Start this method without providing an index!
- *
- * @param {number} [index=0]
  */
 Filter.prototype.loadInBackground = function(index) {
   if (index === undefined)
@@ -180,6 +181,9 @@ Filter.prototype.loadInBackground = function(index) {
   var frame = this.graph.frame;
 
   if (index < this.values.length) {
+    var dataPointsTemp = this._getDataPoints(index);
+    //this.graph.redrawInfo(); // TODO: not neat
+
     // create a progress box
     if (frame.progress === undefined) {
       frame.progress = document.createElement('DIV');

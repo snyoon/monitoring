@@ -1,9 +1,9 @@
 var util = require('../util');
 
 /**
- * An html slider control with start/stop/prev/next buttons
- *
  * @constructor Slider
+ *
+ * An html slider control with start/stop/prev/next buttons
  * @param {Element} container  The element where the slider will be created
  * @param {Object} options   Available options:
  *                 {boolean} visible   If true (default) the
@@ -167,8 +167,6 @@ Slider.prototype.stop = function() {
 /**
  * Set a callback function which will be triggered when the value of the
  * slider bar has changed.
- *
- * @param {function} callback
  */
 Slider.prototype.setOnChangeCallback = function(callback) {
   this.onChangeCallback = callback;
@@ -176,7 +174,7 @@ Slider.prototype.setOnChangeCallback = function(callback) {
 
 /**
  * Set the interval for playing the list
- * @param {number} interval   The interval in milliseconds
+ * @param {Number} interval   The interval in milliseconds
  */
 Slider.prototype.setPlayInterval = function(interval) {
   this.playInterval = interval;
@@ -184,18 +182,17 @@ Slider.prototype.setPlayInterval = function(interval) {
 
 /**
  * Retrieve the current play interval
- * @return {number} interval   The interval in milliseconds
+ * @return {Number} interval   The interval in milliseconds
  */
-Slider.prototype.getPlayInterval = function() {
+Slider.prototype.getPlayInterval = function(interval) {
   return this.playInterval;
 };
 
 /**
  * Set looping on or off
- * @param {boolean} doLoop  If true, the slider will jump to the start when
+ * @pararm {boolean} doLoop  If true, the slider will jump to the start when
  *               the end is passed, and will jump to the end
  *               when the start is passed.
- *
  */
 Slider.prototype.setPlayLoop = function(doLoop) {
   this.playLoop = doLoop;
@@ -246,7 +243,7 @@ Slider.prototype.setValues = function(values) {
 
 /**
  * Select a value by its index
- * @param {number} index
+ * @param {Number} index
  */
 Slider.prototype.setIndex = function(index) {
   if (index < this.values.length) {
@@ -262,7 +259,7 @@ Slider.prototype.setIndex = function(index) {
 
 /**
  * retrieve the index of the currently selected vaue
- * @return {number} index
+ * @return {Number} index
  */
 Slider.prototype.getIndex = function() {
   return this.index;
@@ -336,7 +333,7 @@ Slider.prototype._onMouseMove = function (event) {
 };
 
 
-Slider.prototype._onMouseUp = function (event) {  // eslint-disable-line no-unused-vars
+Slider.prototype._onMouseUp = function (event) {
   this.frame.style.cursor = 'auto';
 
   // remove event listeners
