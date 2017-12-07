@@ -208,6 +208,18 @@ var openFile = function (event) {
             chartNavProc.appendChild(chartNavProcA);
             chartNav.appendChild(chartNavProc);
  
+            // vis timeline
+            var chartNavTimeline = document.createElement("li");
+            chartNavTimeline.setAttribute("class", "nav");
+            var chartNavTimelineA = document.createElement("a");
+            chartNavTimelineA.setAttribute("data-toggle", "tab");
+            var hrefTL = "tl" +divID;
+            newSchedule.divID = hrefTL;
+            chartNavTimelineA.setAttribute("href", "#" + hrefTL);
+            chartNavTimelineA.appendChild(document.createTextNode("Timeline"));
+            chartNavTimeline.appendChild(chartNavTimelineA);
+            chartNav.appendChild(chartNavTimeline);
+
             var chartNavStat = document.createElement("li");
             chartNavStat.setAttribute("class", "nav");
             var chartNavStatA = document.createElement("a");
@@ -270,7 +282,11 @@ var openFile = function (event) {
             var scheduleChartDive = document.createElement("div");
             scheduleChartDive.setAttribute("id", href11);
             scheduleChartDive.setAttribute("class","tab-pane fade in active");
- 
+            
+            var tlChartDive = document.createElement("div");
+            tlChartDive.setAttribute("id", hrefTL);
+            tlChartDive.setAttribute("class","tab-pane fade in active");
+
             var statChartDive = document.createElement("div");
             statChartDive.setAttribute("id", href22);
             statChartDive.setAttribute("class","tab-pane fade");
@@ -292,6 +308,7 @@ var openFile = function (event) {
             KPIChartDive.setAttribute("class","tab-pane fade");        
  
             chartTypesContent.appendChild(scheduleChartDive);
+            chartTypesContent.appendChild(tlChartDive);
             chartTypesContent.appendChild(KPIChartDive);
             chartTypesContent.appendChild(statChartDive);
             chartTypesContent.appendChild(loadChartDive);
@@ -346,6 +363,18 @@ var openFile = function (event) {
             chartNavProcA.appendChild(document.createTextNode("Schedule View"));
             chartNavProc.appendChild(chartNavProcA);
             chartNav.appendChild(chartNavProc);
+
+            // vis timeline
+            var chartNavTimeline = document.createElement("li");
+            chartNavTimeline.setAttribute("class", "nav");
+            var chartNavTimelineA = document.createElement("a");
+            chartNavTimelineA.setAttribute("data-toggle", "tab");
+            var hrefTL = "tl" +divID;
+            newSchedule.divID = hrefTL;
+            chartNavTimelineA.setAttribute("href", "#" + hrefTL);
+            chartNavTimelineA.appendChild(document.createTextNode("Timeline"));
+            chartNavTimeline.appendChild(chartNavTimelineA);
+            chartNav.appendChild(chartNavTimeline);
  
             var chartNavStat = document.createElement("li");
             chartNavStat.setAttribute("class", "nav");
@@ -410,6 +439,10 @@ var openFile = function (event) {
             scheduleChartDive.setAttribute("id", href11);
             scheduleChartDive.setAttribute("class","tab-pane fade in active");
  
+            var tlChartDive = document.createElement("div");
+            tlChartDive.setAttribute("id", hrefTL);
+            tlChartDive.setAttribute("class","tab-pane fade in active");
+
             var statChartDive = document.createElement("div");
             statChartDive.setAttribute("id", href22);
             statChartDive.setAttribute("class","tab-pane fade");
@@ -431,6 +464,7 @@ var openFile = function (event) {
             KPIChartDive.setAttribute("class","tab-pane fade");  
  
             chartTypesContent.appendChild(scheduleChartDive);
+            chartTypesContent.appendChild(tlChartDive);
             chartTypesContent.appendChild(KPIChartDive);
             chartTypesContent.appendChild(statChartDive);
             chartTypesContent.appendChild(loadChartDive);
@@ -442,6 +476,7 @@ var openFile = function (event) {
         // compare pages have explanaintiosn at definition
         chartRemoveFunction(TscheduleName);
         timelineHover(traveledTime, href11, TscheduleName);
+        timelineCreate(activeSchedule, hrefTL);
         //ProductionStatus(TKPIs, TproductionStat, href22, TKPI);
         kpiCreate(TKPIs, hrefKPI);
         statViewPage(TproductionStat, href22);
@@ -1998,8 +2033,22 @@ function wipTabCreate(divID, jSon){
     var numberOfCharts = jSon.length;
     var values = jSon.values;
     var container = document.getElementById(divID);
+    
+    var table = document.createElement("table");
+    var tablebody = document.createElement("tbody");
+    table.appendChild(tablebody);
+    container.appendChild(table);
+    table.setAttribute("border", "0");
 
     for (var i = 0; i < numberOfCharts; i++) {
+        //Table row + cell cration
+        var row = document.createElement("tr");
+        var totalcell = document.createElement("td");
+        var percell = document.createElement("td");
+        row.appendChild(totalcell);
+        row.appendChild(percell)
+        tablebody.appendChild(row);
+
         var listofgroups = [];
         var dataset = new vis.DataSet();
         var datasetSums = new vis.DataSet();
@@ -2032,6 +2081,9 @@ function wipTabCreate(divID, jSon){
             var groupTemp={
                 id: listofgroups[s],
                 content: listofgroups[s],
+                options:{
+                    drawPoints: false
+                }
             }
             groupDataSet.add(groupTemp);
         }
@@ -2042,6 +2094,7 @@ function wipTabCreate(divID, jSon){
                 content: "WB_Total",
                 style:"stroke:red",
                 options:{
+                    interpolation: false,
                     drawPoints: false
                 }
             }
@@ -2050,6 +2103,7 @@ function wipTabCreate(divID, jSon){
                 content: "DA_Total",
                 style:"stroke:green",
                 options:{
+                    interpolation: false,
                     drawPoints: false
                 }
             } 
@@ -2067,8 +2121,8 @@ function wipTabCreate(divID, jSon){
             }};
         //~~~~~~~~~~~ Summnation data ~~~~~~~~~~~~~~~~
 
-        var graph2d = new vis.Graph2d(container, datasetSums, groupDataSetSums,options2);
-        var graph2d = new vis.Graph2d(container, dataset, groupDataSet, options);   
+        var graph2d = new vis.Graph2d(totalcell, datasetSums, groupDataSetSums,options2);
+        var graph2d = new vis.Graph2d(percell, dataset, groupDataSet, options);   
     }
 
 }
@@ -2144,6 +2198,7 @@ function eqpTabCreate(divID, object, listofProducts){
                 id: listofProducts[x],
                 content: listofProducts[x],
                 options:{
+                    interpolation: false,
                     drawPoints: false
                 },
             }
@@ -2156,6 +2211,7 @@ function eqpTabCreate(divID, object, listofProducts){
                 id:"to",
                 content: "To",
                 options:{
+                    interpolation: false,
                     style:"points",
                     drawPoints:{
                         style:"circle"
@@ -2166,6 +2222,7 @@ function eqpTabCreate(divID, object, listofProducts){
                 id:"from",
                 content: "From",
                 options:{
+                    interpolation: false,
                     style:"points",
                     drawPoints:{
                         style:"square"
@@ -2257,6 +2314,7 @@ function statViewPage(object, divID){
         id: "DA",
         content: "DA",
         options:{
+            interpolation: false,
             drawPoints: false
         },
         style:"stroke:green"
@@ -2265,6 +2323,7 @@ function statViewPage(object, divID){
         id: "WB",
         content: "WB",
         options:{
+            interpolation: false,
             drawPoints: false
         },
         style:"stroke:red"
@@ -2296,6 +2355,7 @@ function statViewPage(object, divID){
             id:key,
             content:key,
             options:{
+                interpolation: false,
                 drawPoints: false
             }
         });
@@ -2330,6 +2390,7 @@ function statViewPage(object, divID){
             id:"Ship_Count",
             content:"Ship_Count",
             options:{
+                interpolation: false,
                 drawPoints: false
             }
         });
@@ -2363,6 +2424,7 @@ function statViewPage(object, divID){
         id:"DA",
         content:"DA",
         options:{
+            interpolation: false,
             drawPoints: false
         },
         style:"stroke:green"
@@ -2371,6 +2433,7 @@ function statViewPage(object, divID){
         id:"WB",
         content:"WB",
         options:{
+            interpolation: false,
             drawPoints: false
         },
         style:"stroke:red"
@@ -2442,4 +2505,129 @@ function kpiCreate(array, divID){
  
 }
 
+function timelineCreate(schedule, div){
+    var container = document.getElementById(div);
 
+    var tlINFO = schedule.ganttData;
+    var scheduleName = schedule.name;
+    var idnum= 1;
+    //CREATE STYLES FOR ALL THE DIFFERENT PRODUCT GROUPS
+
+    var data = new vis.DataSet();
+    var listOfGroups = []
+    var groups = new vis.DataSet();
+    for (var i = 0; i < tlINFO.length; i++) {
+        indivObjectHandler(tlINFO[i], data, schedule.Decision, scheduleName, listOfGroups);
+    }
+
+    for(var i =0; i < listOfGroups.length; i++){
+        groups.add({id: listOfGroups[i], content: listOfGroups[i]})
+    }
+
+    var options = {
+        width:'100%',
+        //height: window.innerHeight - document.getElementById("myFiles").offsetHeight - (document.getElementById("listOfCharts").offsetHeight * 2),
+        //maxHeight: window.innerHeight - document.getElementById("myFiles").offsetHeight - (document.getElementById("listOfCharts").offsetHeight * 2),
+        zoomMax: 31556952000,
+        stackSubgroups: false,
+        groupOrder: "id",
+        stack: false,
+        orientation: {
+            axis: "both"},
+        margin: {
+            item : {
+                horizontal : 0
+            }
+    }
+
+    };
+
+    //var timeline = new vis.Timeline(container, data, groups, options);
+    var timeline = new vis.Timeline(container);
+    timeline.setOptions(options);
+    timeline.setGroups(groups);
+    timeline.setItems(data);
+
+    timeline.on('select', function(properties){
+        var temp = data.get(properties.items[0]);
+        multiSelectClick(timeline, temp, data);
+    })
+    // timeline.on('doubleClick', function(properties){
+    //     var decisionInfo = alldecisionInfo[scheduleName];
+    //     var productInfo = allProductInfo[scheduleName];
+    //     var denominator = allDenominator[scheduleName];
+
+        
+    // })
+}
+
+function multiSelectClick(timeline, clicked, list){
+    var look = clicked.content;
+    
+    var group11 =[];
+    var group2 = list.get({
+        filter: function(item){
+            if(item.content == look){
+                        group11.push(item.id);
+                        return(item.id);
+                    }}
+    }) 
+    timeline.setSelection(group11);
+}
+
+
+function indivObjectHandler(object, data, decision, schedulename, listofGroups){
+    var times = object.times;
+    var idnum = 1;
+    var objectlabel = object.label;
+    for(var i = 0; i < times.length; i++){
+
+        var idididid = times[i].lotId;
+        if(idididid.indexOf('_')>0) idididid = idididid.substring(0, idididid.indexOf('_'))
+        var decisionKey = times[i].degree + '_' + idididid;
+        //FORMAT TIME 
+        var STARTDATE = times[i].new_start_time;
+        STARTDATE = STARTDATE.replace(" ", "T");
+        STARTDATE = STARTDATE + "Z";
+        var sd = new Date(times[i].starting_time);
+        var ENDDATE = times[i].new_end_time;
+        ENDDATE = ENDDATE.replace(" ", "T");
+        ENDDATE = ENDDATE + "Z";
+        var ed = new Date(times[i].ending_time);
+        var idid = objectlabel + idnum;
+        var lotId = times[i].lotId;
+        if(lotId.indexOf('_')>0) lotId = lotId.substring(0, lotId.indexOf('_'));
+        if(lotId.includes("Setup")){
+           var lotIdID = '\u200b';
+           var classID = "setup";
+
+        }else if(lotId.includes("RESERVED")){
+            var classID = "reserve";
+            var lotIdID ='\u200b';
+        }else{
+            var lotIdID = lotId.substr(lotId.length - 4);
+            var classID = times[i].productGroup;
+        }
+
+        var decisionKey = times[i].degree + '_' + lotId;
+        if(decisionKey.indexOf("Setup")>0){
+            //decisionKey = decisionKey + idnum;
+            decisionKey = times[i].eventId;
+        }else if(decisionKey.indexOf("RESEREVD")){
+            //decisionKey = decisionKey + idnum;
+            decisionKey = times[i].eventId;
+        }
+        console.log(decisionKey);
+        if((ed + sd ) != (2 * ed)){
+         data.add({id: decisionKey, text: times[i].productId, start: sd, end: ed,
+             group: objectlabel, subgroup: objectlabel, className: classID, content: lotIdID});
+        }
+
+        if(listofGroups.indexOf(objectlabel)<0){
+            listofGroups.push(objectlabel);
+        }
+
+        idnum++;
+    }
+
+}
