@@ -750,7 +750,6 @@ function addZero(i) {
  
  
 function displayAttribute(d, datum, divID, scheduleName){
-    console.log(decisionInfo);
     var decisionInfo = alldecisionInfo[scheduleName];
     var productInfo = allProductInfo[scheduleName];
     var denominator = allDenominator[scheduleName];
@@ -1791,7 +1790,6 @@ function loadTabCreate(divID, LAjsonobj){
         listofProducts.push(tempPO);
     }
     listofProducts.sort(function(a,b) {return (a.id > b.id) ? 1 : ((b.id > a.id) ? -1 : 0);} ); 
-    console.log(listofProducts);
     var table = document.createElement("table");
     //~~~~~~~~~~~~~Creating the table~~~~~~~~~~~~~~~~~~~~~~
 
@@ -2511,15 +2509,15 @@ function timelineCreate(schedule, div){
     var tlINFO = schedule.ganttData;
     var scheduleName = schedule.name;
     var idnum= 1;
+    var listofClasses = [];
     //CREATE STYLES FOR ALL THE DIFFERENT PRODUCT GROUPS
 
     var data = new vis.DataSet();
     var listOfGroups = []
     var groups = new vis.DataSet();
     for (var i = 0; i < tlINFO.length; i++) {
-        indivObjectHandler(tlINFO[i], data, schedule.Decision, scheduleName, listOfGroups);
+        indivObjectHandler(tlINFO[i], data, schedule.Decision, scheduleName, listOfGroups, listofClasses);
     }
-
     for(var i =0; i < listOfGroups.length; i++){
         groups.add({id: listOfGroups[i], content: listOfGroups[i]})
     }
@@ -2538,16 +2536,33 @@ function timelineCreate(schedule, div){
             item : {
                 horizontal : 0
             }
-    }
-
+        }
     };
 
+    // Create CSS Style Sheet for the timeline 
+    var sheet = (function() {
+        // Create the <style> tag
+        var style = document.createElement("style");
+
+        // Add a media (and/or media query) here if you'd like!
+        // style.setAttribute("media", "screen")
+        // style.setAttribute("media", "only screen and (max-width : 1024px)")
+
+        // WebKit hack :(
+        style.appendChild(document.createTextNode(""));
+
+        // Add the <style> element to the page
+        document.head.appendChild(style);
+
+        return style.sheet;
+    })();
+
+    cssStyleCreate(sheet, listofClasses);
     //var timeline = new vis.Timeline(container, data, groups, options);
     var timeline = new vis.Timeline(container);
     timeline.setOptions(options);
     timeline.setGroups(groups);
     timeline.setItems(data);
-
     timeline.on('select', function(properties){
         var temp = data.get(properties.items[0]);
         multiSelectClick(timeline, temp, data);
@@ -2563,7 +2578,6 @@ function timelineCreate(schedule, div){
 
 function multiSelectClick(timeline, clicked, list){
     var look = clicked.content;
-    
     var group11 =[];
     var group2 = list.get({
         filter: function(item){
@@ -2571,12 +2585,14 @@ function multiSelectClick(timeline, clicked, list){
                         group11.push(item.id);
                         return(item.id);
                     }}
-    }) 
-    timeline.setSelection(group11);
+    })
+
+   timeline.setSelection(group11);
+    
 }
 
 
-function indivObjectHandler(object, data, decision, schedulename, listofGroups){
+function indivObjectHandler(object, data, decision, schedulename, listofGroups, listofClasses){
     var times = object.times;
     var idnum = 1;
     var objectlabel = object.label;
@@ -2606,7 +2622,11 @@ function indivObjectHandler(object, data, decision, schedulename, listofGroups){
             var lotIdID ='\u200b';
         }else{
             var lotIdID = lotId.substr(lotId.length - 4);
-            var classID = times[i].productGroup;
+            var classID = times[i].productId;
+            //classID= classID.replace('_', "");
+            if(listofClasses.indexOf(classID)<0){
+                listofClasses.push(classID);
+            }
         }
 
         var decisionKey = times[i].degree + '_' + lotId;
@@ -2619,7 +2639,7 @@ function indivObjectHandler(object, data, decision, schedulename, listofGroups){
         }
         if((ed + sd ) != (2 * ed)){
          data.add({id: decisionKey, text: times[i].productId, start: sd, end: ed,
-             group: objectlabel, subgroup: objectlabel, className: classID, content: lotIdID});
+             group: objectlabel, subgroup: objectlabel, className: numberToString(classID), content: lotIdID});
         }
 
         if(listofGroups.indexOf(objectlabel)<0){
@@ -2629,5 +2649,67 @@ function indivObjectHandler(object, data, decision, schedulename, listofGroups){
         idnum++;
     }
 
+}
+
+function addCSSRule(sheet, selector, rules, index) {
+    if("insertRule" in sheet) {
+        sheet.insertRule(selector + "{" + rules + "}", index);
+    }
+    else if("addRule" in sheet) {
+        sheet.addRule(selector, rules, index);
+    }
+}
+
+function cssStyleCreate(sheet, list){
+    //~~~~~~~~~~~~~~~~~~~~~~ COLOR OF THE BOXES~~~~~~~~~~~~~~~~~~~~~~~
+    // match this wit hwhat you have in d3-timeline
+    var c10 = d3.scale.category10();
+    var colorDomain = ["2MCP_01", "2MCP_02", "2MCP_03"]
+    c10.domain(colorDomain);
+    var colorCycle = {
+        "2MCP_01" : c10("2MCP_01"), 
+        "2MCP_02" : c10("2MCP_02"),
+        "2MCP_03" : c10("2MCP_03"),
+        // 'SDP_01': '#2A75A6',
+        // 'SDP_02': '#AEC6EB',
+        // 'SDP_03': '#FD7E12',
+        // 'DDP_01': '#FCB972',
+        // 'DDP_02': '#2AA12D',
+        // 'DDP_03': '#A0D993',
+        // 'DDP_04': '#8BC432',
+        // 'QDP_01': '#FF9894',
+        // 'QDP_02': '#9663C3',
+        // '2MCP_01': '#C8ADDB',
+        // '2MCP_02': '#8B5844',
+        // '3MCP_01': '#C19992',
+        // '3MCP_02': '#D87CC6',
+        // '4MCP_01': '#F9B8D3',
+        // '4MCP_02': '#7E7E7E'
+        };
+
+    for (var i = 0; i < list.length; i++) {
+        var rule = "border-color: " + c10(list[i]) +"; background-color: "+ c10(list[i]) +";";
+        var strinadjust = "."+ numberToString(list[i]);
+        addCSSRule(sheet, strinadjust, rule);     
+    }
+
+    var diagonal = "color: white; background: repeating-linear-gradient(45deg,#FFFFFF,#FFFFFF 2px,#000000 2px,#000000 4px);"
+    addCSSRule(sheet, ".reserve", diagonal);
+    
+    addCSSRule(sheet, ".setup", "border-color: #000000; background-color: #000000;")   
+}
+
+function numberToString(string){
+    string = string.replace("1", "one");
+    string = string.replace("3", "three");
+    string = string.replace("2", "two");
+    string = string.replace("4", "four");
+    string = string.replace("5", "five");
+    string = string.replace("6", "six");
+    string = string.replace("7", "seven");
+    string = string.replace("8", "eight");
+    string = string.replace("9", "nine");
+    string = string.replace("0", "zero");
+    return string;
 }
 
